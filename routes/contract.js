@@ -8,23 +8,25 @@ var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
 var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
-router.post('/', function(req, res, next) {
-    // TODO : body 값 받음 - 파일존재로 form-data
-    // TODO : (1. 미체결 계약, 2.배송요청등록) 생성
-
+router.post('/', isSecure, isAuthenticated, function(req, res, next) {
+    // body 값 받음 - 파일존재로 form-data
+    // (1. 미체결 계약, 2.배송요청등록) 생성
     var form = new formidable.IncomingForm();
     form.keepExtensions = true;
     form.multiples = true;
-    form.uploadDir = path.join(__dirname, '../uploads/images/menus');
+    form.uploadDir = path.join(__dirname, '../uploads/images/sendings');
     form.parse(req, function(err, fields, files) {
         if (err) {return next(err);}
         var result = {};
+        // Fixme : req.user.id
         result.user_id = fields.user_id;
-        result.addr = fields.addr;
+        result.addr_lat = fields.addr_lat;
+        result.addr_lon = fields.addr_lon;
+        result.arr_time = fields.arr_time;
         result.rec_phone = fields.rec_phone;
         result.price = fields.price;
-        result.info = fields.info;
-        result.memo = fields.memo;
+        result.info = fields.info || "";
+        result.memo = fields.memo || "";
         result.pic = [];
         if (files.pic instanceof Array) {
             result.pic = files.pic;
@@ -33,26 +35,13 @@ router.post('/', function(req, res, next) {
         }
         Contract.insertSendingContract(result, function(err, data) {
            if (err) { return next(err); }
-
+           var filename = path.basename(files.pic.path);
+           result.pic.push({url : url.resolve(ecTo,'/images/'+filename)});
            res.send({
-               message : '배송 요청이 등록되었습니다.',
-               temp : data
+               message : '배송 요청이 등록되었습니다.'
            });
         });
-
-
-
-
-
-
-        var filename = path.basename(files.pic.path);
-        result.pic.push({url : url.resolve(ecTo,'/images/'+filename)});
-        res.send({
-            message :  '배송 요청이 등록되었습니다.',
-            temp : result
         });
-
-    });
 }); // 8. 배송 요청 등록 및 미체결 계약 생성
 
 router.get('/', isSecure, isAuthenticated, function(req, res, next) {

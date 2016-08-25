@@ -45,6 +45,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/sendings_images',express.static(path.join(__dirname, 'uploads/images/sendings')));
 app.use('/board_images',express.static(path.join(__dirname, 'uploads/images/boards')));
 app.use('/chatting_images',express.static(path.join(__dirname, 'uploads/images/chattings')));
 app.use('/profile_images',express.static(path.join(__dirname, 'uploads/images/profiles')));
