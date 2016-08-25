@@ -3,10 +3,12 @@
 /**
  * Module dependencies.
  */
-
 var app = require('../app');
-var debug = require('debug')('sender_02:server');
+var debug = require('debug')('sender_02:httpServer');
 var http = require('http');
+var https = require('https');
+var path = requre('path');
+var fs = require('fs');
 
 /**
  * Get port from environment and store in Express.
@@ -16,18 +18,32 @@ var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
 /**
- * Create HTTP server.
+ * Create HTTP httpServer.
  */
 
-var server = http.createServer(app);
+var key = fs.readFileSync(path.join(__dirname,'../cert/site.key')).toString();
+var cert = fs.readFileSync(path.join(__dirname,'../cert/site.crt')).toString();
+// 서버 시작 전이라서 사용
+
+var opts = {
+  key : key,
+  cert : cert
+};
+
+var httpServer = http.createServer(app);
+var httpsServer = https.createServer(opts, app);
 
 /**
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+httpServer.listen(port);
+httpServer.on('error', onError);
+httpServer.on('listening', onListening);
+
+httpsServer.listen(443, function () {
+  console.log("HTTPS Listening on 443");
+});
 
 /**
  * Normalize a port into a number, string, or false.
@@ -50,7 +66,7 @@ function normalizePort(val) {
 }
 
 /**
- * Event listener for HTTP server "error" event.
+ * Event listener for HTTP httpServer "error" event.
  */
 
 function onError(error) {
@@ -78,11 +94,11 @@ function onError(error) {
 }
 
 /**
- * Event listener for HTTP server "listening" event.
+ * Event listener for HTTP httpServer "listening" event.
  */
 
 function onListening() {
-  var addr = server.address();
+  var addr = httpServer.address();
   var bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
