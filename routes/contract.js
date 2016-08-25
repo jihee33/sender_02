@@ -3,31 +3,53 @@ var router = express.Router();
 var formidable = require('formidable');
 var path = require('path');
 var url = require('url');
+var Contract = require('../models/contract');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
 var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
-router.post('/', isSecure, isAuthenticated,  function(req, res, next) {
+router.post('/', function(req, res, next) {
+    // TODO : body 값 받음 - 파일존재로 form-data
+    // TODO : (1. 미체결 계약, 2.배송요청등록) 생성
+
     var form = new formidable.IncomingForm();
     form.keepExtensions = true;
     form.multiples = true;
     form.uploadDir = path.join(__dirname, '../uploads/images/menus');
     form.parse(req, function(err, fields, files) {
         if (err) {return next(err);}
-        var temp = {};
-        temp.user_id = fields.user_id;
-        temp.addr = fields.addr;
-        temp.rec_phone = fields.rec_phone;
-        temp.price = fields.price;
-        temp.info = fields.info;
-        temp.memo = fields.memo;
-        temp.pic = [];
-        temp.pic.push(files.pic);
+        var result = {};
+        result.user_id = fields.user_id;
+        result.addr = fields.addr;
+        result.rec_phone = fields.rec_phone;
+        result.price = fields.price;
+        result.info = fields.info;
+        result.memo = fields.memo;
+        result.pic = [];
+        if (files.pic instanceof Array) {
+            result.pic = files.pic;
+        } else if (files.pic) {
+            result.pic.push(files.pic);
+        }
+        Contract.insertSendingContract(result, function(err, data) {
+           if (err) { return next(err); }
+
+           res.send({
+               message : '배송 요청이 등록되었습니다.',
+               temp : data
+           });
+        });
+
+
+
+
+
+
         var filename = path.basename(files.pic.path);
-        temp.pic.push({url : url.resolve(ecTo,'/images/'+filename)});
+        result.pic.push({url : url.resolve(ecTo,'/images/'+filename)});
         res.send({
             message :  '배송 요청이 등록되었습니다.',
-            temp : temp
+            temp : result
         });
 
     });
