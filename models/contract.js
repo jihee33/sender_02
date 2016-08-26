@@ -41,7 +41,7 @@ function insertSendingContract(data, callback) {
                 ins_cont_id = result.insertId;
                 done(null);
             });
-        }
+        } // 계약 등록
         function insertSending(done) {
             dbConn.query(sql_insert_sending, [data.user_id, ins_cont_id, data.addr_lat, data.addr_lon, data.info,
             data.arr_time, data.rec_phone, data.price, data.memo],
@@ -50,7 +50,7 @@ function insertSendingContract(data, callback) {
                 ins_send_id = result.insertId;
                 done(null);
             });
-        }
+        } // 베송 요청 등록
         function insertFile(callback) {
             async.each(data.pic, function(item, done) {
                 console.log(ins_send_id + " : "+ item.name  + " : "+ item.path);
@@ -62,21 +62,16 @@ function insertSendingContract(data, callback) {
                 if (err) {return callback(err);}
                 callback(null);
             });
-        }
-    }); // getConn
+        } // 배송 요청 파일 등록
+    });
 }
 
 function selectSending(senderId, callback) {
-    // fixme : 시간 정보 변경
     var sql_select_sending = 'SELECT id, addr_lat, addr_lon, info, date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, rec_phone, price, memo FROM sending where id = ? ';
     var sql_select_file = 'SELECT filename, filepath FROM file where type = ? and fk_id = ? ';
     var info = {};
     dbPool.getConnection(function(err, dbConn) {
-        if (err) {return callback(err);}
-                if (err) {
-                    dbConn.release();
-                    return callback(err);
-                }
+                if (err) {return callback(err);}
                 async.parallel([selectSending, selectFile], function(err, result) {
                     dbConn.release();
                     if (err) {callback(err);}
@@ -98,29 +93,76 @@ function selectSending(senderId, callback) {
                         });
                         callback();
                     });
-                    // 사진 처리리
-
                    callback(null, info);
-
-
-                }); // async.series
+                }); // async.parallel
     function selectSending(callback) {
         dbConn.query(sql_select_sending, ['+00:00', '+09:00', senderId], function(err, result) {
            if (err) {callback(err);}
            callback(null, result);
         });
-    }
+    } //배송요청 출력
     function selectFile(callback) {
         dbConn.query(sql_select_file, [4, senderId], function(err, results) {
             if (err) {return callback(err);}
             callback(null, results);
         });
-    }
-
-
-
+    } //배송요청 파일 출력
     }); //getConn
+}
+
+function listDelivering(currentPage, itemsPerPage, callback) {
+    var sql_select_delivering = 'SELECT id deilver_id, user_id, here_lat, here_lon, next_lat, next_lon, ' +
+                                'date_format(convert_tz(dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
+                                'date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time ' +
+                                'FROM delivering order by id limit ?, ?';
+    var sql_select_count = 'select count(id) count from delivering';
+    var info = {};
+    dbPool.getConnection(function(err, dbConn) {
+        if (err) {return callback(err);}
+        async.parallel([selectLimitDelivering, selectCountDelivering], function(err, result){
+            dbConn.release();
+            if (err) return callback(err);
+            info.totalPage = Math.ceil(result[1].count / itemsPerPage);
+            info.currentPage = currentPage;
+            info.itemsPerPage = itemsPerPage;
+            info.data = result[0];
+            callback(null, info);
+
+        });
+        function selectLimitDelivering(callback) {
+            dbConn.query(sql_select_delivering,
+                ['+00:00', '+09:00', '+00:00', '+09:00' ,itemsPerPage * (currentPage - 1), itemsPerPage ],
+                function(err, results) {
+                    if (err) return callback(err);
+                    if (results.length === 0) return callback(null, null);
+                    callback(null, results);
+                });
+        } // 배달 페이지 출력
+        function selectCountDelivering(callback) {
+            dbConn.query(sql_select_count, [], function(err, result) {
+                if (err) return callback(err);
+                callback(null, result[0]);
+            });
+        } // 배달 가기 카운트 출력 _ totalPage를 위해 존재
+    });
+}
+
+function listIdDelivering(deliverId, callback) {
+    var sql_select_delivering_id = 'select id deilver_id, user_id, here_lat, here_lon, next_lat, next_lon, ' +
+                                    'date_format(convert_tz(dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
+                                    'date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time ' +
+                                    'from delivering where id = ? ';
+    dbPool.getConnection(function(err, dbConn) {
+        if (err) return callback(err);
+        dbConn.query(sql_select_delivering_id, ['+00:00', '+09:00', '+00:00', '+09:00', deliverId], function(err, result) {
+            dbConn.release();
+            if (err) callback(err);
+            callback(null, result);
+        });
+    });
 }
 
 module.exports.insertSendingContract = insertSendingContract;
 module.exports.selectSending = selectSending;
+module.exports.listDelivering = listDelivering;
+module.exports.listIdDelivering = listIdDelivering;
