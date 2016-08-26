@@ -44,7 +44,7 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
         });
 }); // 8. 배송 요청 등록 및 미체결 계약 생성
 
-router.get('/',  function(req, res, next) {
+router.get('/', isSecure, isAuthenticated,  function(req, res, next) {
     var sender = req.query.sender;
     if(req.url.match(/\/\?sender=\d+/i)) {
         Contract.selectSending(sender, function(err, result) {
@@ -60,57 +60,17 @@ router.get('/',  function(req, res, next) {
     }
 }); // 9. 배송 요청 보기
 
-router.get('/delivering', isSecure, isAuthenticated, function(req, res, next) {
-    var currentPage = parseInt(req.query.currentPage) || 1;
-    var itemsPerPage = parseInt(req.query.itemsPerPage) || 10;
+// fixme :  isSecure, isAuthenticated,
+router.get('/delivering', function(req, res, next) {
+    var currentPage = parseInt(req.query.currentPage);
+    var itemsPerPage = parseInt(req.query.itemsPerPage);
+    var deliverer = {};
     if (req.url.match(/\?currentPage=\d+&itemsPerPage=\d+/i)) {
-        res.send({
-            totalPage : 10,
-            currentPage : currentPage,
-            itemsPerPage : itemsPerPage,
-            result : {
-                deliverer : [{
-                    deliverer_id : 1,
-                    user_id : 1,
-                    here : '서울 서초구 강남대로 399 한국몬테소리 빌딩',
-                    next : '서울 관악구 서울대 연구공원 웨딩홀 식당'
-                },{
-                    deliverer_id : 2,
-                    user_id : 21,
-                    here : '서울 서초구 서초대로 314 서브웨이',
-                    next : '서울 관악구 남현1길 51 연안본가'
-                },{
-                    deliverer_id : 3,
-                    user_id : 12,
-                    here : '서울 서초구 강남대로61길 13 버터핑거팬케이크',
-                    next : '서울 관악구 과천대로 947 사당타워 나동 1층 봉추찜닭'
-                },{
-                    deliverer_id : 4,
-                    user_id :9,
-                    here : '서울 관악구 남현1길 58 설악흑돼지마을',
-                    next : '서울 관악구 서울대 연구공원 웨딩홀 식당'
-                },{
-                    deliverer_id : 5,
-                    user_id : 5,
-                    here : '서울 관악구 남현3길 78 만경양육관',
-                    next : '서울 관악구 과천대로 947 사당타워 나동 1층 크리스피크림도넛'
-                },{
-                    deliverer_id : 6,
-                    user_id : 41,
-                    here : '서울 서초구 강남대로61길 13 버터핑거팬케이크',
-                    next : '서울 관악구 서울대 연구공원 웨딩홀 식당'
-                },{
-                    deliverer_id : 7,
-                    user_id : 88,
-                    here : '서울 관악구 과천대로 939 르메이에르강남타운 3층 빕스',
-                    next : '서울 관악구 과천대로 947 사당타워 나동 1층 크리스피크림도넛'
-                },{
-                    deliverer_id : 8,
-                    user_id : 23,
-                    here : '서울 관악구 과천대로 939 르메이에르강남타운 1층 피자헛',
-                    next : '서울 관악구 서울대 연구공원 웨딩홀 식당'
-                }]
-            }
+        Contract.listDelivering(currentPage, itemsPerPage, function(err, result) {
+            if (err) return next(err);
+            res.send({
+                result : result
+            });
         });
     } else {
         res.send({

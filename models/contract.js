@@ -67,16 +67,11 @@ function insertSendingContract(data, callback) {
 }
 
 function selectSending(senderId, callback) {
-    // fixme : 시간 정보 변경
     var sql_select_sending = 'SELECT id, addr_lat, addr_lon, info, date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, rec_phone, price, memo FROM sending where id = ? ';
     var sql_select_file = 'SELECT filename, filepath FROM file where type = ? and fk_id = ? ';
     var info = {};
     dbPool.getConnection(function(err, dbConn) {
-        if (err) {return callback(err);}
-                if (err) {
-                    dbConn.release();
-                    return callback(err);
-                }
+                if (err) {return callback(err);}
                 async.parallel([selectSending, selectFile], function(err, result) {
                     dbConn.release();
                     if (err) {callback(err);}
@@ -98,12 +93,8 @@ function selectSending(senderId, callback) {
                         });
                         callback();
                     });
-                    // 사진 처리리
-
                    callback(null, info);
-
-
-                }); // async.series
+                }); // async.parallel
     function selectSending(callback) {
         dbConn.query(sql_select_sending, ['+00:00', '+09:00', senderId], function(err, result) {
            if (err) {callback(err);}
@@ -116,11 +107,55 @@ function selectSending(senderId, callback) {
             callback(null, results);
         });
     }
-
-
-
     }); //getConn
+}
+
+function listDelivering(currentPage, itemsPerPage, callback) {
+    var sql_select_delivering = 'SELECT id deilver_id, user_id, here_lat, here_lon, next_lat, next_lon, ' +
+                                'date_format(convert_tz(dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
+                                'date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time ' +
+                                'FROM delivering order by id limit ?, ?';
+    var sql_select_count = 'select count(id) count from delivering';
+    var info = {};
+// todo : 연결 후 totalPage는 = ceil(총 수량 / itemperpage)
+    dbPool.getConnection(function(err, dbConn) {
+        if (err) {return callback(err);}
+        async.parallel([selectLimitDelivering, selectCountDelivering], function(err, result){
+            dbConn.release();
+            if (err) return callback(err);
+            info.totalPage = Math.ceil(result[1].count / itemsPerPage);
+            info.currentPage = currentPage;
+            info.itemsPerPage = itemsPerPage;
+            info.data = result[0];
+            callback(null, info);
+
+        });
+        function selectLimitDelivering(callback) {
+            dbConn.query(sql_select_delivering,
+                ['+00:00', '+09:00', '+00:00', '+09:00' ,itemsPerPage * (currentPage - 1), itemsPerPage ],
+                function(err, results) {
+                    if (err) return callback(err);
+                    if (results.length === 0) return callback(null, null);
+                    callback(null, results);
+                });
+        }
+        function selectCountDelivering(callback) {
+            dbConn.query(sql_select_count, [], function(err, result) {
+                if (err) return callback(err);
+                callback(null, result[0]);
+            });
+        }
+
+
+
+    });
+} //getConn
+
+function listIdDelivering(deliverId, callback) {
+
 }
 
 module.exports.insertSendingContract = insertSendingContract;
 module.exports.selectSending = selectSending;
+module.exports.listDelivering = listDelivering;
+module.exports.listIdDelivering = listIdDelivering;
