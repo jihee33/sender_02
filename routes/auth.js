@@ -13,7 +13,7 @@ passport.use(new FacebookTokenStrategy({
     clientSecret: process.env.FACEBOOK_APP_SECRET,
     profileFields: ['id', 'displayName', 'name','gender', 'profileUrl', 'photos', 'emails']
 }, function(accessToken, refreshToken, profile, done) {
-    Customer.findById('test5', function (err, user) {// 추후 변수 수정 필요
+    Customer.findOrCreateFacebook('test2', function (err, user) {// 추후 변수 수정 필요
         if(err) {
             return done(err);
         }
@@ -82,7 +82,10 @@ router.get('/local/logout', isAuthenticated, function(req, res, next) {
 });
 
 router.post('/facebook/token', isSecure, passport.authenticate('facebook-token', {scope : ['email']}), function(req, res, next) {
-    res.sendStatus(req.user ? 200 : 401);
+    res.send({
+        user: req.user
+    });
+    // res.sendStatus(req.user ? 200 : 401);
 });
 
 module.exports = router;
