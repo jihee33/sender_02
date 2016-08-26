@@ -60,8 +60,7 @@ router.get('/', isSecure, isAuthenticated,  function(req, res, next) {
     }
 }); // 9. 배송 요청 보기
 
-// fixme :  isSecure, isAuthenticated,
-router.get('/delivering', function(req, res, next) {
+router.get('/delivering',isSecure, isAuthenticated, function(req, res, next) {
     var currentPage = parseInt(req.query.currentPage);
     var itemsPerPage = parseInt(req.query.itemsPerPage);
     var deliverer = {};
@@ -79,19 +78,16 @@ router.get('/delivering', function(req, res, next) {
     }
 }); // 10. 배달 가기 목록 보기
 
-router.get('/delivering/:deliverer_id', isSecure, isAuthenticated, function(req, res, next) {
+//   fixme :  , isSecure, isAuthenticated
+router.get('/delivering/:deliverer_id', function(req, res, next) {
     var id = req.params.deliverer_id;
-    res.send({
-        result : {
-            deliverer : {
-                user_id : 1,
-                here : '서울 서초구 강남대로 399 한국몬테소리 빌딩',
-                next : '서울 관악구 서울대 연구공원 웨딩홀 식당',
-                dep_time : '2016-08-24 18:01:00',
-                arr_time : '2016-08-24 19:30:00'
-            }
-        }
+    Contract.listIdDelivering(id, function(err, result) {
+        if (err) return next(err);
+        res.send({
+            result : result
+        });
     });
+
 }); // 11. ‘배달가기’ 상세 목록 보기
 
 router.post('/delivering', isSecure, isAuthenticated, function(req, res, next) {
