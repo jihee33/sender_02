@@ -35,6 +35,11 @@ router.put('/', isSecure, isAuthenticated, function(req, res, next) {
 }); // 2. 핸드폰 번호 등록
 
 router.get('/me', isSecure, isAuthenticated, function(req, res, next) {
+    Member.findUser(req.user.id, function (err, user) {
+        if (err) {
+            // return
+        }
+    });
     res.send({
         result: {
             user_id : 1,
