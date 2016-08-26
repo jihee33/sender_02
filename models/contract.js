@@ -90,7 +90,7 @@ function selectSending(senderId, callback) {
 
                     // 사진 처리리
 
-
+console.log('aa');
 
 
 
