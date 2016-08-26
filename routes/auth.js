@@ -8,18 +8,18 @@ var Customer = require('../models/user');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
 
-/*passport.use(new FacebookTokenStrategy({
+passport.use(new FacebookTokenStrategy({
     clientID: process.env.FACEBOOK_APP_ID,
     clientSecret: process.env.FACEBOOK_APP_SECRET,
     profileFields: ['id', 'displayName', 'name','gender', 'profileUrl', 'photos', 'emails']
 }, function(accessToken, refreshToken, profile, done) {
-    Customer.findById('test1', function (err, user) {
+    Customer.findById('test5', function (err, user) {// 추후 변수 수정 필요
         if(err) {
             return done(err);
         }
         return done(null, user);
     });
-}));*/
+}));
 
 // 1. use로 strategy 함수 만들기 - name, password가 기본필드라 옵션 변경해야함
 passport.use(new LocalStrategy({usernameField: 'api_id', passwordField: 'password'}, function(api_id, password, done) {
@@ -81,8 +81,8 @@ router.get('/local/logout', isAuthenticated, function(req, res, next) {
     res.send({ message: 'local logout' });
 });
 
-/*router.post('/facebook/token', passport.authenticate('facebook-token', isSecure, {scope : ['email']}), function(req, res, next) {
-    res.send(req.user ? 200 : 401);
-});*/
+router.post('/facebook/token', isSecure, passport.authenticate('facebook-token', {scope : ['email']}), function(req, res, next) {
+    res.sendStatus(req.user ? 200 : 401);
+});
 
 module.exports = router;
