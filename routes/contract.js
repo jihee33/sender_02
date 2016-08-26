@@ -44,21 +44,14 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
         });
 }); // 8. 배송 요청 등록 및 미체결 계약 생성
 
-router.get('/', isSecure, isAuthenticated, function(req, res, next) {
+router.get('/',  function(req, res, next) {
     var sender = req.query.sender;
     if(req.url.match(/\/\?sender=\d+/i)) {
-        Contract.
-        res.send({
-            result: {
-                sender_id: sender,
-                addr : '서울 관악구 서울대 연구공원',
-                info : '도자기',
-                pic : ecTo+'/images/upload_01bd18c7dd4fa45013be85aef81111111.jpg',
-                arr_time : '2016-08-24 11:24:32',
-                req_phone : '010-1235-5555',
-                price: 12000,
-                memo: '깨지기 쉬워요!!'
-            }
+        Contract.selectSending(sender, function(err, result) {
+            if (err) return next(err);
+            res.send({
+                result: result
+            });
         });
     } else {
         res.send({

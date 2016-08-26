@@ -4,6 +4,7 @@ var dbPool = require('./common').dbPool;
 var path = require('path');
 var url = require('url');
 var fs = require('fs');
+var url_ = 'http://localhost:8080';
 
 function insertSendingContract(data, callback) {
     var sql_insert_contract = 'insert into contract(state) values(?)';
@@ -68,7 +69,7 @@ function insertSendingContract(data, callback) {
 function selectSending(senderId, callback) {
     // fixme : 시간 정보 변경
     var sql_select_sending = 'SELECT id, addr_lat, addr_lon, info, arr_time, rec_phone, price, memo FROM sending where id = ? ';
-    var sql_select_file = 'SELECT filepath FROM file where type = ? and fk_id = ? ';
+    var sql_select_file = 'SELECT filename, filepath FROM file where type = ? and fk_id = ? ';
     var info = {};
     dbPool.getConnection(function(err, dbConn) {
         if (err) {return callback(err);}
@@ -87,19 +88,17 @@ function selectSending(senderId, callback) {
                     info.rec_phone = result[0][0].rec_phone;
                     info.price = result[0][0].price;
                     info.memo = result[0][0].memo;
-
+                    info.pic = [];
+                    async.each(result[1], function(item, callback) {
+                       if (err) {return callback(err);}
+                        var filename = path.basename(item.filepath);
+                        info.pic.push({
+                            originalFilename : item.filename,
+                            fileUrl : url.resolve(url_ ,'/sending_images/'+filename)
+                        });
+                        callback();
+                    });
                     // 사진 처리리
-
-console.log('aa');
-
-
-
-
-
-
-
-
-
 
                    callback(null, info);
 
@@ -112,7 +111,7 @@ console.log('aa');
         });
     }
     function selectFile(callback) {
-        conn.query(sql_select_file, [4, senderId], function(err, results) {
+        dbConn.query(sql_select_file, [4, senderId], function(err, results) {
             if (err) {return callback(err);}
             callback(null, results);
         });
