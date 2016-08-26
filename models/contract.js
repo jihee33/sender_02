@@ -68,7 +68,7 @@ function insertSendingContract(data, callback) {
 
 function selectSending(senderId, callback) {
     // fixme : 시간 정보 변경
-    var sql_select_sending = 'SELECT id, addr_lat, addr_lon, info, arr_time, rec_phone, price, memo FROM sending where id = ? ';
+    var sql_select_sending = 'SELECT id, addr_lat, addr_lon, info, date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, rec_phone, price, memo FROM sending where id = ? ';
     var sql_select_file = 'SELECT filename, filepath FROM file where type = ? and fk_id = ? ';
     var info = {};
     dbPool.getConnection(function(err, dbConn) {
@@ -105,7 +105,7 @@ function selectSending(senderId, callback) {
 
                 }); // async.series
     function selectSending(callback) {
-        dbConn.query(sql_select_sending, [senderId], function(err, result) {
+        dbConn.query(sql_select_sending, ['+00:00', '+09:00', senderId], function(err, result) {
            if (err) {callback(err);}
            callback(null, result);
         });
