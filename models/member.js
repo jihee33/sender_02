@@ -92,6 +92,35 @@ function findUser(userId, callback) {
     });
 }
 
+function updateMember(user, callback) {
+    var sql = 'UPDATE user SET phone = ?, activation = 1 WHERE id = ?';
+    dbPool.getConnection(function (err, dbConn) {
+       if (err) {
+           return callback(err);
+       }
+       dbConn.beginTransaction(function (err) {
+           if (err) {
+               dbConn.release();
+               return callback(err);
+           }
+            dbConn.query(sql, [user.phone, user.id], function (err) {
+                if (err) {
+                    return dbConn.rollback(function() {
+                        dbConn.release();
+                        callback(err);
+                    });
+                }
+
+                dbConn.commit(function () {
+                    dbConn.release();
+                    callback(null);
+                });
+            })
+       })
+    });
+}
+
 module.exports.findById = findById;
 module.exports.findUser = findUser;
 module.exports.findOrCreateFacebook = findOrCreateFacebook;
+module.exports.updateMember = updateMember;

@@ -6,18 +6,31 @@ var async = require('async');
 var url = require('url');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
+
+var Member = require('../models/member');
+
 var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 router.put('/', isSecure, isAuthenticated, function(req, res, next) {
-    var phone = req.body.phone;
-    if (phone !== undefined) {
-        res.send({
-            message: phone + ': dummy 사용자 등록을 성공했습니다.'
+    var user = {};
+    user.phone = req.body.phone;
+    if (user.phone !== undefined) {
+        user.id = req.user.id;
+        Member.updateMember(user, function (err) {
+            if (err) {
+                return function() {
+                    res.send({
+                        error: '사용자 등록을 실패했습니다.'
+                    });
+                    next(err);
+                }
+            }
+            res.send({
+               message: '사용자 등록을 성공했습니다.'
+            });
         });
     } else {
-        res.send({
-            message: 'dummy 사용자 등록을 실패했습니다.'
-        });
+        next(new Error('사용자 등록을 실패했습니다.'));
     }
 }); // 2. 핸드폰 번호 등록
 
