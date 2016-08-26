@@ -35,7 +35,7 @@ function findOrCreateFacebook(profile, callback) {
                        });
                    }
 
-                   // dbConn.commit(function () {
+                   dbConn.commit(function () {
                        var user = {};
                        user.id = result.insertId;
                        user.api_id = profile.id;
@@ -43,7 +43,7 @@ function findOrCreateFacebook(profile, callback) {
                        user.activation = 0;
                        dbConn.release();
                        callback(null, user);
-                   // });
+                   });
                });
            });
        })
