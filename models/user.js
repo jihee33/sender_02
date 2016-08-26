@@ -8,7 +8,7 @@ function findOrCreateFacebook(profile, callback) {
        if (err) {
            return callback(err);
        }
-       dbConn.query(sql_find_facebook_id, [profile], function (err, result) {
+       dbConn.query(sql_find_facebook_id, [profile.id], function (err, result) {
            if (err) {
                return callback(err);
            }
@@ -27,7 +27,7 @@ function findOrCreateFacebook(profile, callback) {
                    dbConn.release();
                    return callback(err)
                }
-               dbConn.query(sql_create_facebook_id, [profile], function (err, result) {
+               dbConn.query(sql_create_facebook_id, [profile.id], function (err, result) {
                    if (err) {
                        return dbConn.rollback(function() {
                            dbConn.release();
@@ -35,7 +35,7 @@ function findOrCreateFacebook(profile, callback) {
                        });
                    }
 
-                   // dbConn.commit(function () {
+                   dbConn.commit(function () {
                        var user = {};
                        user.id = result.insertId;
                        user.api_id = profile.id;
@@ -43,7 +43,7 @@ function findOrCreateFacebook(profile, callback) {
                        user.activation = 0;
                        dbConn.release();
                        callback(null, user);
-                   // });
+                   });
                });
            });
        })
@@ -52,6 +52,7 @@ function findOrCreateFacebook(profile, callback) {
 
 function findById(apiId, callback) {
     var sql = 'SELECT id, api_id, api_type, introduction, deliver_com, deliver_req FROM user WHERE api_id = ?';
+
     dbPool.getConnection(function(err, dbConn) {
         if (err) {
             return callback(err);
@@ -71,15 +72,19 @@ function findById(apiId, callback) {
 
 function findUser(userId, callback) {
     var sql = 'SELECT id, api_id, api_type, introduction, deliver_com, deliver_req FROM user WHERE id = ?';
+    console.log(userId);
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
+            console.log('find get err');
             return callback(err);
         }
         dbConn.query(sql, [userId], function (err, result) {
             dbConn.release();
             if (err) {
+                console.log('find query err');
                 return callback(err);
             }
+            console.log('wow');
             var user = {};
             user.id = result[0].id;
             user.api_id = result[0].api_id;
