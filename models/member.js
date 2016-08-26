@@ -1,4 +1,3 @@
-var mysql = require('mysql');
 var dbPool = require('./common').dbPool;
 
 function findOrCreateFacebook(profile, callback) {
