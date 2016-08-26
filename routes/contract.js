@@ -78,8 +78,7 @@ router.get('/delivering',isSecure, isAuthenticated, function(req, res, next) {
     }
 }); // 10. 배달 가기 목록 보기
 
-//   fixme :  , isSecure, isAuthenticated
-router.get('/delivering/:deliverer_id', function(req, res, next) {
+router.get('/delivering/:deliverer_id', isSecure, isAuthenticated, function(req, res, next) {
     var id = req.params.deliverer_id;
     Contract.listIdDelivering(id, function(err, result) {
         if (err) return next(err);
