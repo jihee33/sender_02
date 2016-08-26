@@ -13,7 +13,7 @@ passport.use(new FacebookTokenStrategy({
     clientSecret: process.env.FACEBOOK_APP_SECRET,
     profileFields: ['id', 'displayName', 'name','gender', 'profileUrl', 'photos', 'emails']
 }, function(accessToken, refreshToken, profile, done) {
-    Customer.findOrCreateFacebook('test1', function (err, user) {// 추후 변수 수정 필요
+    Customer.findOrCreateFacebook(profile, function (err, user) {// 추후 변수 수정 필요
         if(err) {
             return done(err);
         }
