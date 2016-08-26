@@ -72,19 +72,15 @@ function findById(apiId, callback) {
 
 function findUser(userId, callback) {
     var sql = 'SELECT id, api_id, api_type, introduction, deliver_com, deliver_req FROM user WHERE id = ?';
-    console.log(userId);
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
-            console.log('find get err');
             return callback(err);
         }
         dbConn.query(sql, [userId], function (err, result) {
             dbConn.release();
             if (err) {
-                console.log('find query err');
                 return callback(err);
             }
-            console.log('wow');
             var user = {};
             user.id = result[0].id;
             user.api_id = result[0].api_id;
