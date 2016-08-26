@@ -62,7 +62,66 @@ function insertSendingContract(data, callback) {
                 callback(null);
             });
         }
-    }); // getconn
+    }); // getConn
+}
+
+function selectSending(senderId, callback) {
+    // fixme : 시간 정보 변경
+    var sql_select_sending = 'SELECT id, addr_lat, addr_lon, info, arr_time, rec_phone, price, memo FROM sending where id = ? ';
+    var sql_select_file = 'SELECT filepath FROM file where type = ? and fk_id = ? ';
+    var info = {};
+    dbPool.getConnection(function(err, dbConn) {
+        if (err) {return callback(err);}
+                if (err) {
+                    dbConn.release();
+                    return callback(err);
+                }
+                async.parallel([selectSending, selectFile], function(err, result) {
+                    dbConn.release();
+                    if (err) {callback(err);}
+                    info.sender_id = senderId;
+                    info.addr_lat = result[0][0].addr_lat;
+                    info.addr_lon = result[0][0].addr_lon;
+                    info.info = result[0][0].info;
+                    info.arr_time = result[0][0].arr_time;
+                    info.rec_phone = result[0][0].rec_phone;
+                    info.price = result[0][0].price;
+                    info.memo = result[0][0].memo;
+
+                    // 사진 처리리
+
+
+
+
+
+
+
+
+
+
+
+
+                   callback(null, info);
+
+
+                }); // async.series
+    function selectSending(callback) {
+        dbConn.query(sql_select_sending, [senderId], function(err, result) {
+           if (err) {callback(err);}
+           callback(null, result);
+        });
+    }
+    function selectFile(callback) {
+        conn.query(sql_select_file, [4, senderId], function(err, results) {
+            if (err) {return callback(err);}
+            callback(null, results);
+        });
+    }
+
+
+
+    }); //getConn
 }
 
 module.exports.insertSendingContract = insertSendingContract;
+module.exports.selectSending = selectSending;

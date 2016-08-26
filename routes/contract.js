@@ -47,6 +47,7 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
 router.get('/', isSecure, isAuthenticated, function(req, res, next) {
     var sender = req.query.sender;
     if(req.url.match(/\/\?sender=\d+/i)) {
+        Contract.
         res.send({
             result: {
                 sender_id: sender,
