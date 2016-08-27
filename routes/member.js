@@ -57,17 +57,18 @@ router.get('/me', isSecure, isAuthenticated, function(req, res, next) {
 
 router.get('/:user_id', isSecure, isAuthenticated, function(req, res, next) {
     var userId = req.params.user_id;
-    res.send({
-        result : {
-            user_id: userId,
-            name: '홍길동생',
-            email: 'hongsang@hwalbin.com',
-            phone: '010-1111-1111',
-            introduction: '나는 홍길동의 동생입니다.',
-            deliver_com: 3,
-            deliver_req: 1,
-            pic: ecTo + '/images/upload_01bd18c7dd4fa45013be85aef8ed10a5.jpg',
-            activation: 1
+    Member.findUser(userId, function (err, user) {
+        if (err) {
+            return function() {
+                res.send({
+                    error: '특정 사용자의 프로필을 불러오는데 실패했습니다.'
+                })
+            }
+        }
+        if (user.activation !== 0) {
+            res.send({
+                result: user
+            });
         }
     });
 }); // 4. 특정 사용자의 정보 보기
@@ -93,7 +94,7 @@ router.put('/me', isAuthenticated, function(req, res, next) {
 }); // 5. 자신의 프로필 사진 변경 하기
 
 router.delete('/', isAuthenticated, function(req, res, next) {
-    var userId = req.body.user_id;
+    var userId = req.user.id;
     res.send({ message: userId +' : 회원 탈퇴가 처리되었습니다.' });
 }); // 7. 회원 탈퇴 하기
 
