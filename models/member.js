@@ -87,6 +87,7 @@ function findUser(userId, callback) {
             user.introduction = result[0].introduction;
             user.deliver_com = result[0].deliver_com;
             user.deliver_req = result[0].deliver_req;
+            user.activation = result[0].activation;
             return callback(null, user);
         });
     });

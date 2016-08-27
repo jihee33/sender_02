@@ -37,20 +37,20 @@ router.put('/', isSecure, isAuthenticated, function(req, res, next) {
 router.get('/me', isSecure, isAuthenticated, function(req, res, next) {
     Member.findUser(req.user.id, function (err, user) {
         if (err) {
-            // return
+            return function() {
+                res.send({
+                    error: '자신의 프로필을 불러오는데 실패했습니다.'
+                })
+            }
         }
-    });
-    res.send({
-        result: {
-            user_id : 1,
-            name : '홍길동',
-            email : 'hong123@hwalbin.com',
-            phone : "010-1234-5678",
-            introduction : '저는 안산에 살고 있습니다.', // 자기소개 내용
-            deliver_com : 1, //배달 완료 횟수
-            deliver_req : 5, // 배달 요청 횟수
-            pic : ecTo + '/images/upload_20c413748c8b88ae38a10c03370cc850.jpg',
-            activation : 1 // 활성화 유무
+        if (user.activation !== 0) {
+            res.send({
+                result: user
+            });
+        } else {
+            res.send({
+                message: '핸드폰 번호 등록을 통해 계정을 활성화 시켜야 합니다'
+            })
         }
     });
 }); // 3. 자신의 정보 보기
