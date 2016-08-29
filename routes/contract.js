@@ -18,31 +18,39 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
     form.uploadDir = path.join(__dirname, '../uploads/images/sendings');
     form.parse(req, function(err, fields, files) {
         if (err) {return next(err);}
-        var result = {};
-        // Fixme : req.user.id
-        result.user_id = fields.user_id; //fixme : 추후 session값으로 변경
-        result.addr_lat = fields.addr_lat;
-        result.addr_lon = fields.addr_lon;
-        result.arr_time = fields.arr_time;
-        result.rec_phone = fields.rec_phone;
-        result.price = fields.price;
-        result.info = fields.info || "";
-        result.memo = fields.memo || "";
-        result.pic = [];
-        if (files.pic instanceof Array) {
-            result.pic = files.pic;
-        } else if (files.pic) {
-            result.pic.push(files.pic);
+        if (fields.addr_lat && fields.addr_lon && fields.rec_phone && fields.price) {
+            var result = {};
+            // Fixme : req.user.id
+            result.user_id = fields.user_id; //fixme : 추후 session값으로 변경
+            result.addr_lat = fields.addr_lat;
+            result.addr_lon = fields.addr_lon;
+            result.arr_time = fields.arr_time;
+            result.rec_phone = fields.rec_phone;
+            result.price = fields.price;
+            result.info = fields.info || "";
+            result.memo = fields.memo || "";
+            result.pic = [];
+            if (files.pic instanceof Array) {
+                result.pic = files.pic;
+            } else if (files.pic) {
+                result.pic.push(files.pic);
+            }
+            Contract.insertSendingContract(result, function (err, data) {
+                if (err) {return next(err);}
+                if (files.pic) {
+                    var filename = path.basename(files.pic.path);
+                    result.pic.push({url: url.resolve(ecTo, '/images/' + filename)});
+                }
+                res.send({
+                    message: '배송 요청이 등록되었습니다.'
+                });
+            });
+        } else {
+            res.send({
+                  error : '배송 요청 등록이 실패했습니다. (데이터 미등록)'
+            });
         }
-        Contract.insertSendingContract(result, function(err, data) {
-           if (err) { return next(err); }
-           var filename = path.basename(files.pic.path);
-           result.pic.push({url : url.resolve(ecTo,'/images/'+filename)});
-           res.send({
-               message : '배송 요청이 등록되었습니다.'
-           });
-        });
-        });
+    });
 }); // 8. 배송 요청 등록 및 미체결 계약 생성
 
 router.get('/', isSecure, isAuthenticated,  function(req, res, next) {
@@ -90,8 +98,7 @@ router.get('/delivering/:deliverer_id', isSecure, isAuthenticated, function(req,
 
 }); // 11. ‘배달가기’ 상세 목록 보기
 
-// fixme :  isSecure, isAuthenticated,
-router.post('/delivering',function(req, res, next) {
+router.post('/delivering', isSecure, isAuthenticated, function(req, res, next) {
     if (req.body.here_lat && req.body.here_lon && req.body.next_lat && req.body.next_lon && req.body.dep_time && req.body.arr_time) {
         var result = {};
         result.userId = req.body.user_id; //fixme : 추후 session값으로 변경
@@ -109,13 +116,13 @@ router.post('/delivering',function(req, res, next) {
                 });
             } else {
                 res.send({
-                    message : '배달 가기 정보 등록에 실패했습니다.'
+                    error : '배달 가기 정보 등록에 실패했습니다.'
                 });
             }
         });
     } else {
         res.send({
-            message : '배달 가기 정보 등록에 실패했습니다. (데이터 미등록)'
+            error : '배달 가기 정보 등록에 실패했습니다. (데이터 미등록)'
         });
     }
 }); // 12. ‘배달 가기’ 등록
