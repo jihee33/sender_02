@@ -42,7 +42,7 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
                     result.pic.push({url: url.resolve(ecTo, '/images/' + filename)});
                 }
                 res.send({
-                    message: '배송 요청이 등록되었습니다.'
+                    result : '배송 요청이 등록되었습니다.'
                 });
             });
         } else {
@@ -59,7 +59,7 @@ router.get('/', isSecure, isAuthenticated,  function(req, res, next) {
         Contract.selectSending(sender, function(err, result) {
             if (err) return next(err);
             res.send({
-                result: result
+                result : result
             });
         });
     } else {
@@ -112,7 +112,7 @@ router.post('/delivering', isSecure, isAuthenticated, function(req, res, next) {
             if (err) {next(err);}
             if (bool === 1) {
                 res.send({
-                    message : '배달 가기 정보를 등록했습니다.'
+                    result : '배달 가기 정보를 등록했습니다.'
                 });
             } else {
                 res.send({
@@ -127,19 +127,25 @@ router.post('/delivering', isSecure, isAuthenticated, function(req, res, next) {
     }
 }); // 12. ‘배달 가기’ 등록
 
-router.put('/', function(req, res, next) {
-    if (req.body.contract_id && req.body.deliver_id) {
+router.put('/',isAuthenticated, function(req, res, next) {
+    if (req.body.contract_id && req.body.deliverer_id) {
         var contract_id = req.body.contract_id;
         var deliverer_id = req.body.deliverer_id;
         Contract.updateContract(contract_id, deliverer_id, function(err, result) {
             if (err) return next(err);
-            res.send({
-                message : '계약이 체결 되었습니다.'
-            });
+            if (result === 2) {
+                res.send({
+                    result: '계약이 체결 되었습니다.'
+                });
+            } else {
+                res.send({
+                    error : '계약 체결이 실패했습니다.'
+                });
+            }
         });
     } else {
         res.send({
-            error : '계약 체결이 실패했습니다.'
+            error : '계약 체결이 실패했습니다. (데이터 미등록)'
         });
     }
 
@@ -163,7 +169,7 @@ router.put('/:contract_id', isAuthenticated, function(req, res, next) {
     var contract_id = req.params.contract_id;
     var state = req.body.state;
     res.send({
-        message : '계약 상태가 변경되었습니다.',
+        result : '계약 상태가 변경되었습니다.',
         temp : {
             contract_id : contract_id,
             state : state

@@ -178,6 +178,7 @@ function insertDelivering(obj, callback)  {
 }
 
 function updateContract(contractId, delivererId, callback) {
+    var changedRows = 0;
     var sql_update_contract = 'update contract ' +
                                 'set state = ? ,res_time = str_to_date(now(), \'%Y-%m-%d %H:%i:%s\') ' +
                                 ', utime = str_to_date(now(), \'%Y-%m-%d %H:%i:%s\') ' +
@@ -196,19 +197,22 @@ function updateContract(contractId, delivererId, callback) {
                });
                } // if
                dbConn.commit(function () {
-                   callback(null, null);
+                   callback(null, changedRows);
                });
            });
        });
         function updateContract(done) {
             dbConn.query(sql_update_contract, [1, contractId], function(err, result) {
                if (err) return done(err);
+               changedRows += result.changedRows;
+                console.log(changedRows);
                done(null, null);
             });
         }
-        function updateDelivering(done) { //TODO : 왜 안됨
+        function updateDelivering(done) {
             dbConn.query(sql_update_delivering, [contractId, delivererId], function(err, result) {
                 if (err) return done(err);
+                changedRows += result.changedRows;
                 done(null, null);
             });
         }
