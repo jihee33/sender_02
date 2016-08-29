@@ -151,7 +151,7 @@ router.put('/',isAuthenticated, function(req, res, next) {
 
 }); // 13. 계약 체결하기
 
-router.get('/:contract_id', function(req, res, next) {
+router.get('/:contract_id', isAuthenticated, function(req, res, next) {
     if (req.params.contract_id) {
         var contract_id = req.params.contract_id;
         Contract.selectContract(contract_id, function(err, result) {
