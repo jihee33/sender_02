@@ -6,6 +6,7 @@ var url = require('url');
 var Contract = require('../models/contract');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
+//fixme : ecTo 제거
 var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 router.post('/', isSecure, isAuthenticated, function(req, res, next) {
@@ -19,7 +20,7 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
         if (err) {return next(err);}
         var result = {};
         // Fixme : req.user.id
-        result.user_id = fields.user_id;
+        result.user_id = fields.user_id; //fixme : 추후 session값으로 변경
         result.addr_lat = fields.addr_lat;
         result.addr_lon = fields.addr_lon;
         result.arr_time = fields.arr_time;
@@ -89,18 +90,34 @@ router.get('/delivering/:deliverer_id', isSecure, isAuthenticated, function(req,
 
 }); // 11. ‘배달가기’ 상세 목록 보기
 
-router.post('/delivering', isSecure, isAuthenticated, function(req, res, next) {
-    var temp = {};
-    temp.userId = req.body.user_id;
-    temp.here = req.body.here;
-    temp.next = req.body.next;
-    temp.dep_time = req.body.dep_time;
-    temp.arr_time = req.body.arr_time;
-    res.send({
-        message : '배달 가기 정보를 등록했습니다.',
-        temp : temp
-    });
-
+// fixme :  isSecure, isAuthenticated,
+router.post('/delivering',function(req, res, next) {
+    if (req.body.here_lat && req.body.here_lon && req.body.next_lat && req.body.next_lon && req.body.dep_time && req.body.arr_time) {
+        var result = {};
+        result.userId = req.body.user_id; //fixme : 추후 session값으로 변경
+        result.here_lat = req.body.here_lat;
+        result.here_lon = req.body.here_lon;
+        result.next_lat = req.body.next_lat;
+        result.next_lon = req.body.next_lon;
+        result.dep_time = req.body.dep_time;
+        result.arr_time = req.body.arr_time;
+        Contract.insertDelivering(result, function(err, bool) {
+            if (err) {next(err);}
+            if (bool === 1) {
+                res.send({
+                    message : '배달 가기 정보를 등록했습니다.'
+                });
+            } else {
+                res.send({
+                    message : '배달 가기 정보 등록에 실패했습니다.'
+                });
+            }
+        });
+    } else {
+        res.send({
+            message : '배달 가기 정보 등록에 실패했습니다. (데이터 미등록)'
+        });
+    }
 }); // 12. ‘배달 가기’ 등록
 
 router.put('/', isAuthenticated, function(req, res, next) {
