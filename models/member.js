@@ -1,5 +1,7 @@
 var dbPool = require('./common').dbPool;
 
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com';
+
 function findOrCreateFacebook(profile, callback) {
     var sql_find_facebook_id = 'SELECT id, phone, introduction, deliver_com, deliver_req FROM user WHERE api_id = ?';
     var sql_create_facebook_id = 'INSERT INTO user(api_id, api_type, activation) VALUES(?, 0, 0);';
@@ -88,6 +90,7 @@ function findUser(userId, callback) {
             user.deliver_com = result[0].deliver_com;
             user.deliver_req = result[0].deliver_req;
             user.activation = result[0].activation;
+            user.pic = url.resolve(url_ ,'/uploads/images/profiles' + filename);
             return callback(null, user);
         });
     });
