@@ -1,4 +1,6 @@
 var dbPool = require('./common').dbPool;
+var url = require('url');
+var path = require('path');
 
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com';
 
@@ -72,7 +74,10 @@ function findById(apiId, callback) {
 }
 
 function findUser(userId, callback) {
-    var sql = 'SELECT id, api_id, api_type, introduction, deliver_com, deliver_req FROM user WHERE id = ?';
+    var sql = 'SELECT u.id user_id, u.api_id api_id, u.api_type api_type, u.introduction introduction, ' +
+              'u.deliver_com deliver_com, u.deliver_req deliver_req, u.activation activation, f.filepath filepath ' +
+              'FROM user u LEFT JOIN (SELECT fk_id, filename, filepath ' +
+              'FROM file WHERE type = 0) f ON (u.id = f.fk_id) WHERE u.id = ?';
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
             return callback(err);
@@ -83,14 +88,18 @@ function findUser(userId, callback) {
                 return callback(err);
             }
             var user = {};
-            user.id = result[0].id;
+            user.id = result[0].user_id;
             user.api_id = result[0].api_id;
             user.api_type = result[0].api_type;
             user.introduction = result[0].introduction;
             user.deliver_com = result[0].deliver_com;
             user.deliver_req = result[0].deliver_req;
             user.activation = result[0].activation;
-            user.pic = url.resolve(url_ ,'/uploads/images/profiles' + filename);
+            if (result[0].filepath) {
+                user.pic = url.resolve(url_ ,'/uploads/images/profiles' + path.basename(result[0].filepath));
+            } else {
+                user.pic = '';
+            }
             return callback(null, user);
         });
     });

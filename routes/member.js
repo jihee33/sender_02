@@ -37,7 +37,7 @@ router.put('/', isSecure, isAuthenticated, function(req, res, next) {
 router.get('/me', isSecure, isAuthenticated, function(req, res, next) {
     Member.findUser(req.user.id, function (err, user) {
         if (err) {
-            return function() {
+            return function () {
                 res.send({
                     error: '자신의 프로필을 불러오는데 실패했습니다.'
                 })

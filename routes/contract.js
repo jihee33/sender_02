@@ -6,7 +6,7 @@ var url = require('url');
 var Contract = require('../models/contract');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
-//fixme : ecTo 제거
+//fixme : ecTo 추후 변경
 var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 router.post('/', isSecure, isAuthenticated, function(req, res, next) {
