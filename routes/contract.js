@@ -151,18 +151,19 @@ router.put('/',isAuthenticated, function(req, res, next) {
 
 }); // 13. 계약 체결하기
 
-router.get('/:contract_id', isSecure, isAuthenticated, function(req, res, next) {
-    var contract_id = req.params.contract_id;
-    res.send({
-        result : {
-            contract_id : contract_id,
-            sender_id : 1,
-            deliverer_id : 1,
-            req_time : '2016-08-24 18:01:00',
-            res_time : '2016-08-24 19:30:00',
-            state : 2
-        }
-    });
+router.get('/:contract_id', function(req, res, next) {
+    if (req.params.contract_id) {
+        var contract_id = req.params.contract_id;
+        Contract.selectContract(contract_id, function(err, result) {
+            res.send({
+                result : result
+            });
+        });
+    } else {
+        res.send({
+             error : '계약 내역 보기를 실패했습니다.'
+        });
+    }
 }); // 14. 계약 내역 보기
 
 router.put('/:contract_id', isAuthenticated, function(req, res, next) {

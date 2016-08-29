@@ -18,7 +18,7 @@ function insertSendingContract(data, callback) {
     dbPool.getConnection(function(err, dbConn) {
         var ins_cont_id = '';
         var ins_send_id = '';
-        if (err) { return callback(err); }
+        if (err) { return callback(err);}
         dbConn.beginTransaction(function (err) {
             if (err) {
                 dbConn.release();
@@ -185,6 +185,7 @@ function updateContract(contractId, delivererId, callback) {
                                 'where id = ? ';
     var sql_update_delivering = 'update delivering set contract_id = ? where id = ?';
     dbPool.getConnection(function(err, dbConn) {
+        if (err) { return callback(err); }
        dbConn.beginTransaction(function(err) {
            if (err) {
                dbConn.release();
@@ -219,6 +220,23 @@ function updateContract(contractId, delivererId, callback) {
     });
 }
 
+function selectContract(contractId, callback) {
+    var sql_select_contract = 'select c.id contract_id, s.id sender_id, d.id diliverer_id, ' +
+                            'date_format(convert_tz(c.req_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') req_time, ' +
+                            'date_format(convert_tz(c.res_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') res_time, c.state state ' +
+                            'from contract c join sending s on(c.id = s.contract_id) ' +
+                            'join delivering d on(c.id = d.contract_id) ' +
+                            'where c.id = ? ';
+    dbPool.getConnection(function(err, dbConn) {
+       if (err) { return callback(err);}
+       dbConn.query(sql_select_contract, ['+00:00', '+09:00', '+00:00', '+09:00', contractId], function(err, results) {
+           if (err) { return callback(err);}
+            callback(null, results[0]);
+       });
+    });
+}
+
+module.exports.selectContract = selectContract;
 module.exports.updateContract = updateContract;
 module.exports.insertDelivering = insertDelivering;
 module.exports.insertSendingContract = insertSendingContract;
