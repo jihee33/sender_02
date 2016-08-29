@@ -4,6 +4,7 @@ var dbPool = require('./common').dbPool;
 var path = require('path');
 var url = require('url');
 var fs = require('fs');
+//fixme : 추후 변경
 var url_ = 'http://localhost:8080';
 
 function insertSendingContract(data, callback) {
@@ -162,6 +163,21 @@ function listIdDelivering(deliverId, callback) {
     });
 }
 
+function insertDelivering(obj, callback)  {
+    var sql_insert_delivering = 'insert into delivering(user_id, here_lat, here_lon, next_lat, next_lon, dep_time, arr_time) ' +
+                            'values(?, ?, ?, ?, ?, str_to_date(? ,\'%Y-%m-%d %H:%i:%s\'),str_to_date(? ,\'%Y-%m-%d %H:%i:%s\'))';
+    dbPool.getConnection(function(err, dbConn) {
+        if (err) return callback(err);
+       dbConn.query(sql_insert_delivering, [obj.userId, obj.here_lat, obj.here_lon, obj.next_lat, obj.next_lon, obj.dep_time, obj.arr_time],
+           function(err, result) {
+           dbConn.release();
+            if (err) return callback(err);
+           callback(null, result.affectedRows);
+       });
+    });
+}
+
+module.exports.insertDelivering = insertDelivering;
 module.exports.insertSendingContract = insertSendingContract;
 module.exports.selectSending = selectSending;
 module.exports.listDelivering = listDelivering;
