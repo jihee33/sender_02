@@ -5,12 +5,12 @@ var path = require('path');
 var url = require('url');
 var fs = require('fs');
 //fixme : 추후 변경
-var url_ = 'http://localhost:8080';
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080';// dev_service용 url 설정
 
 function insertSendingContract(data, callback) {
     var sql_insert_contract = 'insert into contract(state) values(?)';
-    var sql_insert_sending = 'INSERT INTO sending (user_id, contract_id, addr_lat, addr_lon, info, arr_time, rec_phone, price) ' +
-    'VALUES ( ?, ?, ?, ?, ?, str_to_date(?,\'%Y-%m-%d %H:%i:%s\'), ?, ?)';
+    var sql_insert_sending = 'INSERT INTO sending (user_id, contract_id, addr_lat, addr_lon, info, arr_time, rec_phone, price, memo) ' +// memo 입력 누락으로 인한 memo 추가
+    'VALUES ( ?, ?, ?, ?, ?, str_to_date(?,\'%Y-%m-%d %H:%i:%s\'), ?, ?, ?)';
     var sql_insert_file = 'insert into file(fk_id, type, filename, filepath) values(?, ?, ? ,?)';
     //  sql
     //  getconnection - trasaction
@@ -45,7 +45,7 @@ function insertSendingContract(data, callback) {
         } // 계약 등록
         function insertSending(done) {
             dbConn.query(sql_insert_sending, [data.user_id, ins_cont_id, data.addr_lat, data.addr_lon, data.info,
-            data.arr_time, data.rec_phone, data.price, data.memo],
+            data.arr_time, data.rec_phone, data.price, data.memo],// 메모 입력 누락이로 인한 data.memo 추가
             function(err, result) {
                 if (err) {return done(err);}
                 ins_send_id = result.insertId;
@@ -55,7 +55,7 @@ function insertSendingContract(data, callback) {
         function insertFile(callback) {
             async.each(data.pic, function(item, done) {
                 console.log(ins_send_id + " : "+ item.name  + " : "+ item.path);
-            dbConn.query(sql_insert_file, [ins_send_id, 1, item.name, item.path], function(err, result) {
+            dbConn.query(sql_insert_file, [ins_send_id, 4, item.name, item.path], function(err, result) {// 파일 테이블에 입력시 타입 오류 변경 1 -> 4
                 if (err) { return done(err);}
                 done(null);
             });
@@ -90,7 +90,7 @@ function selectSending(senderId, callback) {
                         var filename = path.basename(item.filepath);
                         info.pic.push({
                             originalFilename : item.filename,
-                            fileUrl : url.resolve(url_ ,'/sending_images/'+filename)
+                            fileUrl : url.resolve(url_, '/sendings/' + filename)
                         });
                         callback();
                     });
@@ -221,16 +221,22 @@ function updateContract(contractId, delivererId, callback) {
 }
 
 function selectContract(contractId, callback) {
-    var sql_select_contract = 'select c.id contract_id, s.id sender_id, d.id diliverer_id, ' +
+    var sql_select_contract = 'select c.id contract_id, s.id sender_id, d.id deliverer_id, ' +
                             'date_format(convert_tz(c.req_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') req_time, ' +
                             'date_format(convert_tz(c.res_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') res_time, c.state state ' +
                             'from contract c join sending s on(c.id = s.contract_id) ' +
-                            'join delivering d on(c.id = d.contract_id) ' +
+                            'left join delivering d on(c.id = d.contract_id) ' + // LEFT JOIN을 통해 delivering이 없을 때도 내역 출력
                             'where c.id = ? ';
     dbPool.getConnection(function(err, dbConn) {
-       if (err) { return callback(err);}
+       if (err) {
+           return callback(err);
+       }
        dbConn.query(sql_select_contract, ['+00:00', '+09:00', '+00:00', '+09:00', contractId], function(err, results) {
-           if (err) { return callback(err);}
+           dbConn.release();
+           if (err) {
+               return callback(err);
+           }
+           console.log(results[0]);
             callback(null, results[0]);
        });
     });

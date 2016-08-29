@@ -14,7 +14,7 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
         if (err) {
             return callback(err);
         }
-        async.parallel([selectLimitDelivering, selectCountDelivering], function(err, result){
+        async.parallel([selectLimitReviews, selectCountReviews], function(err, result){
             dbConn.release();
             if (err) {
                 return callback(err);
@@ -41,18 +41,18 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
                     }
                 });
                 if (!queryResult.data.review[0]) {
-                    return callback(null, null);
+                    return callback(null, '등록된 리뷰가 없습니다');
                 }
             } else {// if (result[0].length === 1) {
                 if (result[0][0].content !== null) {
                     queryResult.data.review.push(result[0][0]);
                 } else {
-                    return callback(null, null);
+                    return callback(null, '등록된 리뷰가 없습니다');
                 }
             }
             callback(null, queryResult);
         });
-        function selectLimitDelivering(callback) {
+        function selectLimitReviews(callback) {
             dbConn.query(sql_select_reviews,
                 ['+00:00', '+09:00', delivererId, '+00:00', '+09:00' , (itemsPerPage * (currentPage - 1)), itemsPerPage ],
                 function(err, results) {
@@ -65,7 +65,7 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
                     callback(null, results);
                 });
         }
-        function selectCountDelivering(callback) {
+        function selectCountReviews(callback) {
             dbConn.query(sql_select_count, [delivererId], function(err, result) {
                 if (err) {
                     return callback(err);

@@ -44,6 +44,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/sendings', express.static(path.join(__dirname, 'uploads/images/sendings')));// 배송 요청 사진 접근 위한 static service url 선언
 
 app.use('/sending_images',express.static(path.join(__dirname, 'uploads/images/sendings')));
 app.use('/board_images',express.static(path.join(__dirname, 'uploads/images/boards')));
