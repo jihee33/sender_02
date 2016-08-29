@@ -127,15 +127,22 @@ router.post('/delivering', isSecure, isAuthenticated, function(req, res, next) {
     }
 }); // 12. ‘배달 가기’ 등록
 
-router.put('/', isAuthenticated, function(req, res, next) {
-    var temp = {};
-    temp.sender_id = req.body.sender_id;
-    temp.deliverer_id = req.body.deliverer_id;
-    temp.state = req.body.state;
-    res.send({
-        message : '계약이 체결 되었습니다.',
-        temp : temp
-    });
+router.put('/', function(req, res, next) {
+    if (req.body.contract_id && req.body.deliver_id) {
+        var contract_id = req.body.contract_id;
+        var deliverer_id = req.body.deliverer_id;
+        Contract.updateContract(contract_id, deliverer_id, function(err, result) {
+            if (err) return next(err);
+            res.send({
+                message : '계약이 체결 되었습니다.'
+            });
+        });
+    } else {
+        res.send({
+            error : '계약 체결이 실패했습니다.'
+        });
+    }
+
 }); // 13. 계약 체결하기
 
 router.get('/:contract_id', isSecure, isAuthenticated, function(req, res, next) {

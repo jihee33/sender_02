@@ -9,7 +9,7 @@ var url_ = 'http://localhost:8080';
 
 function insertSendingContract(data, callback) {
     var sql_insert_contract = 'insert into contract(state) values(?)';
-    var sql_insert_sending = 'INSERT INTO `senderdb`.`sending` (`user_id`, `contract_id`, `addr_lat`, `addr_lon`, `info`, `arr_time`, `rec_phone`, `price`) ' +
+    var sql_insert_sending = 'INSERT INTO sending (user_id, contract_id, addr_lat, addr_lon, info, arr_time, rec_phone, price) ' +
     'VALUES ( ?, ?, ?, ?, ?, str_to_date(?,\'%Y-%m-%d %H:%i:%s\'), ?, ?)';
     var sql_insert_file = 'insert into file(fk_id, type, filename, filepath) values(?, ?, ? ,?)';
     //  sql
@@ -177,6 +177,45 @@ function insertDelivering(obj, callback)  {
     });
 }
 
+function updateContract(contractId, delivererId, callback) {
+    var sql_update_contract = 'update contract ' +
+                                'set state = ? ,res_time = str_to_date(now(), \'%Y-%m-%d %H:%i:%s\') ' +
+                                ', utime = str_to_date(now(), \'%Y-%m-%d %H:%i:%s\') ' +
+                                'where id = ? ';
+    var sql_update_delivering = 'update delivering set contract_id = ? where id = ?';
+    dbPool.getConnection(function(err, dbConn) {
+       dbConn.beginTransaction(function(err) {
+           if (err) {
+               dbConn.release();
+               return callback(err);
+           }
+           async.parallel([updateContract, updateDelivering], function(err, result) {
+               dbConn.release();
+               if (err) {return dbConn.rollback(function (){
+                   callback(err);
+               });
+               } // if
+               dbConn.commit(function () {
+                   callback(null, null);
+               });
+           });
+       });
+        function updateContract(done) {
+            dbConn.query(sql_update_contract, [1, contractId], function(err, result) {
+               if (err) return done(err);
+               done(null, null);
+            });
+        }
+        function updateDelivering(done) { //TODO : 왜 안됨
+            dbConn.query(sql_update_delivering, [contractId, delivererId], function(err, result) {
+                if (err) return done(err);
+                done(null, null);
+            });
+        }
+    });
+}
+
+module.exports.updateContract = updateContract;
 module.exports.insertDelivering = insertDelivering;
 module.exports.insertSendingContract = insertSendingContract;
 module.exports.selectSending = selectSending;
