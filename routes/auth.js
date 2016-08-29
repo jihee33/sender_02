@@ -57,7 +57,7 @@ router.post('/local/login', isSecure, function(req, res, next) {
         }
         if (!user) {
             return res.status(401).send({
-                message: 'login failed'
+                error: 'login failed'
             });
         }
         req.login(user, function (err) {
@@ -71,14 +71,14 @@ router.post('/local/login', isSecure, function(req, res, next) {
     var user = {};
     user.name = req.user.api_id;
     res.send({
-        message: 'local login',
+        result: 'local login',
         user: user
     });
 });
 
 router.get('/local/logout', isAuthenticated, function(req, res, next) {
     req.logout();
-    res.send({ message: 'local logout' });
+    res.send({ result: 'local logout' });
 });
 
 router.post('/facebook/token', isSecure, passport.authenticate('facebook-token', {scope : ['email']}), function(req, res, next) {

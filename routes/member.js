@@ -26,7 +26,7 @@ router.put('/', isSecure, isAuthenticated, function(req, res, next) {
                 }
             }
             res.send({
-               message: '사용자 등록을 성공했습니다.'
+               result: '사용자 등록을 성공했습니다.'
             });
         });
     } else {
@@ -49,7 +49,7 @@ router.get('/me', isSecure, isAuthenticated, function(req, res, next) {
             });
         } else {
             res.send({
-                message: '핸드폰 번호 등록을 통해 계정을 활성화 시켜야 합니다'
+                error: '핸드폰 번호 등록을 통해 계정을 활성화 시켜야 합니다'
             })
         }
     });
@@ -87,7 +87,7 @@ router.put('/me', isAuthenticated, function(req, res, next) {
             menu.files.push({url : url.resolve(ecTo ,'/images/' + filename)});
 
             res.send({
-                message: '프로필 사진의 변경을 성공하였습니다.',
+                result: '프로필 사진의 변경을 성공하였습니다.',
                 temp : menu
             });
     });
@@ -95,7 +95,7 @@ router.put('/me', isAuthenticated, function(req, res, next) {
 
 router.delete('/', isAuthenticated, function(req, res, next) {
     var userId = req.user.id;
-    res.send({ message: userId +' : 회원 탈퇴가 처리되었습니다.' });
+    res.send({ result: userId +' : 회원 탈퇴가 처리되었습니다.' });
 }); // 7. 회원 탈퇴 하기
 
 module.exports = router;
