@@ -5,7 +5,7 @@ var isAuthenticated = require('./common').isAuthenticated;
 
 router.post('/', isAuthenticated, function(req, res, next) {
     var reviewData = {};
-    reviewData.userId = req.body.user_id;
+    reviewData.userId = req.body.user_id;//fixme : 추후 session값으로 변경
     reviewData.contractId = req.body.contract_id;
     reviewData.content = req.body.content;
     reviewData.star = req.body.star;
