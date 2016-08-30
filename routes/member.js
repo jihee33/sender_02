@@ -9,7 +9,7 @@ var isAuthenticated = require('./common').isAuthenticated;
 
 var Member = require('../models/member');
 
-var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080';
 
 router.put('/', isSecure, isAuthenticated, function(req, res, next) {
     var user = {};
@@ -84,7 +84,7 @@ router.put('/me', isAuthenticated, function(req, res, next) {
         menu.files = [];
             menu.files.push(files.pic);
             var filename = path.basename(files.pic.path);
-            menu.files.push({url : url.resolve(ecTo ,'/images/' + filename)});
+            menu.files.push({url : url.resolve(url_ ,'/images/' + filename)});
 
             res.send({
                 result: '프로필 사진의 변경을 성공하였습니다.',

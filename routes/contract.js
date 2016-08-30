@@ -6,8 +6,8 @@ var url = require('url');
 var Contract = require('../models/contract');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
-//fixme : ecTo 추후 변경
-var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
+//fixme : url_ 추후 변경
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080';
 
 router.post('/', isSecure, isAuthenticated, function(req, res, next) {
     // body 값 받음 - 파일존재로 form-data
@@ -39,7 +39,7 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
                 if (err) {return next(err);}
                 if (files.pic) {
                     var filename = path.basename(files.pic.path);
-                    result.pic.push({url: url.resolve(ecTo, '/images/' + filename)});
+                    result.pic.push({url: url.resolve(url_, '/images/' + filename)});
                 }
                 res.send({
                     result : '배송 요청이 등록되었습니다.'

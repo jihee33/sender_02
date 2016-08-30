@@ -7,16 +7,16 @@ var bodyParser = require('body-parser');
 
 var session = require('express-session');
 var passport = require('passport');
-var redis = require('redis');
-var redisClient = redis.createClient();
-var RedisStore = require('connect-redis')(session);
-var auth = require('./routes/auth');
-var board = require('./routes/board');
-var chatting = require('./routes/chatting');
-var contract = require('./routes/contract');
-var member = require('./routes/member');
-var notice = require('./routes/notice');
-var review = require('./routes/review');
+var redis = require('redis');// redis 사용 위해 require
+var redisClient = redis.createClient();// 세션 정보 저장을 위한 redis client 설정
+var RedisStore = require('connect-redis')(session);// 세션 정보 저장을 위한 redis 연결 설정
+var auth = require('./routes/auth');// 인증 부분 router 연결
+var board = require('./routes/board');// 사용자 게시물 등록 부분 router 연결
+var chatting = require('./routes/chatting');// 채팅 부분 router 연결
+var contract = require('./routes/contract');// 계약 부분 router 연결
+var member = require('./routes/member');// 사용자 부분 router 연결
+var notice = require('./routes/notice');// 공지사항 및 이벤트 부분 router 연결
+var review = require('./routes/review');// 리뷰 부분 router 연결
 
 var app = express();
 app.set('env', 'development');
@@ -31,7 +31,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.use(session({
+app.use(session({// redis seesion 생성 및 설정
   secret : process.env.SESSION_SECRET,
   store : new RedisStore({
     host : "127.0.0.1",
@@ -51,9 +51,9 @@ app.use('/board_images',express.static(path.join(__dirname, 'uploads/images/boar
 app.use('/chatting_images',express.static(path.join(__dirname, 'uploads/images/chattings')));
 app.use('/profile_images',express.static(path.join(__dirname, 'uploads/images/profiles')));
 
-app.use('/auth', auth);
-app.use('/boards', board);
-app.use('/chattings', chatting);
+app.use('/auth', auth);// 인증 부분 model 연결
+app.use('/boards', board);// 사용자 게시물 부분 router
+app.use('/chattings', chatting);//
 app.use('/contracts', contract);
 app.use('/members', member);
 app.use('/notices', notice);

@@ -21,17 +21,17 @@ app.set('port', port);
  * Create HTTP httpServer.
  */
 
-var key = fs.readFileSync(path.join(__dirname,'../cert/site.key')).toString();
-var cert = fs.readFileSync(path.join(__dirname,'../cert/site.crt')).toString();
+var key = fs.readFileSync(path.join(__dirname,'../cert/site.key')).toString();// https 프로토콜 사용을 위한 private key
+var cert = fs.readFileSync(path.join(__dirname,'../cert/site.crt')).toString();// https 프로토콜 사용을 위한 certificate
 // 서버 시작 전이라서 사용
 
-var opts = {
+var opts = {// https 서버 구동을 위한 옵션 설정
   key : key,
   cert : cert
 };
 
 var httpServer = http.createServer(app);
-var httpsServer = https.createServer(opts, app);
+var httpsServer = https.createServer(opts, app);// https 서버 구동 위한 객체 생성
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -41,7 +41,7 @@ httpServer.listen(port);
 httpServer.on('error', onError);
 httpServer.on('listening', onListening);
 
-httpsServer.listen(4433, function () {
+httpsServer.listen(4433, function () {// https서버 구동
   console.log("HTTPS Listening on 4433");
 });
 

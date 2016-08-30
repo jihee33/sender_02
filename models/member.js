@@ -1,6 +1,7 @@
 var dbPool = require('./common').dbPool;
 var url = require('url');
 var path = require('path');
+var async = require('async');
 
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com';
 
@@ -74,34 +75,59 @@ function findById(apiId, callback) {
 }
 
 function findUser(userId, callback) {
-    var sql = 'SELECT u.id user_id, u.api_id api_id, u.api_type api_type, u.introduction introduction, ' +
-              'u.deliver_com deliver_com, u.deliver_req deliver_req, u.activation activation, f.filepath filepath ' +
-              'FROM user u LEFT JOIN (SELECT fk_id, filename, filepath ' +
-              'FROM file WHERE type = 0) f ON (u.id = f.fk_id) WHERE u.id = ?';
+    var sql_select_user = 'SELECT u.id user_id, u.api_id api_id, u.api_type api_type, u.introduction introduction, ' +
+                          'u.deliver_com deliver_com, u.deliver_req deliver_req, u.activation activation, f.filepath filepath ' +
+                          'FROM user u LEFT JOIN (SELECT fk_id, filename, filepath ' +
+                          'FROM file WHERE type = 0) f ON (u.id = f.fk_id) WHERE u.id = ?';
+    var sql_select_avg_star = 'SELECT AVG(star) avg_star FROM review r JOIN (SELECT id, user_id, contract_id ' +
+                              'FROM delivering WHERE user_id = ?) a ON (r.contract_id = a.contract_id)';
+
+    var user = {};
+
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
             return callback(err);
         }
-        dbConn.query(sql, [userId], function (err, result) {
+        async.parallel([getUserData, getUserStar], function(err, result) {
             dbConn.release();
             if (err) {
                 return callback(err);
             }
-            var user = {};
-            user.id = result[0].user_id;
-            user.api_id = result[0].api_id;
-            user.api_type = result[0].api_type;
-            user.introduction = result[0].introduction;
-            user.deliver_com = result[0].deliver_com;
-            user.deliver_req = result[0].deliver_req;
-            user.activation = result[0].activation;
-            if (result[0].filepath) {
-                user.pic = url.resolve(url_ ,'/uploads/images/profiles' + path.basename(result[0].filepath));
-            } else {
-                user.pic = '';
-            }
-            return callback(null, user);
+            user.star = result[1].avg_star;
+            callback(null, user);
         });
+
+        function getUserData(done) {
+            dbConn.query(sql_select_user, [userId], function (err, result) {
+                if (err) {
+                    return done(err);
+                }
+                user.id = result[0].user_id;
+                user.api_id = result[0].api_id;
+                user.api_type = result[0].api_type;
+                user.introduction = result[0].introduction;
+                user.deliver_com = result[0].deliver_com;
+                user.deliver_req = result[0].deliver_req;
+                user.activation = result[0].activation;
+                if (result[0].filepath) {
+                    user.pic = url.resolve(url_ ,'/uploads/images/profiles' + path.basename(result[0].filepath));
+                } else {
+                    user.pic = '';
+                }
+            });
+            done(null);
+        }
+
+        function getUserStar(done) {
+            dbConn.query(sql_select_avg_star, [userId], function (err, result) {
+                if (err) {
+                    return done(err);
+                }
+                done(null, result[0]);
+            })
+        }
+
+
     });
 }
 
