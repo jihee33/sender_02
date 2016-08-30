@@ -1,6 +1,24 @@
 var async = require('async');
 var dbPool = require('./common').dbPool;
 
+function insertReview(reviewData, callback) {
+    var sql_insert_review = 'INSERT INTO review (user_id, contract_id, content, star) ' +
+                            'VALUES (?, ?, ?, ?)';
+    dbPool.getConnection(function(err, dbConn) {
+        if (err) {
+            return callback(err);
+        }
+        dbConn.query(sql_insert_review,
+            [reviewData.userId, reviewData.contractId, reviewData.content, reviewData.star], function(err) {
+                dbConn.release();
+                if (err) {
+                    return callback(err);
+                }
+                callback(null, '리뷰 등록에 성공했습니다');
+            });
+    });
+}
+
 function listReviews(currentPage, itemsPerPage, delivererId, callback) {
     var sql_select_reviews = 'SELECT r.user_id reviewer_id, r.content content, r.star star, ' +
                                     'date_format(convert_tz(r.ctime, ?, ?), \'%Y-%m-%d %H:%i:%s\') review_date ' +
@@ -76,4 +94,5 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
     });
 }
 
+module.exports.insertReview = insertReview;
 module.exports.listReviews = listReviews;
