@@ -120,12 +120,13 @@ function selectSending(sendingId, callback) {
     }); //getConn
 }
 
-// TODO : 1.listDelivering 에서 지점시간 이후의 시간은 제외 할 수 있게
 function listDelivering(currentPage, itemsPerPage, callback) {
     var sql_select_delivering = 'SELECT  d.id deilvering_id, d.user_id, u.nickname, d.here_lat, d.here_lon, d.next_lat, d.next_lon, ' +
                                 'date_format(convert_tz(dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
                                 'date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time ' +
-                                'from delivering d join user u on(u.id = d.user_id) order by d.id limit ?, ?';
+                                'from delivering d join user u on(u.id = d.user_id) ' +
+                                'where d.arr_time > now() ' +
+                                'order by d.id limit ?, ? ';
     var sql_select_count = 'select count(id) count from delivering';
     var info = {};
     dbPool.getConnection(function(err, dbConn) {
@@ -159,7 +160,7 @@ function listDelivering(currentPage, itemsPerPage, callback) {
 }
 
 function listIdDelivering(deliverId, callback) {
-    var sql_select_delivering_id = 'select  d.id deilvering_id, d.user_id, u.nickname, d.here_lat, d.here_lon, d.next_lat, d.next_lon, ' +
+    var sql_select_delivering_id = 'select d.id deilvering_id, d.user_id, u.nickname, d.here_lat, d.here_lon, d.next_lat, d.next_lon, ' +
                                     'date_format(convert_tz(dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
                                     'date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time ' +
                                     'from delivering d join user u on(u.id = d.user_id) where d.id = ? ';

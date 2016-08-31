@@ -81,7 +81,6 @@ router.get('/', isSecure, isAuthenticated, function(req, res, next) {
     }
 }); // 9. 배송 요청 보기
 
-// ,isSecure, isAuthenticated
 router.get('/delivering', isSecure, isAuthenticated, function(req, res, next) {
     var currentPage = parseInt(req.query.currentPage);
     var itemsPerPage = parseInt(req.query.itemsPerPage);
@@ -92,15 +91,15 @@ router.get('/delivering', isSecure, isAuthenticated, function(req, res, next) {
             res.send({
                 result : result
             });
-        }); //TODO : 조인해서 닉네임 나올 수 있게
+        });
     } else {
         res.send({
             error : '배달 가기의 목록을 불러올 수 없습니다.'
         });
     }
 }); // 10. 배달 가기 목록 보기
-
-router.get('/delivering/:delivering_id', isSecure, isAuthenticated, function(req, res, next) {
+// isSecure, isAuthenticated,
+router.get('/delivering/:delivering_id',  function(req, res, next) {
     var id = req.params.delivering_id;
     Contract.listIdDelivering(id, function(err, result) {
         if (err) return next(err);
