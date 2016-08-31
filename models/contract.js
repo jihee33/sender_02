@@ -5,7 +5,7 @@ var path = require('path');
 var url = require('url');
 var fs = require('fs');
 //fixme : 추후 변경
-var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com';// dev_service용 url 설정
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080';// dev_service용 url 설정
 
 function insertSendingContract(data, callback) {
     var sql_insert_contract = 'insert into contract(state) values(?)';
@@ -51,7 +51,7 @@ function insertSendingContract(data, callback) {
         } // 계약 등록
         function insertSending(done) {
             dbConn.query(sql_insert_sending, [data.user_id, ins_cont_id, data.here_lat, data.here_lon, data.addr_lat, data.addr_lon, data.info,
-            data.arr_time, data.rec_phone, data.price, data.memo],// 메모 입력 누락이로 인한 data.memo 추가
+            data.arr_time, data.rec_phone, data.price, data.memo],
             function(err, result) {
                 if (err) {return done(err);}
                 affectedRows += result.affectedRows;
@@ -60,16 +60,29 @@ function insertSendingContract(data, callback) {
             });
         } // 베송 요청 등록
         function insertFile(callback) {
-            async.each(data.pic, function(item, done) {
-            dbConn.query(sql_insert_file, [ins_send_id, 1, item.name, item.path], function(err, result) {
-                if (err) { return done(err);}
-                affectedRows += result.affectedRows;
-                done(null);
-            });
-            }, function(err) {
-                if (err) {return callback(err);}
-                callback(null);
-            });
+            if (data.pic.length === 0) {
+                dbConn.query(sql_insert_file, [ins_send_id, 1, '', ''], function (err, result) {
+                    if (err) {return callback(err);}
+                    affectedRows += result.affectedRows;
+                    callback(null);
+                });
+            } else {
+                async.each(data.pic, function (item, done) {
+                    console.log('1');
+                    dbConn.query(sql_insert_file, [ins_send_id, 1, item.name, item.path], function (err, result) {
+                        if (err) {
+                            return done(err);
+                        }
+                        affectedRows += result.affectedRows;
+                        done(null);
+                    });
+                }, function (err) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    callback(null);
+                });
+            }
         } // 배송 요청 파일 등록
     });
 }
@@ -107,7 +120,7 @@ function selectSendingForDelivering(deliveringId, callback) {
                         var filename = path.basename(item.filepath);
                         info.pic.push({
                             originalFilename : item.filename,
-                            fileUrl : url.resolve(url_, '/sending_images' + filename)
+                            fileUrl : url.resolve(url_, '/sending/' + filename)
                         });
                         callback();
                     });
@@ -129,16 +142,21 @@ function selectSendingForDelivering(deliveringId, callback) {
 }
 
 function listDelivering(currentPage, itemsPerPage, callback) {
-
+    var sql_select_delivering_review_user ='SELECT d.id delivering_id, d.user_id user_id, u.nickname nickname, u.phone phone, ' +
+                        'r.avg_star star, d.here_lat here_lat, d.here_lon here_lon, d.next_lat next_lat, d.next_lon next_lon, ' +
+                            'date_format(convert_tz(d.dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
+                            'date_format(convert_tz(d.arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, ' +
+                            'f.filename filename, f.filepath filepath ' +
+                            'from delivering d ' +
+                            'join user u on(u.id = d.user_id) ' +
+                            'left join (SELECT fk_id, filename, filepath, type from file WHERE type = 0) f on(u.id = f.fk_id) ' +
+                            'left join ( ' +
+                                'SELECT a.user_id user_id, AVG(star) avg_star FROM  delivering a ' +
+                            'left JOIN review r ON (r.contract_id = a.contract_id))r on ( d.user_id = r.user_id) ' +
+                            'group by d.id ' +
+                            'order by d.id limit ?, ?';
     var sql_select_count = 'select count(id) count from delivering';
-
-
-
-    var sql_select_avg_star = 'SELECT AVG(star) avg_star FROM review r JOIN (SELECT id, user_id, contract_id ' +
-        'FROM delivering WHERE user_id = ?) a ON (r.contract_id = a.contract_id)';
-    var tempId = 0;
     var info = {};
-    var temp = {};
     dbPool.getConnection(function(err, dbConn) {
         if (err) {return callback(err);}
         async.parallel([selectLimitDelivering, selectCountDelivering], function(err, result){
@@ -146,25 +164,31 @@ function listDelivering(currentPage, itemsPerPage, callback) {
             info.totalPage = Math.ceil(result[1].count / itemsPerPage);
             info.currentPage = currentPage;
             info.itemsPerPage = itemsPerPage;
-            // info.data = result[0];
-            temp = result[0];
-            tempId = result.user_id;
-        });
-        async.parallel([getUserData, selectStar], function(err, resu){
-            if (err) return callback(err);
-            dbConn.release();
-            info.data.nickname = resu[0].nickname;
-            info.data.phone = resu[0].phone;
-            info.data.star = resu[1].avg_star; /////
-            if (result[0].filepath) {
-                info.data.pic = url.resolve(url_ ,'/profile_images' + path.basename(resu[0].filepath));
-            } else {
-                user.pic = '';
-            }
+            info.data = [];
+            async.each(result[0], function(item, callback) {
+                if (err) {return callback(err);}
+                info.data.push({
+                    delivering_id : item.delivering_id,
+                    user_id : item.user_id,
+                    name : item.nickname,
+                    phone : item.phone,
+                    star : item.star,
+                    here_lat : item.here_lat,
+                    here_lon : item.here_lon,
+                    next_lat : item.next_lat,
+                    next_lon : item.next_lon,
+                    dep_time : item.dep_time,
+                    arr_time : item.arr_time,
+                    originalFilename : item.filename,
+                    fileUrl : url.resolve(url_, '/profiles/' + path.basename(item.filepath))
+                });
+                callback();
+            });
             callback(null, info);
-        });
+        }); // parallel
+
         function selectLimitDelivering(callback) {
-            dbConn.query(sql_select_delivering,
+            dbConn.query(sql_select_delivering_review_user,
                 ['+00:00', '+09:00', '+00:00', '+09:00' ,itemsPerPage * (currentPage - 1), itemsPerPage ],
                 function(err, results) {
                     if (err) return callback(err);
@@ -172,26 +196,13 @@ function listDelivering(currentPage, itemsPerPage, callback) {
                     callback(null, results);
                 });
         } // 배달 페이지 출력
+
         function selectCountDelivering(callback) {
             dbConn.query(sql_select_count, [], function(err, result) {
                 if (err) return callback(err);
                 callback(null, result[0]);
             });
-        } // 배달 가기 카운트 출력 _ totalPage를 위해 존재
-        function selectStar(callback) {
-                dbConn.query(sql_select_avg_star, [tempId], function (err, result) {
-                    if (err) {
-                        return done(err);
-                    }
-                    callback(null, result[0]);
-                });
-        }
-        function getUserData(callback) {
-            dbConn.query(sql_select_user, [tempId], function (err, result) {
-                if (err) {return callback(err);}
-                callback(null, result[0]);
-            });
-        }
+        } // 배달 가기 카운트 출력_totalPage를 위해 존재
     });
 }
 

@@ -10,8 +10,6 @@ var isAuthenticated = require('./common').isAuthenticated;
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080';
 
 router.post('/', isSecure, isAuthenticated, function(req, res, next) {
-    // body 값 받음 - 파일존재로 form-data
-    // (1. 미체결 계약, 2.배송요청등록) 생성
     var form = new formidable.IncomingForm();
     form.keepExtensions = true;
     form.multiples = true;
@@ -38,7 +36,11 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
             }
             Contract.insertSendingContract(result, function (err, data) {
                 if (err) {
-                    return next(err);
+                    return function() {
+                    res.send({
+                        error: '배송 요청 등록이 실패했습니다.'
+                    });
+                }
                 }
                 if (files.pic) {
                     var filename = path.basename(files.pic.path);
@@ -53,13 +55,13 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
                     });
                 } else {
                     res.send({
-                        error : '배송 요청 등록이 실패했습니다. '
+                        error : '배송 요청 등록이 실패했습니다. 1'
                     });
                 }
             });
         } else {
             res.send({
-                  error : '배송 요청 등록이 실패했습니다. (데이터 미등록)'
+                  error : '배송 요청 등록이 실패했습니다.'
             });
         }
     });
@@ -86,7 +88,13 @@ router.get('/delivering', isSecure, isAuthenticated, function(req, res, next) {
     var itemsPerPage = parseInt(req.query.itemsPerPage);
     if (req.url.match(/\?currentPage=\d+&itemsPerPage=\d+/i)) {
         Contract.listDelivering(currentPage, itemsPerPage, function(err, result) {
-            if (err) return next(err);
+            if (err) {
+                return function() {
+                    res.send({
+                        error: '배달 가기의 목록을 불러올 수 없습니다.'
+                    });
+                }
+            }
             res.send({
                 result : result
             });
