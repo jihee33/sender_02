@@ -9,15 +9,16 @@ var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080';//
 
 function insertSendingContract(data, callback) {
     var sql_insert_contract = 'insert into contract(state) values(?)';
-    var sql_insert_sending = 'INSERT INTO sending (user_id, contract_id, addr_lat, addr_lon, info, arr_time, rec_phone, price, memo) ' +// memo 입력 누락으로 인한 memo 추가
-    'VALUES ( ?, ?, ?, ?, ?, str_to_date(?,\'%Y-%m-%d %H:%i:%s\'), ?, ?, ?)';
+    var sql_insert_sending = 'INSERT INTO sending (user_id, contract_id, here_lat, here_lon, addr_lat, addr_lon, info, arr_time, rec_phone, price, memo) ' +// memo 입력 누락으로 인한 memo 추가
+    'VALUES ( ?, ?, ?, ?, ?, ?, ?, str_to_date(?,\'%Y-%m-%d %H:%i:%s\'), ?, ?, ?)';
     var sql_insert_file = 'insert into file(fk_id, type, filename, filepath) values(?, ?, ? ,?)';
+    var affectedRows = 0;
+    var ins_cont_id = '';
+    var ins_send_id = '';
     //  sql
     //  getconnection - trasaction
     //  async.series - func3개 1.insertSending 2.insertFile 3.insertContract
     dbPool.getConnection(function(err, dbConn) {
-        var ins_cont_id = '';
-        var ins_send_id = '';
         if (err) { return callback(err);}
         dbConn.beginTransaction(function (err) {
             if (err) {
@@ -32,31 +33,37 @@ function insertSendingContract(data, callback) {
                 } // if
                 dbConn.commit(function () {
                     dbConn.release();
-                    callback(null, ins_send_id);
+                    var data = {};
+                    data.affectedRows = affectedRows;
+                    data.ins_cont_id = ins_cont_id;
+                    data.ins_send_id = ins_send_id;
+                    callback(null, data);
                 });
             }); // async.series
         }); // transaction
         function insertContract(done) {
             dbConn.query(sql_insert_contract, [0], function(err, result) {
                 if (err) {return done(err);}
+                affectedRows += result.affectedRows;
                 ins_cont_id = result.insertId;
                 done(null);
             });
         } // 계약 등록
         function insertSending(done) {
-            dbConn.query(sql_insert_sending, [data.user_id, ins_cont_id, data.addr_lat, data.addr_lon, data.info,
+            dbConn.query(sql_insert_sending, [data.user_id, ins_cont_id, data.here_lat, data.here_lon, data.addr_lat, data.addr_lon, data.info,
             data.arr_time, data.rec_phone, data.price, data.memo],// 메모 입력 누락이로 인한 data.memo 추가
             function(err, result) {
                 if (err) {return done(err);}
+                affectedRows += result.affectedRows;
                 ins_send_id = result.insertId;
                 done(null);
             });
         } // 베송 요청 등록
         function insertFile(callback) {
             async.each(data.pic, function(item, done) {
-                console.log(ins_send_id + " : "+ item.name  + " : "+ item.path);
-            dbConn.query(sql_insert_file, [ins_send_id, 4, item.name, item.path], function(err, result) {// 파일 테이블에 입력시 타입 오류 변경 1 -> 4
+            dbConn.query(sql_insert_file, [ins_send_id, 1, item.name, item.path], function(err, result) {
                 if (err) { return done(err);}
+                affectedRows += result.affectedRows;
                 done(null);
             });
             }, function(err) {
@@ -67,8 +74,15 @@ function insertSendingContract(data, callback) {
     });
 }
 
-function selectSending(senderId, callback) {
-    var sql_select_sending = 'SELECT id, addr_lat, addr_lon, info, date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, rec_phone, price, memo FROM sending where id = ? ';
+function selectSendingForDelivering(deliveringId, callback) {
+    var sql_select_sending = 'select s.id sending_id, c.id contract_id, s.here_lat here_lat, s.here_lon here_lon, ' +
+                                's.addr_lat addr_lat, s.here_lon here_lon, s.info info, ' +
+                                'date_format(convert_tz(s.arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, ' +
+                                's.rec_phone rec_phone, s.price price ' +
+                                'from delivering d ' +
+                                'join contract c on(d.contract_id = c.id) ' +
+                                'join sending s on(c.id = s.contract_id) ' +
+                                'where d.id = ? ';
     var sql_select_file = 'SELECT filename, filepath FROM file where type = ? and fk_id = ? ';
     var info = {};
     dbPool.getConnection(function(err, dbConn) {
@@ -76,14 +90,17 @@ function selectSending(senderId, callback) {
                 async.parallel([selectSending, selectFile], function(err, result) {
                     dbConn.release();
                     if (err) {callback(err);}
-                    info.sender_id = senderId;
+                    info.sending_id = result[0][0].sending_id;
+                    info.contract_id =  result[0][0].contract_id;
+                    info.here_lat = result[0][0].here_lat;
+                    info.here_lon = result[0][0].here_lon;
                     info.addr_lat = result[0][0].addr_lat;
                     info.addr_lon = result[0][0].addr_lon;
-                    info.info = result[0][0].info;
+                    info.info = result[0][0].info || "";
                     info.arr_time = result[0][0].arr_time;
                     info.rec_phone = result[0][0].rec_phone;
                     info.price = result[0][0].price;
-                    info.memo = result[0][0].memo;
+                    info.memo = result[0][0].memo || "";
                     info.pic = [];
                     async.each(result[1], function(item, callback) {
                        if (err) {return callback(err);}
@@ -97,13 +114,13 @@ function selectSending(senderId, callback) {
                    callback(null, info);
                 }); // async.parallel
     function selectSending(callback) {
-        dbConn.query(sql_select_sending, ['+00:00', '+09:00', senderId], function(err, result) {
+        dbConn.query(sql_select_sending, ['+00:00', '+09:00', deliveringId], function(err, result) {
            if (err) {callback(err);}
            callback(null, result);
         });
     } //배송요청 출력
     function selectFile(callback) {
-        dbConn.query(sql_select_file, [4, senderId], function(err, results) {
+        dbConn.query(sql_select_file, [1, deliveringId], function(err, results) {
             if (err) {return callback(err);}
             callback(null, results);
         });
@@ -112,10 +129,12 @@ function selectSending(senderId, callback) {
 }
 
 function listDelivering(currentPage, itemsPerPage, callback) {
-    var sql_select_delivering = 'SELECT id deilver_id, user_id, here_lat, here_lon, next_lat, next_lon, ' +
+    var sql_select_delivering = 'SELECT  d.id deilvering_id, d.user_id, u.nickname, d.here_lat, d.here_lon, d.next_lat, d.next_lon, ' +
                                 'date_format(convert_tz(dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
                                 'date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time ' +
-                                'FROM delivering order by id limit ?, ?';
+                                'from delivering d join user u on(u.id = d.user_id) ' +
+                                'where d.arr_time > now() ' +
+                                'order by d.id limit ?, ? ';
     var sql_select_count = 'select count(id) count from delivering';
     var info = {};
     dbPool.getConnection(function(err, dbConn) {
@@ -149,10 +168,10 @@ function listDelivering(currentPage, itemsPerPage, callback) {
 }
 
 function listIdDelivering(deliverId, callback) {
-    var sql_select_delivering_id = 'select id deilver_id, user_id, here_lat, here_lon, next_lat, next_lon, ' +
+    var sql_select_delivering_id = 'select d.id deilvering_id, d.user_id, u.nickname, d.here_lat, d.here_lon, d.next_lat, d.next_lon, ' +
                                     'date_format(convert_tz(dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
                                     'date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time ' +
-                                    'from delivering where id = ? ';
+                                    'from delivering d join user u on(u.id = d.user_id) where d.arr_time > now() and d.id = ? ';
     dbPool.getConnection(function(err, dbConn) {
         if (err) return callback(err);
         dbConn.query(sql_select_delivering_id, ['+00:00', '+09:00', '+00:00', '+09:00', deliverId], function(err, result) {
@@ -170,9 +189,12 @@ function insertDelivering(obj, callback)  {
         if (err) return callback(err);
        dbConn.query(sql_insert_delivering, [obj.userId, obj.here_lat, obj.here_lon, obj.next_lat, obj.next_lon, obj.dep_time, obj.arr_time],
            function(err, result) {
-           dbConn.release();
+               dbConn.release();
+               var temp = {};
+               temp.bool =  result.affectedRows;
+               temp.delivering_id = result.insertId;
             if (err) return callback(err);
-           callback(null, result.affectedRows);
+           callback(null, temp);
        });
     });
 }
@@ -206,7 +228,6 @@ function updateContract(contractId, delivererId, callback) {
             dbConn.query(sql_update_contract, [1, contractId], function(err, result) {
                if (err) return done(err);
                changedRows += result.changedRows;
-                console.log(changedRows);
                done(null, null);
             });
         }
@@ -236,7 +257,6 @@ function selectContract(contractId, callback) {
            if (err) {
                return callback(err);
            }
-           console.log(results[0]);
             callback(null, results[0]);
        });
     });
@@ -246,6 +266,6 @@ module.exports.selectContract = selectContract;
 module.exports.updateContract = updateContract;
 module.exports.insertDelivering = insertDelivering;
 module.exports.insertSendingContract = insertSendingContract;
-module.exports.selectSending = selectSending;
+module.exports.selectSendingForDelivering = selectSendingForDelivering;
 module.exports.listDelivering = listDelivering;
 module.exports.listIdDelivering = listIdDelivering;
