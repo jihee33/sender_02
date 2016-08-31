@@ -129,16 +129,10 @@ function selectSendingForDelivering(deliveringId, callback) {
 }
 
 function listDelivering(currentPage, itemsPerPage, callback) {
-    var sql_select_delivering = 'SELECT id deilvering_id, user_id, here_lat, here_lon, next_lat, next_lon, ' +
-                                'date_format(convert_tz(dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
-                                'date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time ' +
-                                'from delivering where arr_time > now() ' +
-                                'order by id limit ?, ? ';
+
     var sql_select_count = 'select count(id) count from delivering';
 
-    var sql_select_user = 'SELECT u.nickname nickname, u.phone phone, f.filepath filepath ' +
-        'FROM user u LEFT JOIN (SELECT fk_id, filename, filepath ' +
-        'FROM file WHERE type = 0) f ON (u.id = f.fk_id) WHERE u.id = ?';
+
 
     var sql_select_avg_star = 'SELECT AVG(star) avg_star FROM review r JOIN (SELECT id, user_id, contract_id ' +
         'FROM delivering WHERE user_id = ?) a ON (r.contract_id = a.contract_id)';
