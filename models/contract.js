@@ -9,15 +9,16 @@ var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080';//
 
 function insertSendingContract(data, callback) {
     var sql_insert_contract = 'insert into contract(state) values(?)';
-    var sql_insert_sending = 'INSERT INTO sending (user_id, contract_id, addr_lat, addr_lon, info, arr_time, rec_phone, price, memo) ' +// memo 입력 누락으로 인한 memo 추가
-    'VALUES ( ?, ?, ?, ?, ?, str_to_date(?,\'%Y-%m-%d %H:%i:%s\'), ?, ?, ?)';
+    var sql_insert_sending = 'INSERT INTO sending (user_id, contract_id, here_lat, here_lon, addr_lat, addr_lon, info, arr_time, rec_phone, price, memo) ' +// memo 입력 누락으로 인한 memo 추가
+    'VALUES ( ?, ?, ?, ?, ?, ?, ?, str_to_date(?,\'%Y-%m-%d %H:%i:%s\'), ?, ?, ?)';
     var sql_insert_file = 'insert into file(fk_id, type, filename, filepath) values(?, ?, ? ,?)';
+    var affectedRows = 0;
+    var ins_cont_id = '';
+    var ins_send_id = '';
     //  sql
     //  getconnection - trasaction
     //  async.series - func3개 1.insertSending 2.insertFile 3.insertContract
     dbPool.getConnection(function(err, dbConn) {
-        var ins_cont_id = '';
-        var ins_send_id = '';
         if (err) { return callback(err);}
         dbConn.beginTransaction(function (err) {
             if (err) {
@@ -32,31 +33,37 @@ function insertSendingContract(data, callback) {
                 } // if
                 dbConn.commit(function () {
                     dbConn.release();
-                    callback(null, ins_send_id);
+                    var data = {};
+                    data.affectedRows = affectedRows;
+                    data.ins_cont_id = ins_cont_id;
+                    data.ins_send_id = ins_send_id;
+                    callback(null, data);
                 });
             }); // async.series
         }); // transaction
         function insertContract(done) {
             dbConn.query(sql_insert_contract, [0], function(err, result) {
                 if (err) {return done(err);}
+                affectedRows += result.affectedRows;
                 ins_cont_id = result.insertId;
                 done(null);
             });
         } // 계약 등록
         function insertSending(done) {
-            dbConn.query(sql_insert_sending, [data.user_id, ins_cont_id, data.addr_lat, data.addr_lon, data.info,
+            dbConn.query(sql_insert_sending, [data.user_id, ins_cont_id, data.here_lat, data.here_lon, data.addr_lat, data.addr_lon, data.info,
             data.arr_time, data.rec_phone, data.price, data.memo],// 메모 입력 누락이로 인한 data.memo 추가
             function(err, result) {
                 if (err) {return done(err);}
+                affectedRows += result.affectedRows;
                 ins_send_id = result.insertId;
                 done(null);
             });
         } // 베송 요청 등록
         function insertFile(callback) {
             async.each(data.pic, function(item, done) {
-                console.log(ins_send_id + " : "+ item.name  + " : "+ item.path);
-            dbConn.query(sql_insert_file, [ins_send_id, 4, item.name, item.path], function(err, result) {// 파일 테이블에 입력시 타입 오류 변경 1 -> 4
+            dbConn.query(sql_insert_file, [ins_send_id, 1, item.name, item.path], function(err, result) {
                 if (err) { return done(err);}
+                affectedRows += result.affectedRows;
                 done(null);
             });
             }, function(err) {
@@ -68,7 +75,7 @@ function insertSendingContract(data, callback) {
 }
 
 function selectSending(senderId, callback) {
-    var sql_select_sending = 'SELECT id, addr_lat, addr_lon, info, date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, rec_phone, price, memo FROM sending where id = ? ';
+    var sql_select_sending = 'SELECT id, here_lat, here_lon, addr_lat, addr_lon, info, date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, rec_phone, price, memo FROM sending where id = ? ';
     var sql_select_file = 'SELECT filename, filepath FROM file where type = ? and fk_id = ? ';
     var info = {};
     dbPool.getConnection(function(err, dbConn) {
@@ -77,13 +84,15 @@ function selectSending(senderId, callback) {
                     dbConn.release();
                     if (err) {callback(err);}
                     info.sender_id = senderId;
+                    info.here_lat = result[0][0].here_lat;
+                    info.here_lon = result[0][0].here_lon;
                     info.addr_lat = result[0][0].addr_lat;
                     info.addr_lon = result[0][0].addr_lon;
-                    info.info = result[0][0].info;
+                    info.info = result[0][0].info || "";
                     info.arr_time = result[0][0].arr_time;
                     info.rec_phone = result[0][0].rec_phone;
                     info.price = result[0][0].price;
-                    info.memo = result[0][0].memo;
+                    info.memo = result[0][0].memo || "";
                     info.pic = [];
                     async.each(result[1], function(item, callback) {
                        if (err) {return callback(err);}
@@ -103,7 +112,7 @@ function selectSending(senderId, callback) {
         });
     } //배송요청 출력
     function selectFile(callback) {
-        dbConn.query(sql_select_file, [4, senderId], function(err, results) {
+        dbConn.query(sql_select_file, [1, senderId], function(err, results) {
             if (err) {return callback(err);}
             callback(null, results);
         });
@@ -111,6 +120,7 @@ function selectSending(senderId, callback) {
     }); //getConn
 }
 
+// TODO : 1.listDelivering 에서 지점시간 이후의 시간은 제외 할 수 있게
 function listDelivering(currentPage, itemsPerPage, callback) {
     var sql_select_delivering = 'SELECT id deilver_id, user_id, here_lat, here_lon, next_lat, next_lon, ' +
                                 'date_format(convert_tz(dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
@@ -134,6 +144,8 @@ function listDelivering(currentPage, itemsPerPage, callback) {
             dbConn.query(sql_select_delivering,
                 ['+00:00', '+09:00', '+00:00', '+09:00' ,itemsPerPage * (currentPage - 1), itemsPerPage ],
                 function(err, results) {
+
+
                     if (err) return callback(err);
                     if (results.length === 0) return callback(null, null);
                     callback(null, results);
@@ -206,7 +218,6 @@ function updateContract(contractId, delivererId, callback) {
             dbConn.query(sql_update_contract, [1, contractId], function(err, result) {
                if (err) return done(err);
                changedRows += result.changedRows;
-                console.log(changedRows);
                done(null, null);
             });
         }
