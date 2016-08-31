@@ -74,7 +74,7 @@ function insertSendingContract(data, callback) {
     });
 }
 
-function selectSending(senderId, callback) {
+function selectSending(sendingId, callback) {
     var sql_select_sending = 'SELECT id, here_lat, here_lon, addr_lat, addr_lon, info, date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, rec_phone, price, memo FROM sending where id = ? ';
     var sql_select_file = 'SELECT filename, filepath FROM file where type = ? and fk_id = ? ';
     var info = {};
@@ -83,7 +83,7 @@ function selectSending(senderId, callback) {
                 async.parallel([selectSending, selectFile], function(err, result) {
                     dbConn.release();
                     if (err) {callback(err);}
-                    info.sender_id = senderId;
+                    info.sending_id = sendingId;
                     info.here_lat = result[0][0].here_lat;
                     info.here_lon = result[0][0].here_lon;
                     info.addr_lat = result[0][0].addr_lat;
@@ -106,13 +106,13 @@ function selectSending(senderId, callback) {
                    callback(null, info);
                 }); // async.parallel
     function selectSending(callback) {
-        dbConn.query(sql_select_sending, ['+00:00', '+09:00', senderId], function(err, result) {
+        dbConn.query(sql_select_sending, ['+00:00', '+09:00', sendingId], function(err, result) {
            if (err) {callback(err);}
            callback(null, result);
         });
     } //배송요청 출력
     function selectFile(callback) {
-        dbConn.query(sql_select_file, [1, senderId], function(err, results) {
+        dbConn.query(sql_select_file, [1, sendingId], function(err, results) {
             if (err) {return callback(err);}
             callback(null, results);
         });
