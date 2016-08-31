@@ -1,7 +1,7 @@
 var async = require('async');
 var dbPool = require('./common').dbPool;
 
-function insertReview(reviewData, callback) {
+function insertReview(reviewData, callback) {// 리뷰 등록
     var sql_insert_review = 'INSERT INTO review (user_id, contract_id, content, star) ' +
                             'VALUES (?, ?, ?, ?)';
     dbPool.getConnection(function(err, dbConn) {
