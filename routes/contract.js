@@ -66,9 +66,9 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
 }); // 8. 배송 요청 등록 및 미체결 계약 생성
 
 router.get('/', isSecure, isAuthenticated, function(req, res, next) {
-    if(req.url.match(/\/\?sending_id=\d+/i)) {
-        var sending_id = req.query.sending_id;
-        Contract.selectSending(sending_id, function(err, result) {
+    if(req.url.match(/\/\?delivering_id=\d+/i)) {
+        var delivering_id = req.query.delivering_id;
+        Contract.selectSendingForDelivering(delivering_id, function(err, result) {
             if (err) return next(err);
             res.send({
                 result : result
@@ -84,7 +84,6 @@ router.get('/', isSecure, isAuthenticated, function(req, res, next) {
 router.get('/delivering', isSecure, isAuthenticated, function(req, res, next) {
     var currentPage = parseInt(req.query.currentPage);
     var itemsPerPage = parseInt(req.query.itemsPerPage);
-    var deliverer = {};
     if (req.url.match(/\?currentPage=\d+&itemsPerPage=\d+/i)) {
         Contract.listDelivering(currentPage, itemsPerPage, function(err, result) {
             if (err) return next(err);
@@ -98,8 +97,8 @@ router.get('/delivering', isSecure, isAuthenticated, function(req, res, next) {
         });
     }
 }); // 10. 배달 가기 목록 보기
-// isSecure, isAuthenticated,
-router.get('/delivering/:delivering_id',  function(req, res, next) {
+
+router.get('/delivering/:delivering_id', isSecure, isAuthenticated, function(req, res, next) {
     var id = req.params.delivering_id;
     Contract.listIdDelivering(id, function(err, result) {
         if (err) return next(err);
@@ -110,7 +109,7 @@ router.get('/delivering/:delivering_id',  function(req, res, next) {
 
 }); // 11. ‘배달가기’ 상세 목록 보기
 
-router.post('/delivering',  function(req, res, next) {
+router.post('/delivering', isSecure, isAuthenticated, function(req, res, next) {
     if (req.body.here_lat && req.body.here_lon && req.body.next_lat && req.body.next_lon && req.body.dep_time && req.body.arr_time) {
         var result = {};
         result.userId = req.body.user_id; //fixme : 추후 session값으로 변경
@@ -141,6 +140,7 @@ router.post('/delivering',  function(req, res, next) {
     }
 }); // 12. ‘배달 가기’ 등록
 
+// TODO : 추후 수정 13번
 router.put('/',isAuthenticated, function(req, res, next) {
     if (req.body.contract_id && req.body.deliverer_id) {
         var contract_id = req.body.contract_id;
@@ -169,6 +169,7 @@ router.get('/:contract_id', isAuthenticated, function(req, res, next) {
     if (req.params.contract_id) {
         var contract_id = req.params.contract_id;
         Contract.selectContract(contract_id, function(err, result) {
+            if (err) {return next(err);}
             res.send({
                 result : result
             });

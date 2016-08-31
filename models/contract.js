@@ -74,8 +74,15 @@ function insertSendingContract(data, callback) {
     });
 }
 
-function selectSending(sendingId, callback) {
-    var sql_select_sending = 'SELECT id, here_lat, here_lon, addr_lat, addr_lon, info, date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, rec_phone, price, memo FROM sending where id = ? ';
+function selectSendingForDelivering(deliveringId, callback) {
+    var sql_select_sending = 'select s.id sending_id, c.id contract_id, s.here_lat here_lat, s.here_lon here_lon, ' +
+                                's.addr_lat addr_lat, s.here_lon here_lon, s.info info, ' +
+                                'date_format(convert_tz(s.arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, ' +
+                                's.rec_phone rec_phone, s.price price ' +
+                                'from delivering d ' +
+                                'join contract c on(d.contract_id = c.id) ' +
+                                'join sending s on(c.id = s.contract_id) ' +
+                                'where d.id = ? ';
     var sql_select_file = 'SELECT filename, filepath FROM file where type = ? and fk_id = ? ';
     var info = {};
     dbPool.getConnection(function(err, dbConn) {
@@ -83,7 +90,8 @@ function selectSending(sendingId, callback) {
                 async.parallel([selectSending, selectFile], function(err, result) {
                     dbConn.release();
                     if (err) {callback(err);}
-                    info.sending_id = sendingId;
+                    info.sending_id = result[0][0].sending_id;
+                    info.contract_id =  result[0][0].contract_id;
                     info.here_lat = result[0][0].here_lat;
                     info.here_lon = result[0][0].here_lon;
                     info.addr_lat = result[0][0].addr_lat;
@@ -106,13 +114,13 @@ function selectSending(sendingId, callback) {
                    callback(null, info);
                 }); // async.parallel
     function selectSending(callback) {
-        dbConn.query(sql_select_sending, ['+00:00', '+09:00', sendingId], function(err, result) {
+        dbConn.query(sql_select_sending, ['+00:00', '+09:00', deliveringId], function(err, result) {
            if (err) {callback(err);}
            callback(null, result);
         });
     } //배송요청 출력
     function selectFile(callback) {
-        dbConn.query(sql_select_file, [1, sendingId], function(err, results) {
+        dbConn.query(sql_select_file, [1, deliveringId], function(err, results) {
             if (err) {return callback(err);}
             callback(null, results);
         });
@@ -163,7 +171,7 @@ function listIdDelivering(deliverId, callback) {
     var sql_select_delivering_id = 'select d.id deilvering_id, d.user_id, u.nickname, d.here_lat, d.here_lon, d.next_lat, d.next_lon, ' +
                                     'date_format(convert_tz(dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
                                     'date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time ' +
-                                    'from delivering d join user u on(u.id = d.user_id) where d.id = ? ';
+                                    'from delivering d join user u on(u.id = d.user_id) where d.arr_time > now() and d.id = ? ';
     dbPool.getConnection(function(err, dbConn) {
         if (err) return callback(err);
         dbConn.query(sql_select_delivering_id, ['+00:00', '+09:00', '+00:00', '+09:00', deliverId], function(err, result) {
@@ -249,7 +257,6 @@ function selectContract(contractId, callback) {
            if (err) {
                return callback(err);
            }
-           console.log(results[0]);
             callback(null, results[0]);
        });
     });
@@ -259,6 +266,6 @@ module.exports.selectContract = selectContract;
 module.exports.updateContract = updateContract;
 module.exports.insertDelivering = insertDelivering;
 module.exports.insertSendingContract = insertSendingContract;
-module.exports.selectSending = selectSending;
+module.exports.selectSendingForDelivering = selectSendingForDelivering;
 module.exports.listDelivering = listDelivering;
 module.exports.listIdDelivering = listIdDelivering;
