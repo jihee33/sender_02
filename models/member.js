@@ -75,7 +75,8 @@ function findById(apiId, callback) {
 }
 
 function findUser(userId, callback) {
-    var sql_select_user = 'SELECT u.id user_id, u.api_id api_id, u.api_type api_type, u.introduction introduction, ' +
+    var sql_select_user = 'SELECT u.id user_id, u.nickname nickname, u.phone phone, u.api_id api_id, ' +
+                          'u.api_type api_type, u.introduction introduction, ' +
                           'u.deliver_com deliver_com, u.deliver_req deliver_req, u.activation activation, f.filepath filepath ' +
                           'FROM user u LEFT JOIN (SELECT fk_id, filename, filepath ' +
                           'FROM file WHERE type = 0) f ON (u.id = f.fk_id) WHERE u.id = ?';
@@ -103,6 +104,8 @@ function findUser(userId, callback) {
                     return done(err);
                 }
                 user.id = result[0].user_id;
+                user.nickname = result[0].nickname;
+                user.phone = result[0].phone;
                 user.api_id = result[0].api_id;
                 user.api_type = result[0].api_type;
                 user.introduction = result[0].introduction;
