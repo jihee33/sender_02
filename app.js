@@ -45,11 +45,10 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/sendings', express.static(path.join(__dirname, 'uploads/images/sendings')));// 배송 요청 사진 접근 위한 static service url 선언
+app.use('/profiles', express.static(path.join(__dirname, 'uploads/images/profiles')));
+app.use('/board',express.static(path.join(__dirname, 'uploads/images/boards')));
+app.use('/chatting',express.static(path.join(__dirname, 'uploads/images/chattings')));
 
-app.use('/sending_images',express.static(path.join(__dirname, 'uploads/images/sendings')));
-app.use('/board_images',express.static(path.join(__dirname, 'uploads/images/boards')));
-app.use('/chatting_images',express.static(path.join(__dirname, 'uploads/images/chattings')));
-app.use('/profile_images',express.static(path.join(__dirname, 'uploads/images/profiles')));
 
 app.use('/auth', auth);// 인증 부분 model 연결
 app.use('/boards', board);// 사용자 게시물 부분 router

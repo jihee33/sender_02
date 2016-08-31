@@ -113,7 +113,7 @@ function findUser(userId, callback) {
                 user.deliver_req = result[0].deliver_req;
                 user.activation = result[0].activation;
                 if (result[0].filepath) {
-                    user.pic = url.resolve(url_ ,'/uploads/images/profiles' + path.basename(result[0].filepath));
+                    user.pic = url.resolve(url_ ,'/profiles/' + path.basename(result[0].filepath));
                 } else {
                     user.pic = '';
                 }
@@ -162,7 +162,12 @@ function updateMember(user, callback) {
     });
 }
 
+function updateProfileImage() {
+
+}
+
 module.exports.findById = findById;
 module.exports.findUser = findUser;
 module.exports.findOrCreateFacebook = findOrCreateFacebook;
 module.exports.updateMember = updateMember;
+module.exports.updateProfileImage = updateProfileImage;
