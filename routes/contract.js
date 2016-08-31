@@ -82,7 +82,7 @@ router.get('/', isSecure, isAuthenticated, function(req, res, next) {
 }); // 9. 배송 요청 보기
 
 // ,isSecure, isAuthenticated
-router.get('/delivering', function(req, res, next) {
+router.get('/delivering', isSecure, isAuthenticated, function(req, res, next) {
     var currentPage = parseInt(req.query.currentPage);
     var itemsPerPage = parseInt(req.query.itemsPerPage);
     var deliverer = {};
@@ -92,7 +92,7 @@ router.get('/delivering', function(req, res, next) {
             res.send({
                 result : result
             });
-        });
+        }); //TODO : 조인해서 닉네임 나올 수 있게
     } else {
         res.send({
             error : '배달 가기의 목록을 불러올 수 없습니다.'
@@ -100,8 +100,8 @@ router.get('/delivering', function(req, res, next) {
     }
 }); // 10. 배달 가기 목록 보기
 
-router.get('/delivering/:deliverer_id', isSecure, isAuthenticated, function(req, res, next) {
-    var id = req.params.deliverer_id;
+router.get('/delivering/:delivering_id', isSecure, isAuthenticated, function(req, res, next) {
+    var id = req.params.delivering_id;
     Contract.listIdDelivering(id, function(err, result) {
         if (err) return next(err);
         res.send({
@@ -111,7 +111,7 @@ router.get('/delivering/:deliverer_id', isSecure, isAuthenticated, function(req,
 
 }); // 11. ‘배달가기’ 상세 목록 보기
 
-router.post('/delivering', isSecure, isAuthenticated, function(req, res, next) {
+router.post('/delivering',  function(req, res, next) {
     if (req.body.here_lat && req.body.here_lon && req.body.next_lat && req.body.next_lon && req.body.dep_time && req.body.arr_time) {
         var result = {};
         result.userId = req.body.user_id; //fixme : 추후 session값으로 변경
@@ -121,11 +121,13 @@ router.post('/delivering', isSecure, isAuthenticated, function(req, res, next) {
         result.next_lon = req.body.next_lon;
         result.dep_time = req.body.dep_time;
         result.arr_time = req.body.arr_time;
-        Contract.insertDelivering(result, function(err, bool) {
+        Contract.insertDelivering(result, function(err, data) {
             if (err) {next(err);}
-            if (bool === 1) {
+            if (data.bool === 1) {
                 res.send({
-                    result : '배달 가기 정보를 등록했습니다.'
+                    result : {
+                        delivering_id : data.delivering_id
+                    }
                 });
             } else {
                 res.send({
