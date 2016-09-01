@@ -171,8 +171,7 @@ router.put('/delivering',isAuthenticated, function(req, res, next) {
     }
 }); // 14. 계약 신청하기
 
-// isAuthenticated,
-router.put('/', function(req, res, next) {
+router.put('/', isAuthenticated, function(req, res, next) {
     if (req.body.contract_id && req.body.state) {
         var contract_id = req.body.contract_id;
         var state = req.body.state;
