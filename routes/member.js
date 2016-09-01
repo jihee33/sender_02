@@ -73,34 +73,42 @@ router.get('/:user_id', isSecure, isAuthenticated, function(req, res, next) {
     });
 }); // 4. 특정 사용자의 정보 보기
 
+// 나의 물품을 배송한 사람 찾기 router
+router.get('/me/deliverings', isAuthenticated, function(req, res, next) {
+    var userId = req.query.user_id;// fixme : 추후 세션에서 자신의 id 불러옴
+    Member.findDeliverings(userId, function (err, result) {
+        if (err) {
+            return next(err);
+        }
+        res.send({
+           result : result
+        });
+    });
+});
+// TODO : 자신의 프로필 사진 변경하기 router
 router.put('/me', isAuthenticated, function(req, res, next) {
     var form = new formidable.IncomingForm();
-    form.uploadDir = path.join(__dirname, '../uploads/images/menus');
+    form.uploadDir = path.join(__dirname, '../uploads/images/profiles');
     form.keepExtensions = true;
     form.multiples = true;
     form.parse(req, function(err, fields, files) {
         if (err) {return next(err);}
-        var menu = {};
-        menu.files = [];
-        if (files.photos instanceof Array) {
-            menu.files = files.photos;
-        } else if (files.photos instanceof Object) {
-            menu.files.push(files.photos);
-        }
-        var menuId = req.params.id;
-        Member.updateProfileImage(menuId, menu, function(err, result) {
+        var profileImage = {};
+        profileImage.files = [];
+        profileImage.files.push(files.pic);
+        Member.updateProfileImage(req.user.id, profileImage, function(err, result) {
             if (err) {
                 return next(err);
             }
             res.send({
-                message: 'update menu(' + menuId + ')',
+                message: '프로필 사진의 변경을 성공하였습니다.(' + req.user.id + ')',
                 changedRow : result
             });
         });
     });
 
 
-    var form = new formidable.IncomingForm();
+    /*var form = new formidable.IncomingForm();
     form.keepExtensions = true;
     form.multiples = true;
     form.uploadDir = path.join(__dirname, '../uploads/images/menus');
@@ -116,7 +124,7 @@ router.put('/me', isAuthenticated, function(req, res, next) {
                 result: '프로필 사진의 변경을 성공하였습니다.',
                 temp : menu
             });
-    });
+    });*/
 }); // 5. 자신의 프로필 사진 변경 하기
 
 router.delete('/', isAuthenticated, function(req, res, next) {

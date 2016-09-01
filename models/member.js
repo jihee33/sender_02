@@ -2,6 +2,7 @@ var dbPool = require('./common').dbPool;
 var url = require('url');
 var path = require('path');
 var async = require('async');
+var fs = require('fs');
 
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com';
 
@@ -133,6 +134,42 @@ function findUser(userId, callback) {
 
     });
 }
+// 나의 물품을 배송한 사람 찾기 model
+function findDeliverings(userId, callback) {
+    var sql_find_deliverer = 'SELECT  DISTINCT(u.name) dname, d.uid sid, d.duid duid,d.cstate cstate FROM user u ' +
+        'JOIN (SELECT u.id uid, s.id sid, s.contract_id con_id, d.id did, d.user_id duid, c.state cstate ' +
+        'FROM user u JOIN sending s ON (u.id = s.user_id) JOIN delivering d ON (s.contract_id = d.contract_id) ' +
+        'JOIN contract c ON (d.contract_id = c.id) WHERE c.state = 3) d ON (u.id = d.duid) ' +
+        'WHERE d.uid = ?';
+
+    var deliverer = {};
+    deliverer.totalCount = 0;
+    deliverer.name = [];
+
+    dbPool.getConnection(function (err, dbConn) {
+        if (err) {
+            return callback(err);
+        }
+        dbConn.query(sql_find_deliverer, [userId], function (err, result) {
+            dbConn.release();
+            if (err) {
+                return done(err);
+            }
+            async.each(result, function (item, done) {
+                if (err) {
+                    return done(err);
+                }
+                deliverer.totalCount += 1;
+                deliverer.name.push(item.dname);
+            }, function (err) {
+                if (err) {
+                    return callback(err);
+                }
+            });
+            callback(null, deliverer);
+        });
+    });
+}
 
 function updateMember(user, callback) {
     var sql = 'UPDATE user SET phone = ?, activation = 1 WHERE id = ?';
@@ -162,12 +199,83 @@ function updateMember(user, callback) {
     });
 }
 
-function updateProfileImage() {
+function updateProfileImage(userId, file, callback) {
+    var sql_delete_file = 'DELETE FROM file WHERE fk_id = ? AND type = 0';
+    var sql_select_filepath = 'SELECT filepath FROM file WHERE fk_id = ? AND type = 0';
+    var sql_insert_file = 'INSERT INTO file(type, fk_id, filename, filepath) VALUES (0, ?, ?, ?)';
 
+    dbPool.getConnection(function(err, dbConn) {
+        if (err) {
+            return callback(err);
+        }
+        dbConn.beginTransaction(function (err) {
+            if (err) {
+                dbConn.release();
+                return callback(err);
+            }
+            async.series([deleteRealFile, deleteFile, insertFile], function (err, result) {
+                if (err) {
+                    return dbConn.rollback(function () {
+                        dbConn.release();
+                        callback(err);
+                    });
+                }
+                dbConn.commit(function () {
+                    dbConn.release();
+                    callback(null, result);
+                });
+            }); // async
+        });
+        function deleteRealFile(callback) {
+            dbPool.query(sql_select_filepath, [userId], function (err, result) {
+                if (err) {
+                    return callback(err);
+                }
+                async.each(result, function (item, callback) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    if (!item.filepath) {
+                        return callback(null, result);
+                    }
+                    fs.unlink(item.filepath, function (err) {
+                        if (err) {
+                            return callback(err);
+                        }
+                    });
+                }); // async function
+                callback(null, result);
+            });
+        } // deleteRealFile
+        function deleteFile(callback) {
+            dbPool.query(sql_delete_file, [userId], function (err, result) {
+                if (err) {
+                    return callback(err);
+                }
+                callback(null, result);
+            });
+        } // deleteFile
+        function insertFile(callback) { // 여러개일때
+            async.each(file, function (item, done) {
+                dbConn.query(sql_insert_file, [userId, item[0].name, item[0].path], function (err, result) {
+                    if (err) {
+                        return done(err);
+                    }
+                    done(null, result);
+                });
+            }, function (err, result) {
+                if (err) {
+                    return callback(err);
+                }
+                callback(null, result);
+            });
+        } // deleteMenu
+    });
 }
 
 module.exports.findById = findById;
 module.exports.findUser = findUser;
 module.exports.findOrCreateFacebook = findOrCreateFacebook;
+module.exports.findDeliverings = findDeliverings;
 module.exports.updateMember = updateMember;
 module.exports.updateProfileImage = updateProfileImage;
