@@ -76,9 +76,9 @@ router.post('/local/login', isSecure, function(req, res, next) {
     });
 });
 
-router.get('/local/logout', isAuthenticated, function(req, res, next) {
+router.get('/logout', isAuthenticated, function(req, res, next) {
     req.logout();
-    res.send({ result: 'local logout' });
+    res.send({ result: '로그아웃 완료' });
 });
 
 router.post('/facebook/token', isSecure, passport.authenticate('facebook-token', {scope : ['email']}), function(req, res, next) {
