@@ -285,7 +285,7 @@ function selectContract(contractId, callback) {
 } // No.16
 
 function plzContract(deliveringId, contractId, callback) {
-    var sql_update_contract = 'update delivering set contract_id = ?, ,utime = now() where id = ? ';
+    var sql_update_contract = 'update delivering set contract_id = ?, utime = now() where id = ? ';
     dbPool.getConnection(function(err, dbConn) {
         if (err) return callback(err);
         dbConn.query(sql_update_contract, [contractId, deliveringId], function(err, result) {
