@@ -238,47 +238,32 @@ function insertDelivering(obj, callback)  {
     });
 } // No.13
 
-function updateContract(contractId, delivererId, callback) {
-    var changedRows = 0;
+function updateContract1(contractId, callback) {
     var sql_update_contract = 'update contract ' +
                                 'set state = ? ,res_time = str_to_date(now(), \'%Y-%m-%d %H:%i:%s\') ' +
-                                ', utime = str_to_date(now(), \'%Y-%m-%d %H:%i:%s\') ' +
+                                ', utime = now()' +
                                 'where id = ? ';
-    var sql_update_delivering = 'update delivering set contract_id = ? where id = ?';
     dbPool.getConnection(function(err, dbConn) {
         if (err) { return callback(err); }
-       dbConn.beginTransaction(function(err) {
-           if (err) {
-               dbConn.release();
-               return callback(err);
-           }
-           async.parallel([updateContract, updateDelivering], function(err, result) {
-               dbConn.release();
-               if (err) {return dbConn.rollback(function (){
-                   callback(err);
-               });
-               } // if
-               dbConn.commit(function () {
-                   callback(null, changedRows);
-               });
-           });
-       });
-        function updateContract(done) {
-            dbConn.query(sql_update_contract, [1, contractId], function(err, result) {
-               if (err) return done(err);
-               changedRows += result.changedRows;
-               done(null, null);
-            });
-        }
-        function updateDelivering(done) {
-            dbConn.query(sql_update_delivering, [contractId, delivererId], function(err, result) {
-                if (err) return done(err);
-                changedRows += result.changedRows;
-                done(null, null);
-            });
-        }
+        dbConn.query(sql_update_contract, [contractId], function(err, result) {
+            dbConn.release();
+            if (err) {return callback(err);}
+            callback(null, result.changedRows);
+        });
     });
-} // No.15
+} // No.15_1
+
+function updateContract9(contractId, callback) {
+    var sql_update_contract = 'update delivering set contract_id = ? where contract_id = ? ';
+    dbPool.getConnection(function(err, dbConn) {
+        if (err) { return callback(err); }
+        dbConn.query(sql_update_contract, [0, contractId], function(err, result) {
+            dbConn.release();
+            if (err) {return callback(err);}
+            callback(null, result.changedRows);
+        });
+    });
+} // No.15_9
 
 function selectContract(contractId, callback) {
     var sql_select_contract = 'select c.id contract_id, s.id sender_id, d.id deliverer_id, ' +
@@ -311,7 +296,8 @@ function plzContract(deliveringId, contractId, callback) {
 
 module.exports.plzContract = plzContract;
 module.exports.selectContract = selectContract;
-module.exports.updateContract = updateContract;
+module.exports.updateContract1 = updateContract1;
+module.exports.updateContract9 = updateContract9;
 module.exports.insertDelivering = insertDelivering;
 module.exports.insertSendingContract = insertSendingContract;
 module.exports.selectSendingForDelivering = selectSendingForDelivering;

@@ -171,29 +171,42 @@ router.put('/delivering',isAuthenticated, function(req, res, next) {
     }
 }); // 14. 계약 신청하기
 
-router.put('/',isAuthenticated, function(req, res, next) {
-    if (req.body.contract_id && req.body.deliverer_id) {
+// isAuthenticated,
+router.put('/', function(req, res, next) {
+    if (req.body.contract_id && req.body.state) {
         var contract_id = req.body.contract_id;
-        var deliverer_id = req.body.deliverer_id;
-        Contract.updateContract(contract_id, deliverer_id, function(err, result) {
-            if (err) return next(err);
-            if (result === 2) {
-                res.send({
-                    result: '계약이 체결 되었습니다.'
-                });
-            } else {
-                res.send({
-                    error : '계약 체결이 실패했습니다.'
-                });
-            }
-        });
+        var state = req.body.state;
+        if (state === '1') {
+            Contract.updateContract1(contract_id, function (err, result) {
+                if (result === 1) {
+                    res.send({
+                        result: '계약 체결을 수락했습니다. '
+                    });
+                } else {
+                    res.send({
+                        error: '계약 체결에 실패했습니다.'
+                    });
+                }
+            });
+        } else if (state === '9') {
+            Contract.updateContract1(contract_id, function (err, result) {
+                if (result === 1) {
+                    res.send({
+                        result: '계약 체결을 거절했습니다. '
+                    });
+                } else {
+                    res.send({
+                        error: '계약 체결에 실패했습니다.'
+                    });
+                }
+            });
+        }
     } else {
         res.send({
-            error : '계약 체결이 실패했습니다. (데이터 미등록)'
+            error : '계약 체결에 실패했습니다.'
         });
     }
-
-}); // TODO : 15. 계약 체결하기
+}); //  15. 계약 체결하기
 
 router.get('/:contract_id', isAuthenticated, function(req, res, next) {
     if (req.params.contract_id) {
