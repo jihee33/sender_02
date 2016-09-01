@@ -6,19 +6,22 @@ var url = require('url');
 var Contract = require('../models/contract');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
-//fixme : url_ 추후 변경
-var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080';
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; //fixme : port 변경 -> 80
 
 router.post('/', isSecure, isAuthenticated, function(req, res, next) {
     var form = new formidable.IncomingForm();
     form.keepExtensions = true;
     form.multiples = true;
     form.uploadDir = path.join(__dirname, '../uploads/images/sendings');
+
     form.parse(req, function(err, fields, files) {
-        if (err) {return next(err);}
-        if (fields.here_lat && fields.here_lon && fields.addr_lat && fields.addr_lon && fields.rec_phone && fields.price) {
+        if (err) {
+            return next(err);
+        }
+
+        if (fields.here_lat && fields.here_lon && fields.addr_lat && fields.addr_lon && fields.rec_phone && fields.price) { //필수 데이터
             var result = {};
-            result.user_id = fields.user_id; //fixme : 추후 session값으로 변경
+            result.user_id = fields.user_id; //fixme : session값으로 변경 -> req.user
             result.here_lat = fields.here_lat;
             result.here_lon = fields.here_lon;
             result.addr_lat = fields.addr_lat;
@@ -29,24 +32,24 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
             result.info = fields.info || "";
             result.memo = fields.memo || "";
             result.pic = [];
-            if (files.pic instanceof Array) {
+
+            if (files.pic instanceof Array) { // 다수의 사진
                 result.pic = files.pic;
-            } else if (files.pic) {
+            } else if (files.pic) { // 1장의 사진
                 result.pic.push(files.pic);
             }
-            Contract.insertSendingContract(result, function (err, data) {
+
+            Contract.insertSendingContract(result, function(err, data) {
                 if (err) {
-                    return function() {
-                    res.send({
-                        error: '배송 요청 등록이 실패했습니다.'
-                    });
+                    return next(err);
                 }
-                }
-                if (files.pic) {
+
+                if (files.pic) { // 사진이 없을 경우를 보완
                     var filename = path.basename(files.pic.path);
                     result.pic.push({url: url.resolve(url_, '/images/' + filename)});
                 }
-                if (data.affectedRows === 3) {
+
+                if (data.affectedRows === 3) { //insert가 제대로 된 경우
                     res.send({
                         result: {
                             sending_id : data.ins_send_id,
@@ -55,7 +58,7 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
                     });
                 } else {
                     res.send({
-                        error : '배송 요청 등록이 실패했습니다. 1'
+                        error : '배송 요청 등록이 실패했습니다.'
                     });
                 }
             });
