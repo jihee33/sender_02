@@ -65,7 +65,7 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
             });
         }
     });
-}); // 8. 배송 요청 등록 및 미체결 계약 생성
+}); // 9. 배송 요청 등록 및 미체결 계약 생성
 
 router.get('/', isSecure, isAuthenticated, function(req, res, next) {
     if(req.url.match(/\/\?delivering_id=\d+/i)) {
@@ -81,7 +81,7 @@ router.get('/', isSecure, isAuthenticated, function(req, res, next) {
             error : '배송 요청 보기에 실패했습니다'
         });
     }
-}); // 9. 배송 요청 보기
+}); // 10. 배송 요청 보기
 
 router.get('/delivering', isSecure, isAuthenticated, function(req, res, next) {
     var currentPage = parseInt(req.query.currentPage);
@@ -104,7 +104,7 @@ router.get('/delivering', isSecure, isAuthenticated, function(req, res, next) {
             error : '배달 가기의 목록을 불러올 수 없습니다.'
         });
     }
-}); // 10. 배달 가기 목록 보기
+}); // 11. 배달 가기 목록 보기
 
 router.get('/delivering/:delivering_id', isSecure, isAuthenticated, function(req, res, next) {
     var id = req.params.delivering_id;
@@ -115,7 +115,7 @@ router.get('/delivering/:delivering_id', isSecure, isAuthenticated, function(req
         });
     });
 
-}); // 11. ‘배달가기’ 상세 목록 보기
+}); // 12. ‘배달가기’ 상세 목록 보기
 
 router.post('/delivering', isSecure, isAuthenticated, function(req, res, next) {
     if (req.body.here_lat && req.body.here_lon && req.body.next_lat && req.body.next_lon && req.body.dep_time && req.body.arr_time) {
@@ -146,9 +146,31 @@ router.post('/delivering', isSecure, isAuthenticated, function(req, res, next) {
             error : '배달 가기 정보 등록에 실패했습니다. (데이터 미등록)'
         });
     }
-}); // 12. ‘배달 가기’ 등록
+}); // 13. ‘배달 가기’ 등록
 
-// TODO : 추후 수정 13번
+router.put('/delivering',isAuthenticated, function(req, res, next) {
+    if (req.body.contract_id && req.body.delivering_id) {
+        var contract_id = req.body.contract_id;
+        var delivering_id = req.body.delivering_id;
+        Contract.plzContract(delivering_id, contract_id, function(err, result) {
+            if (err) return next(err);
+            if (result === 1) {
+                res.send({
+                    result: '배송 요청에 성공했습니다.'
+                });
+            } else {
+                res.send({
+                    error : '배송 요청에 실패했습니다.'
+                });
+            }
+        });
+    } else {
+        res.send({
+            error : '배송 요청에 실패했습니다. 1'
+        });
+    }
+}); // 14. 계약 신청하기
+
 router.put('/',isAuthenticated, function(req, res, next) {
     if (req.body.contract_id && req.body.deliverer_id) {
         var contract_id = req.body.contract_id;
@@ -171,7 +193,7 @@ router.put('/',isAuthenticated, function(req, res, next) {
         });
     }
 
-}); // 13. 계약 체결하기
+}); // TODO : 15. 계약 체결하기
 
 router.get('/:contract_id', isAuthenticated, function(req, res, next) {
     if (req.params.contract_id) {
@@ -187,7 +209,7 @@ router.get('/:contract_id', isAuthenticated, function(req, res, next) {
              error : '계약 내역 보기를 실패했습니다.'
         });
     }
-}); // 14. 계약 내역 보기
+}); // 16. 계약 내역 보기
 
 router.put('/:contract_id', isAuthenticated, function(req, res, next) {
     var contract_id = req.params.contract_id;
@@ -199,6 +221,6 @@ router.put('/:contract_id', isAuthenticated, function(req, res, next) {
             state : state
         }
     });
-}); // 15. 배송 상태 변경하기
+}); // 17. 배송 상태 변경하기
 
 module.exports = router;

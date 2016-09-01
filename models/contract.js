@@ -85,7 +85,7 @@ function insertSendingContract(data, callback) {
             }
         } // 배송 요청 파일 등록
     });
-}
+} // No.09
 
 function selectSendingForDelivering(deliveringId, callback) {
     var sql_select_sending = 'select s.id sending_id, c.id contract_id, s.here_lat here_lat, s.here_lon here_lon, ' +
@@ -139,7 +139,7 @@ function selectSendingForDelivering(deliveringId, callback) {
         });
     } //배송요청 파일 출력
     }); //getConn
-}
+} // No.10
 
 function listDelivering(currentPage, itemsPerPage, callback) {
     var sql_select_delivering_review_user ='SELECT d.id delivering_id, d.user_id user_id, u.name name, u.phone phone, ' +
@@ -204,7 +204,7 @@ function listDelivering(currentPage, itemsPerPage, callback) {
             });
         } // 배달 가기 카운트 출력_totalPage를 위해 존재
     });
-}
+} // No.11
 
 function listIdDelivering(deliverId, callback) {
     var sql_select_delivering_id = 'select d.id deilvering_id, d.user_id, u.name, d.here_lat, d.here_lon, d.next_lat, d.next_lon, ' +
@@ -219,7 +219,7 @@ function listIdDelivering(deliverId, callback) {
             callback(null, result);
         });
     });
-}
+} // No.12
 
 function insertDelivering(obj, callback)  {
     var sql_insert_delivering = 'insert into delivering(user_id, here_lat, here_lon, next_lat, next_lon, dep_time, arr_time) ' +
@@ -236,7 +236,7 @@ function insertDelivering(obj, callback)  {
            callback(null, temp);
        });
     });
-}
+} // No.13
 
 function updateContract(contractId, delivererId, callback) {
     var changedRows = 0;
@@ -278,7 +278,7 @@ function updateContract(contractId, delivererId, callback) {
             });
         }
     });
-}
+} // No.15
 
 function selectContract(contractId, callback) {
     var sql_select_contract = 'select c.id contract_id, s.id sender_id, d.id deliverer_id, ' +
@@ -288,19 +288,28 @@ function selectContract(contractId, callback) {
                             'left join delivering d on(c.id = d.contract_id) ' + // LEFT JOIN을 통해 delivering이 없을 때도 내역 출력
                             'where c.id = ? ';
     dbPool.getConnection(function(err, dbConn) {
-       if (err) {
-           return callback(err);
-       }
+       if (err) {return callback(err);}
        dbConn.query(sql_select_contract, ['+00:00', '+09:00', '+00:00', '+09:00', contractId], function(err, results) {
            dbConn.release();
-           if (err) {
-               return callback(err);
-           }
+           if (err) {return callback(err);}
             callback(null, results[0]);
        });
     });
-}
+} // No.16
 
+function plzContract(deliveringId, contractId, callback) {
+    var sql_update_contract = 'update delivering set contract_id = ? where id = ? ';
+    dbPool.getConnection(function(err, dbConn) {
+        if (err) return callback(err);
+        dbConn.query(sql_update_contract, [contractId, deliveringId], function(err, result) {
+            dbConn.release();
+            if (err) {return callback(err);}
+            callback(null, result.changedRows);
+        });
+    });
+} // No.14
+
+module.exports.plzContract = plzContract;
 module.exports.selectContract = selectContract;
 module.exports.updateContract = updateContract;
 module.exports.insertDelivering = insertDelivering;
