@@ -12,13 +12,13 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
     var form = new formidable.IncomingForm();
     form.keepExtensions = true;
     form.multiples = true;
-    form.uploadDir = path.join(__dirname, '../uploads/images/sendings');
+
 
     form.parse(req, function(err, fields, files) {
         if (err) {
             return next(err);
         }
-
+        form.uploadDir = path.join(__dirname, '../uploads/images/sendings');
         if (fields.here_lat && fields.here_lon && fields.addr_lat && fields.addr_lon && fields.rec_phone && fields.price) { //필수 데이터
             var result = {};
             result.user_id = fields.user_id; //fixme : session값으로 변경 -> req.user
@@ -50,6 +50,7 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
                 }
 
                 if (data.affectedRows === 3) { //insert가 제대로 된 경우
+                    form.uploadDir = path.join(__dirname, '../uploads/images/sendings');
                     res.send({
                         result: {
                             sending_id : data.ins_send_id,
