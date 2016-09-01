@@ -55,6 +55,22 @@ function findOrCreateFacebook(profile, callback) {
     });
 }
 
+function updateRegistrationToken(regToken, userId, callback) {
+    var sql = 'UPDATE user SET registration_token = ? WHERE id = ?';
+    dbPool.getConnection(function(err, dbConn) {
+        if(err) {
+            return callback(err)
+        }
+        dbConn.query(sql, [regToken, userId], function(err) {
+            dbConn.release();
+            if (err) {
+                return callback(err);
+            }
+            callback(null);
+        });
+    });
+}
+
 function findById(apiId, callback) {
     var sql = 'SELECT id, api_id, api_type, introduction, deliver_com, deliver_req FROM user WHERE api_id = ?';
 
@@ -222,7 +238,7 @@ function updateProfileImage(userId, file, callback) {
                 }
                 dbConn.commit(function () {
                     dbConn.release();
-                    callback(null, result);
+                    callback(null, result[1].affectedRows);
                 });
             }); // async
         });
@@ -269,7 +285,7 @@ function updateProfileImage(userId, file, callback) {
                 }
                 callback(null, result);
             });
-        } // deleteMenu
+        }
     });
 }
 
@@ -279,3 +295,4 @@ module.exports.findOrCreateFacebook = findOrCreateFacebook;
 module.exports.findDeliverings = findDeliverings;
 module.exports.updateMember = updateMember;
 module.exports.updateProfileImage = updateProfileImage;
+module.exports.updateRegistrationToken = updateRegistrationToken;

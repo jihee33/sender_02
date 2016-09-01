@@ -85,7 +85,7 @@ router.get('/me/deliverings', isAuthenticated, function(req, res, next) {
         });
     });
 });
-// TODO : 자신의 프로필 사진 변경하기 router
+// 자신의 프로필 사진 변경하기 router
 router.put('/me', isAuthenticated, function(req, res, next) {
     var form = new formidable.IncomingForm();
     form.uploadDir = path.join(__dirname, '../uploads/images/profiles');

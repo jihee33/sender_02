@@ -82,6 +82,11 @@ router.get('/local/logout', isAuthenticated, function(req, res, next) {
 });
 
 router.post('/facebook/token', isSecure, passport.authenticate('facebook-token', {scope : ['email']}), function(req, res, next) {
+    Member.updateRegistrationToken(req.body.registration_token, req.user.id, function(err, next) {
+        if (err) {
+            return next(err);
+        }
+    });
     res.send({
         message: '페이스북 로그인이 정상적으로 처리되었습니다.'
     });
