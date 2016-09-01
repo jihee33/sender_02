@@ -7,6 +7,7 @@ var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
 var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
+// TODO : No.20 게시글 등록하기
 router.post('/', isSecure, isAuthenticated, function(req, res, next) {
     var form = new formidable.IncomingForm();
     form.keepExtensions = true;
@@ -47,6 +48,6 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
             });
         }
     });
-});
+}); // No.20 게시글 등록하기
 
 module.exports = router;
