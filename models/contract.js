@@ -142,7 +142,7 @@ function selectSendingForDelivering(deliveringId, callback) {
 }
 
 function listDelivering(currentPage, itemsPerPage, callback) {
-    var sql_select_delivering_review_user ='SELECT d.id delivering_id, d.user_id user_id, u.nickname nickname, u.phone phone, ' +
+    var sql_select_delivering_review_user ='SELECT d.id delivering_id, d.user_id user_id, u.name name, u.phone phone, ' +
                         'r.avg_star star, d.here_lat here_lat, d.here_lon here_lon, d.next_lat next_lat, d.next_lon next_lon, ' +
                             'date_format(convert_tz(d.dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
                             'date_format(convert_tz(d.arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, ' +
@@ -170,7 +170,7 @@ function listDelivering(currentPage, itemsPerPage, callback) {
                 info.data.push({
                     delivering_id : item.delivering_id,
                     user_id : item.user_id,
-                    name : item.nickname,
+                    name : item.name,
                     phone : item.phone,
                     star : item.star,
                     here_lat : item.here_lat,
@@ -207,7 +207,7 @@ function listDelivering(currentPage, itemsPerPage, callback) {
 }
 
 function listIdDelivering(deliverId, callback) {
-    var sql_select_delivering_id = 'select d.id deilvering_id, d.user_id, u.nickname, d.here_lat, d.here_lon, d.next_lat, d.next_lon, ' +
+    var sql_select_delivering_id = 'select d.id deilvering_id, d.user_id, u.name, d.here_lat, d.here_lon, d.next_lat, d.next_lon, ' +
                                     'date_format(convert_tz(dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
                                     'date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time ' +
                                     'from delivering d join user u on(u.id = d.user_id) where d.id = ? ';
