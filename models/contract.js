@@ -240,12 +240,12 @@ function insertDelivering(obj, callback)  {
 
 function updateContract1(contractId, callback) {
     var sql_update_contract = 'update contract ' +
-                                'set state = ? ,res_time = str_to_date(now(), \'%Y-%m-%d %H:%i:%s\') ' +
-                                ', utime = now()' +
-                                'where id = ? ';
+                              'set state = ?, res_time = str_to_date(now(), \'%Y-%m-%d %H:%i:%s\') ' +
+                              ',utime = now()' +
+                              'where id = ? ';
     dbPool.getConnection(function(err, dbConn) {
         if (err) { return callback(err); }
-        dbConn.query(sql_update_contract, [contractId], function(err, result) {
+        dbConn.query(sql_update_contract, [1, contractId], function(err, result) {
             dbConn.release();
             if (err) {return callback(err);}
             callback(null, result.changedRows);
@@ -254,7 +254,9 @@ function updateContract1(contractId, callback) {
 } // No.15_1
 
 function updateContract9(contractId, callback) {
-    var sql_update_contract = 'update delivering set contract_id = ? where contract_id = ? ';
+    var sql_update_contract = 'update delivering ' +
+                              'set contract_id = ?, utime = now() ' +
+                              'where contract_id = ? ';
     dbPool.getConnection(function(err, dbConn) {
         if (err) { return callback(err); }
         dbConn.query(sql_update_contract, [0, contractId], function(err, result) {
@@ -283,7 +285,7 @@ function selectContract(contractId, callback) {
 } // No.16
 
 function plzContract(deliveringId, contractId, callback) {
-    var sql_update_contract = 'update delivering set contract_id = ? where id = ? ';
+    var sql_update_contract = 'update delivering set contract_id = ?, ,utime = now() where id = ? ';
     dbPool.getConnection(function(err, dbConn) {
         if (err) return callback(err);
         dbConn.query(sql_update_contract, [contractId, deliveringId], function(err, result) {

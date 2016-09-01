@@ -178,6 +178,7 @@ router.put('/', function(req, res, next) {
         var state = req.body.state;
         if (state === '1') {
             Contract.updateContract1(contract_id, function (err, result) {
+                if (err) return next(err);
                 if (result === 1) {
                     res.send({
                         result: '계약 체결을 수락했습니다. '
@@ -189,7 +190,8 @@ router.put('/', function(req, res, next) {
                 }
             });
         } else if (state === '9') {
-            Contract.updateContract1(contract_id, function (err, result) {
+            Contract.updateContract9(contract_id, function (err, result) {
+                if (err) return next(err);
                 if (result === 1) {
                     res.send({
                         result: '계약 체결을 거절했습니다. '
@@ -200,7 +202,7 @@ router.put('/', function(req, res, next) {
                     });
                 }
             });
-        }
+        } // elseif _9_
     } else {
         res.send({
             error : '계약 체결에 실패했습니다.'
