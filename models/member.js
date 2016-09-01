@@ -4,7 +4,7 @@ var path = require('path');
 var async = require('async');
 var fs = require('fs');
 
-var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com';
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080';
 
 function findOrCreateFacebook(profile, callback) {
     var sql_find_facebook_id = 'SELECT id, phone, introduction, deliver_com, deliver_req FROM user WHERE api_id = ?';
