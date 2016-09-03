@@ -8,7 +8,7 @@ var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080';
 
 function findOrCreateFacebook(profile, callback) {
     var sql_find_facebook_id = 'SELECT id, phone, introduction, deliver_com, deliver_req FROM user WHERE api_id = ?';
-    var sql_create_facebook_id = 'INSERT INTO user(api_id, api_type, activation) VALUES(?, 0, 0);';
+    var sql_create_facebook_id = 'INSERT INTO user(api_id, api_type, name, activation) VALUES(?, ?, 0, 0);';
     dbPool.getConnection(function (err, dbConn) {
        if (err) {
            return callback(err);
@@ -32,7 +32,7 @@ function findOrCreateFacebook(profile, callback) {
                    dbConn.release();
                    return callback(err)
                }
-               dbConn.query(sql_create_facebook_id, [profile.id], function (err, result) {
+               dbConn.query(sql_create_facebook_id, [profile.id, profile.displayName], function (err, result) {
                    if (err) {
                        return dbConn.rollback(function() {
                            dbConn.release();
