@@ -87,9 +87,14 @@ router.post('/facebook/token', isSecure, passport.authenticate('facebook-token',
             return next(err);
         }
     });
-    res.send({
-        message: '페이스북 로그인이 정상적으로 처리되었습니다.'
-    });
+    if(user.insert) {
+        res.send({
+            result : 0
+        });
+    } else
+        res.send({
+            result : 1
+        });
     // res.sendStatus(req.user ? 200 : 401);
 });
 

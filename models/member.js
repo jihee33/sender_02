@@ -46,6 +46,7 @@ function findOrCreateFacebook(profile, callback) {
                        user.api_id = profile.id;
                        user.api_type = 0;
                        user.activation = 0;
+                       user.insert = 1;
                        dbConn.release();
                        callback(null, user);
                    });
