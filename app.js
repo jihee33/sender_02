@@ -52,7 +52,7 @@ app.use('/chatting',express.static(path.join(__dirname, 'uploads/images/chatting
 
 app.use('/auth', auth);// 인증 부분 model 연결
 app.use('/boards', board);// 사용자 게시물 부분 router
-app.use('/chattings', chatting);//
+app.use('/chattings', chatting);
 app.use('/contracts', contract);
 app.use('/members', member);
 app.use('/notices', notice);

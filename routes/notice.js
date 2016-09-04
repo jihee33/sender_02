@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var isAuthenticated = require('./common').isAuthenticated;
 
+// TODO : No.23 배송 요청 알림 전송하기
 router.get('/', isAuthenticated, function(req, res, next) {
     var currentPage = parseInt(req.query.currentPage);
     var itemsPerPage = parseInt(req.query.itemsPerPage);
@@ -47,6 +48,6 @@ router.get('/', isAuthenticated, function(req, res, next) {
             });
         }
     }
-});
+}); // No.23 배송 요청 알림 전송하기
 
 module.exports = router;

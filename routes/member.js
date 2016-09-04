@@ -75,7 +75,7 @@ router.get('/:user_id', isSecure, isAuthenticated, function(req, res, next) {
 
 // 나의 물품을 배송한 사람 찾기 router
 router.get('/me/deliverings', isAuthenticated, function(req, res, next) {
-    var userId = req.query.user_id;// fixme : 추후 세션에서 자신의 id 불러옴
+    var userId = req.query.user_id;// fixme : 추후 세션에서 자신의 id 불러옴 -> req.user
     Member.findDeliverings(userId, function (err, result) {
         if (err) {
             return next(err);
@@ -85,48 +85,50 @@ router.get('/me/deliverings', isAuthenticated, function(req, res, next) {
         });
     });
 });
-// 자신의 프로필 사진 변경하기 router
+// t. 자신의 프로필 사진 변경하기 router
 router.put('/me', isAuthenticated, function(req, res, next) {
     var form = new formidable.IncomingForm();
-    form.uploadDir = path.join(__dirname, '../uploads/images/profiles');
     form.keepExtensions = true;
     form.multiples = true;
     form.parse(req, function(err, fields, files) {
-        if (err) {return next(err);}
+        if (err) {
+            return next(err);
+        }
         var profileImage = {};
         profileImage.files = [];
         profileImage.files.push(files.pic);
+
         Member.updateProfileImage(req.user.id, profileImage, function(err, result) {
             if (err) {
                 return next(err);
             }
+            form.uploadDir = path.join(__dirname, '../uploads/images/profiles');
             res.send({
                 message: '프로필 사진의 변경을 성공하였습니다.(' + req.user.id + ')',
                 changedRow : result
             });
         });
     });
+/*var form = new formidable.IncomingForm();
+form.keepExtensions = true;
+form.multiples = true;
+form.uploadDir = path.join(__dirname, '../uploads/images/menus');
+form.parse(req, function(err, fields, files) {
+    if (err) {return next(err);}
+    var menu = {};
+    menu.files = [];
+        menu.files.push(files.pic);
+        var filename = path.basename(files.pic.path);
+        menu.files.push({url : url.resolve(url_ ,'/images/' + filename)});
 
-
-    /*var form = new formidable.IncomingForm();
-    form.keepExtensions = true;
-    form.multiples = true;
-    form.uploadDir = path.join(__dirname, '../uploads/images/menus');
-    form.parse(req, function(err, fields, files) {
-        if (err) {return next(err);}
-        var menu = {};
-        menu.files = [];
-            menu.files.push(files.pic);
-            var filename = path.basename(files.pic.path);
-            menu.files.push({url : url.resolve(url_ ,'/images/' + filename)});
-
-            res.send({
-                result: '프로필 사진의 변경을 성공하였습니다.',
-                temp : menu
-            });
-    });*/
+        res.send({
+            result: '프로필 사진의 변경을 성공하였습니다.',
+            temp : menu
+        });
+});*/
 }); // 5. 자신의 프로필 사진 변경 하기
 
+// TODO : 7. 회원 탈퇴 하기
 router.delete('/', isAuthenticated, function(req, res, next) {
     var userId = req.user.id;
     res.send({ result: userId +' : 회원 탈퇴가 처리되었습니다.' });
