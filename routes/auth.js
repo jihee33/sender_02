@@ -86,15 +86,17 @@ router.post('/facebook/token', isSecure, passport.authenticate('facebook-token',
         if (err) {
             return next(err);
         }
+        if(req.user.insert) {
+            res.send({
+                result : 0
+            });
+        } else {
+            res.send({
+                result: 1
+            });
+        }
     });
-    if(user.insert) {
-        res.send({
-            result : 0
-        });
-    } else
-        res.send({
-            result : 1
-        });
+
     // res.sendStatus(req.user ? 200 : 401);
 });
 
