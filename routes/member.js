@@ -85,7 +85,8 @@ router.get('/me/deliverings', isAuthenticated, function(req, res, next) {
         });
     });
 });
-// t. 자신의 프로필 사진 변경하기 router
+
+// 5. 자신의 프로필 사진 변경하기 router
 router.put('/me', isAuthenticated, function(req, res, next) {
     var form = new formidable.IncomingForm();
     form.keepExtensions = true;
@@ -104,8 +105,7 @@ router.put('/me', isAuthenticated, function(req, res, next) {
             }
             form.uploadDir = path.join(__dirname, '../uploads/images/profiles');
             res.send({
-                message: '프로필 사진의 변경을 성공하였습니다.(' + req.user.id + ')',
-                changedRow : result
+                result: '프로필 사진의 변경을 성공하였습니다.'
             });
         });
     });
@@ -131,7 +131,7 @@ form.parse(req, function(err, fields, files) {
 // TODO : 7. 회원 탈퇴 하기
 router.delete('/', isAuthenticated, function(req, res, next) {
     var userId = req.user.id;
-    res.send({ result: userId +' : 회원 탈퇴가 처리되었습니다.' });
+    res.send({ result : '회원 탈퇴가 처리되었습니다.' });
 }); // 7. 회원 탈퇴 하기
 
 module.exports = router;
