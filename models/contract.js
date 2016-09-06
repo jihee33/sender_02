@@ -288,7 +288,7 @@ function changeStateOfContract(contractId, state, callback) {
             if (err) {
                 return callback(err);
             }
-            callback(null, result.changeRows);
+            callback(null, result.changedRows);
         });
     });
 }
