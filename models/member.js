@@ -7,8 +7,8 @@ var fs = require('fs');
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080';
 
 function findOrCreateFacebook(profile, callback) {
-    var sql_find_facebook_id = 'SELECT id, phone, introduction, deliver_com, deliver_req FROM user WHERE api_id = ?';
-    var sql_create_facebook_id = 'INSERT INTO user(api_id, api_type, name, activation) VALUES(?, 0, ?, 0);';
+    var sql_find_facebook_id = 'SELECT id, phone, introduction, deliver_com, deliver_req FROM user WHERE fb_id = ?';
+    var sql_create_facebook_id = 'INSERT INTO user(fb_id, api_type, name, activation) VALUES(?, 0, ?, 0);';
     dbPool.getConnection(function (err, dbConn) {
        if (err) {
            return callback(err);
@@ -22,7 +22,7 @@ function findOrCreateFacebook(profile, callback) {
                var user = {};
                user.id = result[0].id;
                user.phone = result[0].phone;
-               user.introduction = result[0].introduction;
+               user.introduction = result[0].introduction || '';
                user.deliver_com = result[0].deliver_com;
                user.deliver_req = result[0].deliver_req;
                return callback(null, user);
@@ -41,7 +41,7 @@ function findOrCreateFacebook(profile, callback) {
                    }
                    var user = {};
                    user.id = result.insertId;
-                   user.api_id = profile.id;
+                   user.fb_id = profile.id;
                    user.api_type = 0;
                    user.activation = 0;
                    user.insert = 1;
@@ -49,11 +49,8 @@ function findOrCreateFacebook(profile, callback) {
                    dbConn.release();
                    callback(null, user);
                });
-
-
-
            });
-       })
+       });
     });
 }
 
@@ -74,7 +71,7 @@ function updateRegistrationToken(regToken, userId, callback) {
 }
 
 function findById(apiId, callback) {
-    var sql = 'SELECT id, api_id, api_type, introduction, deliver_com, deliver_req FROM user WHERE api_id = ?';
+    var sql = 'SELECT id, fb_id, api_type, introduction, deliver_com, deliver_req FROM user WHERE fb_id = ?';
 
     dbPool.getConnection(function(err, dbConn) {
         if (err) {
@@ -94,7 +91,7 @@ function findById(apiId, callback) {
 }
 
 function findUser(userId, callback) {
-    var sql_select_user = 'SELECT u.id user_id, u.name name, u.phone phone, u.api_id api_id, ' +
+    var sql_select_user = 'SELECT u.id user_id, u.name name, u.phone phone, u.fb_id fb_id, ' +
                           'u.api_type api_type, u.introduction introduction, ' +
                           'u.deliver_com deliver_com, u.deliver_req deliver_req, u.activation activation, f.filepath filepath ' +
                           'FROM user u LEFT JOIN (SELECT fk_id, filename, filepath ' +
@@ -102,18 +99,20 @@ function findUser(userId, callback) {
     var sql_select_avg_star = 'SELECT AVG(star) avg_star FROM review r JOIN (SELECT id, user_id, contract_id ' +
                               'FROM delivering WHERE user_id = ?) a ON (r.contract_id = a.contract_id)';
 
-    var user = {};
+
 
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
             return callback(err);
         }
+        var user = {};
+
         async.parallel([getUserData, getUserStar], function(err, result) {
             dbConn.release();
             if (err) {
                 return callback(err);
             }
-            user.star = result[1].avg_star;
+            user.star = result[1].avg_star || '';
             callback(null, user);
         });
 
@@ -122,19 +121,23 @@ function findUser(userId, callback) {
                 if (err) {
                     return done(err);
                 }
-                user.id = result[0].user_id;
-                user.name = result[0].name;
-                user.phone = result[0].phone;
-                user.api_id = result[0].api_id;
-                user.api_type = result[0].api_type;
-                user.introduction = result[0].introduction;
-                user.deliver_com = result[0].deliver_com;
-                user.deliver_req = result[0].deliver_req;
-                user.activation = result[0].activation;
-                if (result[0].filepath) {
-                    user.pic = url.resolve(url_ ,'/profiles/' + path.basename(result[0].filepath));
+                if (result.length !== 0) {
+                    user.id = result[0].user_id;
+                    user.name = result[0].name;
+                    user.phone = result[0].phone;
+                    user.fb_id = result[0].fb_id;
+                    user.api_type = result[0].api_type;
+                    user.introduction = result[0].introduction || '';
+                    user.deliver_com = result[0].deliver_com;
+                    user.deliver_req = result[0].deliver_req;
+                    user.activation = result[0].activation;
+                    if (result[0].filepath) {
+                        user.pic = url.resolve(url_, '/profiles/' + path.basename(result[0].filepath));
+                    } else {
+                        user.pic = '';
+                    }
                 } else {
-                    user.pic = '';
+                    user.message = '존재하지 않는 회원';
                 }
             });
             done(null);
@@ -148,43 +151,47 @@ function findUser(userId, callback) {
                 done(null, result[0]);
             })
         }
-
-
     });
 }
 // 나의 물품을 배송한 사람 찾기 model
 function findDeliverings(userId, callback) {
-    var sql_find_deliverer = 'SELECT  DISTINCT(u.name) dname, d.uid sid, d.duid duid,d.cstate cstate FROM user u ' +
-        'JOIN (SELECT u.id uid, s.id sid, s.contract_id con_id, d.id did, d.user_id duid, c.state cstate ' +
-        'FROM user u JOIN sending s ON (u.id = s.user_id) JOIN delivering d ON (s.contract_id = d.contract_id) ' +
-        'JOIN contract c ON (d.contract_id = c.id) WHERE c.state = 3) d ON (u.id = d.duid) ' +
-        'WHERE d.uid = ?';
+    var sql_find_deliverer = 'SELECT u.name dname, d.uid sid, d.duid duid, d.cstate cstate, date_format(convert_tz(d.res_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') res_time ' +
+                             'FROM user u JOIN (SELECT u.id uid, s.id sid, s.contract_id con_id, d.id did, d.user_id duid, c.state cstate, c.res_time ' +
+                                               'FROM user u JOIN sending s ON (u.id = s.user_id) JOIN delivering d ON (s.contract_id = d.contract_id) ' +
+                                                           'JOIN contract c ON (d.contract_id = c.id) WHERE c.state = 3) d ON (u.id = d.duid) ' +
+                             'WHERE d.uid = ?';
 
     var deliverer = {};
     deliverer.totalCount = 0;
-    deliverer.name = [];
+    deliverer.data = [];
 
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
             return callback(err);
         }
-        dbConn.query(sql_find_deliverer, [userId], function (err, result) {
+        dbConn.query(sql_find_deliverer, ['+00:00', '+09:00', userId], function (err, result) {
             dbConn.release();
             if (err) {
-                return done(err);
+                return callback(err);
             }
             async.each(result, function (item, done) {
                 if (err) {
                     return done(err);
                 }
                 deliverer.totalCount += 1;
-                deliverer.name.push(item.dname);
+                deliverer.data.push({
+                    name : item.dname,
+                    date : item.res_time || ''
+                });
             }, function (err) {
                 if (err) {
                     return callback(err);
                 }
             });
-            callback(null, deliverer);
+            if(deliverer.totalCount !== 0) {
+                return callback(null, deliverer);
+            }
+            callback(null, '결과 없음')
         });
     });
 }

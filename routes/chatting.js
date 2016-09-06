@@ -7,8 +7,14 @@ var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
 var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
-// TODO : No.22 채팅 메세지 전송하기
-router.post('/', isSecure, isAuthenticated, function(req, res, next) {
+
+router.post('/', isAuthenticated, function(req, res, next) {
+    if(req.url.match(/\/\?action=send/i)) {
+        // TODO : No.21 채팅 메세지 전송하기
+    }
+    if(req.url.match(/\/\?action=getlog&lastDate=*/i)) {
+        // TODO : No.22 채팅 메세지 수신하기
+    }
     var form = new formidable.IncomingForm();
     form.keepExtensions = true;
     form.multiples = true;
@@ -30,6 +36,10 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
             result : data
         });
     });
+
 });//  No.22 채팅 메세지 전송하기
+router.get('/', isSecure, isAuthenticated, function(req, res, next) {
+    // TODO : No.22 채팅 메세지 전송하기
+});
 
 module.exports = router;
