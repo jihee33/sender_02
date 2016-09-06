@@ -74,6 +74,10 @@ function normalizePort(val) {
  * Event listener for HTTP httpServer "error" event.
  */
 
+process.on('uncaughtException', function(err) {
+  console.error(err);
+});
+
 function onError(error) {
   if (error.syscall !== 'listen') {
     throw error;
