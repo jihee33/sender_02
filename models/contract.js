@@ -195,17 +195,39 @@ function acceptContract(contractId, callback) {
                               'set state = ?, res_time = str_to_date(now(), \'%Y-%m-%d %H:%i:%s\'), utime = now()' +
                               'where id = ? ';
                                // contract table에 state, res_time, utime 변경
+    var sql_select_Sending = 'select id sending_id, user_id sending_user_id from sending where contract_id = ? ';
     dbPool.getConnection(function(err, dbConn) {
         if (err) {
             return callback(err);
         }
-        dbConn.query(sql_update_contract, [1, contractId], function(err, result) { // state -> 1_계약 완료 및 배송 전
+        async.parallel([changeStartState, selectSendingId], function(err, results) {
             dbConn.release();
             if (err) {
                 return callback(err);
-            }
-            callback(null, result.changedRows); //업데이트 확인을 위해 result.changeRows 존재
-        });
+                }
+            var data = {};
+            data.changedRows = results[0].changedRows;
+            data.sending_id = results[1].sending_id;
+            data.sending_user_id = results[1].sending_user_id;
+            callback(null, data);
+            });
+        // parallel
+        function changeStartState(done) {
+            dbConn.query(sql_update_contract, [1, contractId], function(err, result) { // state -> 1_계약 완료 및 배송 전
+                if (err) {
+                    return done(err);
+                }
+                done(null, result.changedRows); //업데이트 확인을 위해 result.changeRows 존재
+            });
+        }
+        function selectSendingId(done) {
+            dbConn.query(sql_select_Sending, [contractId], function(err, result) {
+               if (err) {
+                   return done(err);
+               }
+               done(null, result[0]);
+            });
+        }
     });
 } // No.15_1 계약 체결하기 _ 수락
 

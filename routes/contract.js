@@ -105,19 +105,23 @@ router.get('/', isSecure, isAuthenticated, function(req, res, next) {
 }); // 10. 배송 요청 보기
 
 //  14. 계약 신청 및 체결하기
-router.put('/', isAuthenticated, function(req, res, next) {
+router.put('/', function(req, res, next) {
+    console.log('aa2');
     if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
+        console.log('aa1');
         var contract_id = parseInt(req.body.contract_id);
         if (req.body.contract_id && req.body.state) {
             var state = parseInt(req.body.state);
             if (state === '1') { // 수락
-                Contract.acceptContract(contract_id, function (err, result) {
+                console.log('aa');
+                Contract.acceptContract(contract_id, function (err, results) {
                     if (err) {
                         return next(err);
                     }
-                    if (result === 1) { // 업데이트 완료시 -> 1
+                    if (results.changedRows === 1) { // 업데이트 완료시 -> 1
+                        delete results.changedRows;
                         res.send({
-                            result: '계약 체결을 수락했습니다. '
+                            result: results
                         });
                     } else {
                         res.send({
@@ -149,11 +153,11 @@ router.put('/', isAuthenticated, function(req, res, next) {
                 }
                 if (result === 1) { // 업데이트 된 값이 있다면 -> 1
                     res.send({
-                        result: '배송 요청에 성공했습니다.'
+                        result: '계약 체결에 성공했습니다.'
                     });
                 } else {
                     res.send({
-                        error : '배송 요청에 실패했습니다. 1'
+                        error : '계약 체결에 실패했습니다. 1'
                     });
                 }
             });
