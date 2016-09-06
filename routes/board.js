@@ -6,15 +6,15 @@ var url = require('url');
 var Board = require('../models/board');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
-var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
+var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; //Fixme
 
-// TODO : No.20 게시글 등록하기
+//  No.20 게시글 등록하기
 router.post('/', isSecure, isAuthenticated, function(req, res, next) {
     if (req.headers['content-type'] !== 'application/x-www-form-urlencoded') { //form-data 형식
         var form = new formidable.IncomingForm();
         form.keepExtensions = true;
         form.multiples = true;
-        form.uploadDir = path.join(__dirname, '../uploads/images/menus');
+        form.uploadDir = path.join(__dirname, '../uploads/images/boards');
         form.parse(req, function (err, fields, files) {
             if (err) {
                 return next(err);
@@ -42,22 +42,20 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
                if (err) {
                    return next(err);
                }
-                if (files.pic) { // 파일 없을 경우 필터링
-                    var filename = path.basename(files.pic.path);
-                    data.pic.push({url: url.resolve(ecTo, '/images/' + filename)});
-                }
-                if (result <= 1) {
+               if (result >= 1) {
+                    if (files.pic) { // 파일 없을 경우 필터링
+                       var filename = path.basename(files.pic.path);
+                       data.pic.push({url: url.resolve(ecTo, '/boards/' + filename)});
+                    }
                     if (boardType === 0) { // 칭찬
                         res.send({
-                            message: '칭찬이 등록되었습니다.',
-                            temp: data
+                            message: '칭찬이 등록되었습니다.'
                         });
                     } else if (boardType === 1) { // 신고
                         res.send({
-                            message: '신고가 등록되었습니다.',
-                            temp: data
+                            message: '신고가 등록되었습니다.'
                         });
-                    } else if (boardType === 3) { // 문의
+                    } else if (boardType === 2) { // 문의
                         res.send({
                             message : '문의가 등록되었습니다.'
                         })

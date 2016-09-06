@@ -27,15 +27,19 @@ function insertBoard(data, callback) {
             async.series([insertBoards, insertFiles], function(err, result) {
                 dbConn.release();
                 if (err) {
-                    return callback(err);
+                    return dbConn.rollback(function (){
+                        callback(err);
+                    });
                 }
-                callback(null, affectedRows);
+                dbConn.commit(function () {
+                    callback(null, affectedRows);
+                });
             });
         });
 
         function insertBoards(done) {
             if (data.boardType === 0 || data.boardType === 1) {
-                dbconn.query(sql_insert_board_praiseAndDeclare,
+                dbConn.query(sql_insert_board_praiseAndDeclare,
                     [data.user_id, data.name, data.boardType, data.esType, '', data.content],
                     function (err, result) {
                     if (err) {
@@ -43,10 +47,11 @@ function insertBoard(data, callback) {
                     }
                     affectedRows += result.affectedRows;
                     recentBoardId = result.insertId;
+                    console.log(recentBoardId);
                     done(null);
                 });
             } else if (data.boardType === 2) {
-                dbconn.query(sql_insert_board_inquire,
+                dbConn.query(sql_insert_board_inquire,
                     [data.user_id, '', data.boardType, data.title, data.content],
                     function (err, result) {
                     if (err) {
@@ -62,11 +67,13 @@ function insertBoard(data, callback) {
         }
         function insertFiles(done) {
             async.each(data.pic, function (item, as_done) {
-                dbConn.query(sql_insert_file, [recentBoardId, 2, item.name, item.path], function (err, result) { // file type -> board은 2 [DB]
+                console.log('aa');
+                dbConn.query(sql_insert_file, [2, recentBoardId, item.name, item.path], function (err, result) { // file type -> board은 2 [DB]
                     if (err) {
                         return as_done(err);
                     }
                     affectedRows += result.affectedRows; // OK -> 2
+                    console.log(result);
                     as_done(null);
                 });
             }, function (err) {
@@ -77,11 +84,5 @@ function insertBoard(data, callback) {
             });
         }
     });
-
-    // TODO : transaction 써야함 board에 입력, file 입력
-    // todo : parallel로 묶기
-
-
-
 }
 module.exports.insertBoard = insertBoard;
