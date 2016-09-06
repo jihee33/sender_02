@@ -11,7 +11,8 @@ function selectNotice(currentPage, itemsPerPage, type, callback) {
     // todo : 페이징
     // todo : 사진 처리
     // todo : 데이터 조합
-    var sql_select_notice = 'select n.id notice_id, n.type type, n.title title, n.text content, f.filename originalFilename, f.filepath filepath, n.write_time write_time ' +
+    var sql_select_notice = 'select n.id notice_id, n.type type, n.title title, n.text content, f.filename originalFilename, f.filepath filepath, ' +
+                            'date_format(convert_tz(n.write_time,?, ?), \'%Y-%m-%d %H:%i:%s\') write_time ' +
                             'from notice n join file f on (n.id = f.fk_id) ' +
                             'where f.type = ? and n.type = ? ' + // 4
                             'order by n.id ' +
@@ -28,8 +29,12 @@ function selectNotice(currentPage, itemsPerPage, type, callback) {
         info.data = [];
 
         async.each(results[0], function(item, e_done) {
+            var fileUrl = '';
             if (err) {
                 return e_done(err);
+            }
+            if (item.filepath.length !== 0) {
+                fileUrl = url.resolve(url_, '/notices_image/' + path.basename(item.filepath));
             }
             info.data.push({
                 notice_id : item.notice_id,
@@ -37,7 +42,7 @@ function selectNotice(currentPage, itemsPerPage, type, callback) {
                 title : item.title,
                 content : item.content,
                 originalFilename : item.originalFilename,
-                fileUrl: url.resolve(url_, '/notices_image/' + path.basename(item.filepath)), // file url
+                fileUrl: fileUrl, // file url
                 write_date : item.write_time
             });
             e_done(null);
@@ -54,7 +59,7 @@ function selectNotice(currentPage, itemsPerPage, type, callback) {
             if (err) {
                 return done(err);
             }
-            dbConn.query(sql_select_notice, [4, type, itemsPerPage * (currentPage - 1), itemsPerPage], function(err, results) {
+            dbConn.query(sql_select_notice, ['+00:00', '+09:00',4, type, itemsPerPage * (currentPage - 1), itemsPerPage], function(err, results) {
                 dbConn.release();
                 if (err) {
                     return done(err);
