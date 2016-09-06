@@ -28,22 +28,22 @@ function listDelivering(currentPage, itemsPerPage, callback) {
     //        dep_time, arr_time, filename, filepath
     var sql_select_count = 'select count(id) count from delivering';
 
-    async.parallel([selectLimitDelivering, selectCountDelivering], function(err, result){
+    async.parallel([selectLimitDelivering, selectCountDelivering], function(err, results){
         // selectLimitDelivering, selectCountDelivering을 동시에 실행
         if (err) {
             return callback(err);
         }
         var info = {};
         //result[1]은 selectCountDelivering 값
-        if (result[1].count === 0) {
-            callback(null, 0);
+        if (results[1].count === 0) {
+            callback(null, 0); //fixme 결과 값 변경
         } else {
-            info.totalPage = Math.ceil(result[1].count / itemsPerPage); // 총 페이지를 itemsPerPage로 나눠 올림
+            info.totalPage = Math.ceil(results[1].count / itemsPerPage); // 총 페이지를 itemsPerPage로 나눠 올림
             info.currentPage = currentPage; // 현재 페이지
             info.itemsPerPage = itemsPerPage; // rowCount
             info.data = [];
 
-            async.each(result[0], function (item, as_done) { //  result[0]은 selectLimitDelivering 값
+            async.each(results[0], function (item, as_done) { //  result[0]은 selectLimitDelivering 값
                 if (err) {
                     return as_done(err);
                 }
