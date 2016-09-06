@@ -194,24 +194,31 @@ router.get('/:contract_id', isAuthenticated, function(req, res, next) {
 // TODO : 16. 배송 상태 변경하기 // isAuthenticated,
 router.put('/:contract_id', function(req, res, next) {
     if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
-        var contractId = parseInt(req.params.contract_id);
-        var state = parseInt(req.body.state);
-        Contract.changeStateOfContract(contractId, state, function(err, result) {
-            if (err) {
-                return next(err);
-            }
-
-        });
-        res.send({
-            result : '계약 상태가 변경되었습니다.',
-            temp : {
-                contract_id : contract_id,
-                state : state
-            }
-        });
+        if (req.body.state && req.params.contract_id) {
+            var contractId = parseInt(req.params.contract_id);
+            var state = parseInt(req.body.state);
+            Contract.changeStateOfContract(contractId, state, function (err, result) {
+                if (err) {
+                    return next(err);
+                }
+                if (result === 1) {
+                    res.send({
+                        result: '계약 상태가 변경되었습니다.'
+                    });
+                } else {
+                    res.send({
+                        error: '계약 체결상태 변경을 실패했습니다. 2'
+                    });
+                }
+            });
+        } else {
+            res.send({
+                error: '계약 체결상태 변경을 실패했습니다. 3-1'
+            });
+        }
     } else {
         res.send({
-            error: '계약 체결상태 변경을 실패했습니다. 3'
+            error: '계약 체결상태 변경을 실패했습니다. 3-2'
         });
     }
 }); // 16. 배송 상태 변경하기

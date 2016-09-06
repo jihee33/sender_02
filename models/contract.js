@@ -277,8 +277,20 @@ function selectContract(contractId, callback) {
 } // No.16 계약 내역 보기
 
 // 배송 상태 변경 하기
-function changeStateOfContract(state, callback) {
-
+function changeStateOfContract(contractId, state, callback) {
+    var sql_change_contract = 'update contract set state = ? where id = ? ';
+    dbPool.getConnection(function(err, dbConn) {
+        if (err) {
+            return callback(err);
+        }
+        dbConn.query(sql_change_contract, [state, contractId], function(err, result) {
+            dbConn.release();
+            if (err) {
+                return callback(err);
+            }
+            callback(null, result.changeRows);
+        });
+    });
 }
 
 module.exports.changeStateOfContract = changeStateOfContract;
