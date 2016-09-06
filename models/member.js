@@ -132,9 +132,9 @@ function findUser(userId, callback) {
                     user.deliver_req = result[0].deliver_req;
                     user.activation = result[0].activation;
                     if (result[0].filepath) {
-                        user.pic = url.resolve(url_, '/profiles/' + path.basename(result[0].filepath));
+                        user.fileUrl = url.resolve(url_, '/profiles/' + path.basename(result[0].filepath));
                     } else {
-                        user.pic = '';
+                        user.fileUrl = '';
                     }
                 } else {
                     user.message = '존재하지 않는 회원';

@@ -9,7 +9,7 @@ function isAuthenticated(req, res, next) { // 세션 확인을 위해 추가
     next();
 }
 
-function isSecure (req, res, next) {// HTTPS 사용 위해 추가
+function isSecure(req, res, next) {// HTTPS 사용 위해 추가
     if(!req.secure) {
         return res.status(426).send({
             message: 'Upgrade Needed'
