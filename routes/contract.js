@@ -105,14 +105,11 @@ router.get('/', isSecure, isAuthenticated, function(req, res, next) {
 
 //  14. 계약 신청 및 체결하기
 router.put('/', function(req, res, next) {
-    console.log('aa2');
     if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
-        console.log('aa1');
         var contract_id = parseInt(req.body.contract_id);
         if (req.body.contract_id && req.body.state) {
             var state = parseInt(req.body.state);
-            if (state === '1') { // 수락
-                console.log('aa');
+            if (state === 1) { // 수락;
                 Contract.acceptContract(contract_id, function (err, results) {
                     if (err) {
                         return next(err);
@@ -128,7 +125,7 @@ router.put('/', function(req, res, next) {
                         });
                     }
                 });
-            } else if (state === '9') { // 거절
+            } else if (state === 9) { // 거절
                 Contract.rejectContract(contract_id, function (err, result) {
                     if (err) {
                         return next(err);
