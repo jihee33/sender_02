@@ -6,6 +6,7 @@ var async = require('async');
 var url = require('url');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
+var isActivated = require('./common').isActivated;
 
 var Member = require('../models/member');
 
@@ -55,7 +56,7 @@ router.get('/me', isSecure, isAuthenticated, function(req, res, next) {
     });
 }); // 3. 자신의 정보 보기
 
-router.get('/:user_id', isSecure, isAuthenticated, function(req, res, next) {
+router.get('/:user_id', isSecure, isAuthenticated, isActivated, function(req, res, next) {
     var userId = req.params.user_id;
     Member.findUser(userId, function (err, user) {
         if (err) {
@@ -87,7 +88,7 @@ router.get('/me/deliverings', isAuthenticated, function(req, res, next) {
 });
 
 // 5. 자신의 프로필 사진 변경하기 router
-router.put('/me', isAuthenticated, function(req, res, next) {
+router.put('/me', isAuthenticated, isActivated, function(req, res, next) {
     var form = new formidable.IncomingForm();
     form.keepExtensions = true;
     form.multiples = true;
@@ -129,7 +130,7 @@ form.parse(req, function(err, fields, files) {
 }); // 5. 자신의 프로필 사진 변경 하기
 
 // TODO : 7. 회원 탈퇴 하기
-router.delete('/', isAuthenticated, function(req, res, next) {
+router.delete('/', isAuthenticated, isActivated, function(req, res, next) {
     var userId = req.user.id;
     res.send({ result : '회원 탈퇴가 처리되었습니다.' });
 }); // 7. 회원 탈퇴 하기
