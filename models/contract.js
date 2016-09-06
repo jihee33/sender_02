@@ -206,7 +206,7 @@ function acceptContract(contractId, callback) {
                 return callback(err);
                 }
             var data = {};
-            data.changedRows = results[0].changedRows;
+            data.changedRows = results[0];
             data.sending_id = results[1].sending_id;
             data.sending_user_id = results[1].sending_user_id;
             callback(null, data);
