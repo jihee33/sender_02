@@ -47,8 +47,9 @@ app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/sendings', express.static(path.join(__dirname, 'uploads/images/sendings')));// 배송 요청 사진 접근 위한 static service url 선언
 app.use('/profiles', express.static(path.join(__dirname, 'uploads/images/profiles')));
-app.use('/board',express.static(path.join(__dirname, 'uploads/images/boards')));
-app.use('/chatting',express.static(path.join(__dirname, 'uploads/images/chattings')));
+app.use('/boards',express.static(path.join(__dirname, 'uploads/images/boards')));
+app.use('/chattings',express.static(path.join(__dirname, 'uploads/images/chattings')));
+app.use('/notices',express.static(path.join(__dirname, 'uploads/images/notices')));
 
 
 app.use('/auth', auth);// 인증 부분 model 연결
