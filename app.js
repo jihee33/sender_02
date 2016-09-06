@@ -13,6 +13,7 @@ var RedisStore = require('connect-redis')(session);// 세션 정보 저장을 �
 var auth = require('./routes/auth');// 인증 부분 router 연결
 var board = require('./routes/board');// 사용자 게시물 등록 부분 router 연결
 var chatting = require('./routes/chatting');// 채팅 부분 router 연결
+var delivering = require('./routes/delivering');// 배달가기 부분 router 연결
 var contract = require('./routes/contract');// 계약 부분 router 연결
 var member = require('./routes/member');// 사용자 부분 router 연결
 var notice = require('./routes/notice');// 공지사항 및 이벤트 부분 router 연결
@@ -53,6 +54,7 @@ app.use('/chatting',express.static(path.join(__dirname, 'uploads/images/chatting
 app.use('/auth', auth);// 인증 부분 model 연결
 app.use('/boards', board);// 사용자 게시물 부분 router
 app.use('/chattings', chatting);
+app.use('/deliverings', delivering);
 app.use('/contracts', contract);
 app.use('/members', member);
 app.use('/notices', notice);

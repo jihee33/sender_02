@@ -104,97 +104,6 @@ router.get('/', isSecure, isAuthenticated, function(req, res, next) {
     }
 }); // 10. 배송 요청 보기
 
-// 11. 배달 가기 목록 보기
-router.get('/delivering', isSecure, isAuthenticated, function(req, res, next) {
-    var currentPage = parseInt(req.query.currentPage); // 현재 페이지
-    var itemsPerPage = parseInt(req.query.itemsPerPage); // rowCount
-    if (req.url.match(/\?currentPage=\d+&itemsPerPage=\d+/i)) {
-        Contract.listDelivering(currentPage, itemsPerPage, function(err, result) {
-            if (err) {
-                return next(err);
-            }
-            if (result !== 0) {
-                res.send({
-                    result : result
-                });
-            } else {
-                res.send({
-                    error : '배달 가기의 목록을 불러올 수 없습니다.'
-                });
-            }
-        });
-    } else {
-        res.send({
-            error : '배달 가기의 목록을 불러올 수 없습니다.'
-        });
-    }
-}); // 11. 배달 가기 목록 보기
-
-// 12. ‘배달가기’ 상세 목록 보기
-router.get('/delivering/:delivering_id', isSecure, isAuthenticated, function(req, res, next) {
-    var id = parseInt(req.params.delivering_id);
-    if (id !== undefined) {
-        Contract.listIdDelivering(id, function (err, result) {
-            if (err) {
-                return next(err);
-            }
-            if (result !== 0) {
-                res.send({
-                    result: result
-                });
-            } else {
-                res.send({
-                    error: '배달 가기의 목록을 불러올 수 없습니다.'
-                });
-            }
-        });
-    } else {
-        res.send({
-            error: '배달 가기의 목록을 불러올 수 없습니다.'
-        });
-    }
-}); // 12. ‘배달가기’ 상세 목록 보기
-
-// 13. ‘배달 가기’ 등록
-router.post('/delivering', isSecure, isAuthenticated, function(req, res, next) {
-    if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
-        if (req.body.here_lat && req.body.here_lon && req.body.next_lat && req.body.next_lon && req.body.dep_time && req.body.arr_time) { // 필수 데이터
-            var result = {};
-            result.userId = parseInt(req.body.user_id); //fixme : 추후 session값으로 변경
-            result.here_lat = req.body.here_lat; // 현위치 위도
-            result.here_lon = req.body.here_lon; // 현위치 경도
-            result.next_lat = req.body.next_lat; // 행선지 위도
-            result.next_lon = req.body.next_lon; // 행선지 경도
-            result.dep_time = req.body.dep_time; // 출발 시각
-            result.arr_time = req.body.arr_time; // 도착 시각
-            Contract.insertDelivering(result, function(err, data) {
-                if (err) {
-                    next(err);
-                }
-                if (data.exist === 1) { // 등록 된 값이 있다면 -> 1
-                    res.send({
-                        result : {
-                            delivering_id : data.delivering_id
-                        }
-                    });
-                } else {
-                    res.send({
-                        error : '배달 가기 정보 등록에 실패했습니다. 1'
-                    });
-                }
-            });
-        } else {
-            res.send({
-                error : '배달 가기 정보 등록에 실패했습니다. 2'
-            });
-        }
-    } else {
-        res.send({
-            error: '배달 가기 정보 등록에 실패했습니다. 3'
-        });
-    }
-}); // 13. ‘배달 가기’ 등록
-
 //  14. 계약 신청 및 체결하기
 router.put('/', isAuthenticated, function(req, res, next) {
     if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
@@ -202,7 +111,7 @@ router.put('/', isAuthenticated, function(req, res, next) {
         if (req.body.contract_id && req.body.state) {
             var state = parseInt(req.body.state);
             if (state === '1') { // 수락
-                Contract.AcceptContract(contract_id, function (err, result) {
+                Contract.acceptContract(contract_id, function (err, result) {
                     if (err) {
                         return next(err);
                     }
@@ -217,7 +126,7 @@ router.put('/', isAuthenticated, function(req, res, next) {
                     }
                 });
             } else if (state === '9') { // 거절
-                Contract.RejectContract(contract_id, function (err, result) {
+                Contract.rejectContract(contract_id, function (err, result) {
                     if (err) {
                         return next(err);
                     }
@@ -279,11 +188,17 @@ router.get('/:contract_id', isAuthenticated, function(req, res, next) {
     }
 }); // 15. 계약 내역 보기
 
-// TODO : 16. 배송 상태 변경하기
-router.put('/:contract_id', isAuthenticated, function(req, res, next) {
+// TODO : 16. 배송 상태 변경하기 // isAuthenticated,
+router.put('/:contract_id', function(req, res, next) {
     if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
-        var contract_id = req.params.contract_id;
-        var state = req.body.state;
+        var contractId = parseInt(req.params.contract_id);
+        var state = parseInt(req.body.state);
+        Contract.changeStateOfContract(contractId, state, function(err, result) {
+            if (err) {
+                return next(err);
+            }
+
+        });
         res.send({
             result : '계약 상태가 변경되었습니다.',
             temp : {
@@ -293,7 +208,7 @@ router.put('/:contract_id', isAuthenticated, function(req, res, next) {
         });
     } else {
         res.send({
-            error: '계약 체결상태 변경 실패. 3'
+            error: '계약 체결상태 변경을 실패했습니다. 3'
         });
     }
 }); // 16. 배송 상태 변경하기
