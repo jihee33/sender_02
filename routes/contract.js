@@ -52,7 +52,7 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
                         result.pic.push({url: url.resolve(url_, '/images/' + filename)});
                         form.uploadDir = path.join(__dirname, '../uploads/images/sendings'); //파일 업로드
                     }
-                    if (data.affectedRows === 3) { //insert가 제대로 된 경우
+                    if (data.affectedRows <= 3) { //insert가 제대로 된 경우
                         res.send({
                             result: {
                                 sending_id: data.sending_id, // 생성된 sending table의 id
@@ -188,8 +188,8 @@ router.get('/:contract_id', isAuthenticated, function(req, res, next) {
     }
 }); // 15. 계약 내역 보기
 
-// TODO : 16. 배송 상태 변경하기 // isAuthenticated,
-router.put('/:contract_id', function(req, res, next) {
+// 16. 배송 상태 변경하기
+router.put('/:contract_id', isAuthenticated, function(req, res, next) {
     if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
         if (req.body.state && req.params.contract_id) {
             var contractId = parseInt(req.params.contract_id);
