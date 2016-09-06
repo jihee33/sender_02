@@ -112,7 +112,7 @@ function findUser(userId, callback) {
             if (err) {
                 return callback(err);
             }
-            user.star = result[1].avg_star || '';
+            user.star = result[1].avg_star;
             callback(null, user);
         });
 
@@ -127,14 +127,14 @@ function findUser(userId, callback) {
                     user.phone = result[0].phone;
                     user.fb_id = result[0].fb_id;
                     user.api_type = result[0].api_type;
-                    user.introduction = result[0].introduction || '';
+                    user.introduction = result[0].introduction;
                     user.deliver_com = result[0].deliver_com;
                     user.deliver_req = result[0].deliver_req;
                     user.activation = result[0].activation;
                     if (result[0].filepath) {
                         user.fileUrl = url.resolve(url_, '/profiles/' + path.basename(result[0].filepath));
                     } else {
-                        user.fileUrl = '';
+                        user.fileUrl = null;
                     }
                 } else {
                     user.message = '존재하지 않는 회원';
@@ -181,7 +181,7 @@ function findDeliverings(userId, callback) {
                 deliverer.totalCount += 1;
                 deliverer.data.push({
                     name : item.dname,
-                    date : item.res_time || ''
+                    date : item.res_time
                 });
             }, function (err) {
                 if (err) {
