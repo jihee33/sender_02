@@ -49,7 +49,7 @@ app.use('/sendings', express.static(path.join(__dirname, 'uploads/images/sending
 app.use('/profiles', express.static(path.join(__dirname, 'uploads/images/profiles')));
 app.use('/boards',express.static(path.join(__dirname, 'uploads/images/boards')));
 app.use('/chattings',express.static(path.join(__dirname, 'uploads/images/chattings')));
-app.use('/notices',express.static(path.join(__dirname, 'uploads/images/notices')));
+app.use('/notices_image',express.static(path.join(__dirname, 'uploads/images/notices')));
 
 
 app.use('/auth', auth);// 인증 부분 model 연결

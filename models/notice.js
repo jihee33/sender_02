@@ -37,7 +37,7 @@ function selectNotice(currentPage, itemsPerPage, type, callback) {
                 title : item.title,
                 content : item.content,
                 originalFilename : item.originalFilename,
-                fileUrl: url.resolve(url_, '/notices/' + path.basename(item.filepath)), // file url
+                fileUrl: url.resolve(url_, '/notice_image/' + path.basename(item.filepath)), // file url
                 write_date : item.write_time
             });
             e_done(null);
