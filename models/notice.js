@@ -11,7 +11,7 @@ function selectNotice(currentPage, itemsPerPage, type, callback) {
     // todo : 페이징
     // todo : 사진 처리
     // todo : 데이터 조합
-    var sql_select_notice = 'select n.id notice_id, n.type type, n.title title, n.text content, f.filename originalFilename, f.filepath filepath, ' +
+    var sql_select_notice = 'select n.id notice_id, n.type type, n.title title, n.content content, f.filename originalFilename, f.filepath filepath, ' +
                             'date_format(convert_tz(n.write_time,?, ?), \'%Y-%m-%d %H:%i:%s\') write_time ' +
                             'from notice n join file f on (n.id = f.fk_id) ' +
                             'where f.type = ? and n.type = ? ' + // 4
