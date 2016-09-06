@@ -52,7 +52,6 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
                         result.pic.push({url: url.resolve(url_, '/images/' + filename)});
                         form.uploadDir = path.join(__dirname, '../uploads/images/sendings'); //파일 업로드
                     }
-
                     if (data.affectedRows === 3) { //insert가 제대로 된 경우
                         res.send({
                             result: {
