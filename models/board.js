@@ -36,7 +36,7 @@ function insertBoard(data, callback) {
         function insertBoards(done) {
             if (data.boardType === 0 || data.boardType === 1) {
                 dbconn.query(sql_insert_board_praiseAndDeclare,
-                    [data.user_id, data.name, data.boardType, data.esType, data.title, data.content],
+                    [data.user_id, data.name, data.boardType, data.esType, '', data.content],
                     function (err, result) {
                     if (err) {
                         return done(err);
