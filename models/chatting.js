@@ -38,17 +38,18 @@ function getChattingLogs(data, callback) {
                dbConn.release();
                return callback(err);
            }
-            var log = {};
-            log.message = [];
-            log.date = [];
+            var log = [];
             dbConn.query(sql_get_chatting_log, [data.receiverId, data.contractId], function(err, results) {
                 if (err) {
                     dbConn.rollback();
                     return dbConn.release();
                 }
                 async.each(results, function(item, done) {
-                    log.message.push(item.content);
-                    log.date.push(item.date);
+                    log.push({
+                        message : item.content,
+                        date : item.date
+                    });
+
                     dbConn.query(sql_update_chatting_log, [item.id, item.contractId], function(err) {
                         if (err) {
                             dbConn.rollback();
