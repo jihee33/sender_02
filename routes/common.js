@@ -21,11 +21,8 @@ function isAuthenticated(req, res, next) { // 세션 확인을 위해 추가
         return res.send({
             error: '로그인이 필요합니다.'
         });
-        var err = new Error('login needed');
-        err.status = 401;
-        next(err);
     }
-
+    next();
 }
 
 function isSecure(req, res, next) {// HTTPS 사용 위해 추가
@@ -33,11 +30,8 @@ function isSecure(req, res, next) {// HTTPS 사용 위해 추가
         return res.send({
             error: '프로토콜 변경이 필요합니다.'
         });
-        var err = new Error('upgrade needed');
-        err.status = 426;
-        next(err);
     }
-
+    next();
 }
 
 function isActivated(req, res, next) { // 세션 확인을 위해 추가
@@ -45,11 +39,8 @@ function isActivated(req, res, next) { // 세션 확인을 위해 추가
         return res.send({
             error: '핸드폰 번호 등록이 필요합니다.'
         });
-        var err = new Error('activation needed');
-        err.status = 401;
-        next(err);
     }
-
+    next();
 }
 
 module.exports.isAuthenticated = isAuthenticated;
