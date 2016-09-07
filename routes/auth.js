@@ -12,7 +12,7 @@ var logger = require('../common/logger');
 passport.use(new FacebookTokenStrategy({
     clientID: process.env.FACEBOOK_APP_ID,
     clientSecret: process.env.FACEBOOK_APP_SECRET,
-    profileFields: ['id', 'displayName', 'name','gender', 'profileUrl', 'photos', 'emails']
+    profileFields: ['id', 'displayName', 'name', 'gender', 'profileUrl', 'photos', 'emails']
 }, function(accessToken, refreshToken, profile, done) {
     Member.findOrCreateFacebook(profile, function (err, user) {// 추후 변수 수정 필요
         if(err) {

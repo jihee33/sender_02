@@ -15,7 +15,7 @@ function findOrCreateFacebook(profile, callback) {
        if (err) {
            return callback(err);
        }
-       dbConn.query(sql_find_facebook_id, [process.env.MYSQ_SECRET, 512, profile.id], function (err, result) {
+       dbConn.query(sql_find_facebook_id, [process.env.MYSQL_SECRET, 512, profile.id], function (err, result) {
            if (err) {
                return callback(err);
            }
@@ -34,6 +34,7 @@ function findOrCreateFacebook(profile, callback) {
                    dbConn.release();
                    return callback(err)
                }
+               console.log(profile);
                dbConn.query(sql_create_facebook_id, [profile.id, profile.displayName, process.env.MYSQL_SECRET, 512], function (err, result) {
                    if (err) {
                        return dbConn.rollback(function() {
@@ -290,6 +291,7 @@ function updateProfileImage(userId, file, callback) {
         } // deleteFile
         function insertFile(callback) { // 여러개일때
             async.each(file, function (item, done) {
+                console.log(item);
                 dbConn.query(sql_insert_file, [0, userId, item[0].name, item[0].path], function (err, result) {
                     if (err) {
                         return done(err);

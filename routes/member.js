@@ -57,7 +57,7 @@ router.get('/me', getLog, isSecure, isAuthenticated, function(req, res, next) {
 }); // 3. 자신의 정보 보기
 
 router.get('/:user_id', getLog, isSecure, isAuthenticated, isActivated, function(req, res, next) {
-    Member.findUser(req.user.id, function (err, user) {
+    Member.findUser(req.params.user_id, function (err, user) {
         if (err) {
             return function() {
                 res.send({
@@ -97,7 +97,6 @@ router.put('/me', getLog, isAuthenticated, isActivated, function(req, res, next)
         var profileImage = {};
         profileImage.files = [];
         profileImage.files.push(files.pic);
-
         Member.updateProfileImage(req.user.id, profileImage, function(err, result) {
             if (err) {
                 return next(err);
