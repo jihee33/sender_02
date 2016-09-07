@@ -4,7 +4,7 @@ var path = require('path');
 var async = require('async');
 var fs = require('fs');
 
-var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080';
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; // fixme : port -> 80
 
 function findOrCreateFacebook(profile, callback) {
     var sql_find_facebook_id = 'SELECT id, phone, introduction, deliver_com, deliver_req FROM user WHERE fb_id = ?';
@@ -98,8 +98,6 @@ function findUser(userId, callback) {
                           'FROM file WHERE type = 0) f ON (u.id = f.fk_id) WHERE u.id = ?';
     var sql_select_avg_star = 'SELECT AVG(star) avg_star FROM review r JOIN (SELECT id, user_id, contract_id ' +
                               'FROM delivering WHERE user_id = ?) a ON (r.contract_id = a.contract_id)';
-
-
 
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
@@ -298,6 +296,54 @@ function updateProfileImage(userId, file, callback) {
     });
 }
 
+function deleteUser(userId, callback) {
+    var sql_select_apiType = 'select api_type from user where id = ? ';
+    var sql_reset_fbId = 'update user set fb_id = ? where id = ? ';
+    var sql_reset_naverId = 'update user set naver_id = ? where id = ? ';
+
+    dbPool.getConnection(function(err, dbConn) {
+        if (err) {
+            return callback(err);
+        }
+        async.waterfall([selectApiType, resetUserApiId], function(err, results){
+            //api_type의 값을 알아와서 api_id를 초기화 해야함
+            if (err) {
+                return callback(err);
+            }
+            callback(null, results);
+        });
+        function selectApiType(done) { //api_id 추출
+            dbConn.query(sql_select_apiType, [userId], function(err, result) {
+                if (err) {
+                    done(err);
+                }
+                done(null, result[0].api_type);
+            });
+        }
+        function resetUserApiId(apiType, done) { // api_id값에 탈퇴id값을 삽입
+            if (apiType === 0) {
+                dbConn.query(sql_reset_fbId, ['444^*-^', userId], function (err, result) {
+                    if (err) {
+                        done(err);
+                    }
+                    console.log(result.changedRows);
+                    done(null, result.changedRows);
+                });
+            } else if (apiType === 1) {
+                dbConn.query(sql_reset_naverId, ['444^*-^', userId], function (err, result) {
+                    if (err) {
+                        done(err);
+                    }
+                    done(null, result.changedRows);
+                });
+            } else {
+                done(new Error('apiType이 없습니다.'));
+            }
+        }
+    });
+}
+
+module.exports.deleteUser = deleteUser;
 module.exports.findById = findById;
 module.exports.findUser = findUser;
 module.exports.findOrCreateFacebook = findOrCreateFacebook;

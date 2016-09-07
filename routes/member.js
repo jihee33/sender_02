@@ -10,8 +10,6 @@ var isActivated = require('./common').isActivated;
 
 var Member = require('../models/member');
 
-var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080';
-
 router.put('/', isSecure, isAuthenticated, function(req, res, next) {
     var user = {};
     user.phone = req.body.phone;
@@ -57,8 +55,7 @@ router.get('/me', isSecure, isAuthenticated, function(req, res, next) {
 }); // 3. 자신의 정보 보기
 
 router.get('/:user_id', isSecure, isAuthenticated, isActivated, function(req, res, next) {
-    var userId = req.params.user_id;
-    Member.findUser(userId, function (err, user) {
+    Member.findUser(req.user.id, function (err, user) {
         if (err) {
             return function() {
                 res.send({
@@ -76,8 +73,7 @@ router.get('/:user_id', isSecure, isAuthenticated, isActivated, function(req, re
 
 // 나의 물품을 배송한 사람 찾기 router
 router.get('/me/deliverings', isAuthenticated, function(req, res, next) {
-    var userId = req.query.user_id;// fixme : 추후 세션에서 자신의 id 불러옴 -> req.user
-    Member.findDeliverings(userId, function (err, result) {
+    Member.findDeliverings(req.user.id, function (err, result) {
         if (err) {
             return next(err);
         }
@@ -110,29 +106,20 @@ router.put('/me', isAuthenticated, isActivated, function(req, res, next) {
             });
         });
     });
-/*var form = new formidable.IncomingForm();
-form.keepExtensions = true;
-form.multiples = true;
-form.uploadDir = path.join(__dirname, '../uploads/images/menus');
-form.parse(req, function(err, fields, files) {
-    if (err) {return next(err);}
-    var menu = {};
-    menu.files = [];
-        menu.files.push(files.pic);
-        var filename = path.basename(files.pic.path);
-        menu.files.push({url : url.resolve(url_ ,'/images/' + filename)});
-
-        res.send({
-            result: '프로필 사진의 변경을 성공하였습니다.',
-            temp : menu
-        });
-});*/
 }); // 5. 자신의 프로필 사진 변경 하기
 
-// TODO : 7. 회원 탈퇴 하기
+// 7. 회원 탈퇴 하기
 router.delete('/', isAuthenticated, isActivated, function(req, res, next) {
-    var userId = req.user.id;
-    res.send({ result : '회원 탈퇴가 처리되었습니다.' });
+    Member.deleteUser(req.user.id, function(err, result) {
+        if (err) {
+            return next(err);
+        }
+        if (result === 1) {
+            res.send({ result : '회원 탈퇴가 처리되었습니다.' });
+        } else {
+            res.send({ result : '회원 탈퇴가 미처리되었습니다.' });
+        }
+    });
 }); // 7. 회원 탈퇴 하기
 
 module.exports = router;
