@@ -6,11 +6,12 @@ var url = require('url');
 var Contract = require('../models/contract');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
+var getLog = require('./common').getLog;
 var logger = require('../common/logger');
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; //fixme : port 변경 -> 80
 
 // 9. 배송 요청 등록 및 미체결 계약 생성
-router.post('/', isSecure, isAuthenticated, function(req, res, next) {
+router.post('/', getLog, isSecure, isAuthenticated, function(req, res, next) {
     if (req.headers['content-type'] !== 'application/x-www-form-urlencoded') { //form-data 형식
         var form = new formidable.IncomingForm();
         form.keepExtensions = true;
@@ -80,7 +81,7 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
 }); // 9. 배송 요청 등록 및 미체결 계약 생성
 
 // 10. 배송 요청 보기
-router.get('/', isSecure, isAuthenticated, function(req, res, next) {
+router.get('/', getLog, isSecure, isAuthenticated, function(req, res, next) {
     if(req.url.match(/\/\?delivering_id=\d+/i)) {
         var delivering_id = parseInt(req.query.delivering_id);
         Contract.selectSending(delivering_id, function(err, result) {
@@ -105,7 +106,7 @@ router.get('/', isSecure, isAuthenticated, function(req, res, next) {
 }); // 10. 배송 요청 보기
 
 //  14. 계약 신청 및 체결하기
-router.put('/', function(req, res, next) {
+router.put('/', getLog, function(req, res, next) {
     if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
         var contract_id = parseInt(req.body.contract_id);
         if (req.body.contract_id && req.body.state) {
@@ -171,7 +172,7 @@ router.put('/', function(req, res, next) {
 }); // 14. 계약 신청 및 체결하기
 
 // 15. 계약 내역 보기
-router.get('/:contract_id', isAuthenticated, function(req, res, next) {
+router.get('/:contract_id', getLog, isAuthenticated, function(req, res, next) {
     if (req.params.contract_id) {
         var contract_id = req.params.contract_id;
         Contract.selectContract(contract_id, function(err, result) {
@@ -190,7 +191,7 @@ router.get('/:contract_id', isAuthenticated, function(req, res, next) {
 }); // 15. 계약 내역 보기
 
 // 16. 배송 상태 변경하기
-router.put('/:contract_id', isAuthenticated, function(req, res, next) {
+router.put('/:contract_id', getLog, isAuthenticated, function(req, res, next) {
     if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
         if (req.body.state && req.params.contract_id) {
             var contractId = parseInt(req.params.contract_id);

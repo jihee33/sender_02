@@ -5,8 +5,8 @@ var path = require('path');
 var url = require('url');
 var fcm = require('node-gcm');
 var Chatting = require('../models/chatting');
-var logger = require('../common/logger');
 
+var getLog = require('./common').getLog;
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
 var isActivated = require('./common').isActivated;
@@ -14,7 +14,7 @@ var isActivated = require('./common').isActivated;
 var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080';
 
 
-router.post('/', isAuthenticated, isActivated, function(req, res, next) {
+router.post('/', getLog,  isAuthenticated, isActivated, function(req, res, next) {
     if(req.url.match(/\/\?action=send/i)) {
         // TODO : No.21 채팅 메세지 전송하기
         var form = new formidable.IncomingForm();
@@ -116,7 +116,7 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
     });*/
 
 });//  No.22 채팅 메세지 전송하기
-router.get('/', isSecure, isAuthenticated, isActivated, function(req, res, next) {
+router.get('/', getLog, isSecure, isAuthenticated, isActivated, function(req, res, next) {
     // TODO : No.22 채팅 메세지 수신하기
     if(req.url.match(/\/\?senderId=\d+&contractId=\d+/i)) {
         var data = {};

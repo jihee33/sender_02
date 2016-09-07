@@ -77,12 +77,22 @@ router.post('/local/login', isSecure, function(req, res, next) {
     });
 });
 
-router.get('/logout', isAuthenticated, function(req, res, next) {
+router.get('/logout', getLog, isAuthenticated, function(req, res, next) {
     req.logout();
     res.send({ result: '로그아웃 완료' });
 });
 
-router.post('/facebook/token', isSecure, getLog, passport.authenticate('facebook-token', {scope : ['email']}), function(req, res, next) {
+router.post('/facebook/token', getLog, isSecure, passport.authenticate('facebook-token', {scope : ['email']}), function(req, res, next) {
+    /*logger.log('debug', 'method: %s', req.method);
+    logger.log('debug', 'protocol: %s', req.protocol);
+    logger.log('debug', 'host: %s', req.headers['host']);
+    logger.log('debug', 'originalUrl: %s', req.originalUrl);
+    logger.log('debug', 'baseUrl: %s', req.baseUrl);
+    logger.log('debug', 'url: %s', req.url);
+    logger.log('debug', 'body: %j', req.body, {});
+    logger.log('debug', 'range: %s', req.headers['range']);
+
+    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);*/
      Member.updateRegistrationToken(req.body.registration_token, req.user.id, function(err, next) {
         if (err) {
             return next(err);

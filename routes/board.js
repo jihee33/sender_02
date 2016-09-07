@@ -6,11 +6,11 @@ var url = require('url');
 var Board = require('../models/board');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
-var logger = require('../common/logger');
+var getLog = require('./common').getLog;
 var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; //Fixme
 
 //  No.20 게시글 등록하기
-router.post('/', isSecure, isAuthenticated, function(req, res, next) {
+router.post('/', getLog, isSecure, isAuthenticated, function(req, res, next) {
     if (req.headers['content-type'] !== 'application/x-www-form-urlencoded') { //form-data 형식
         var form = new formidable.IncomingForm();
         form.keepExtensions = true;
