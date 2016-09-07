@@ -26,9 +26,10 @@ function insertSendingAndContract(data, callback) {
                 return callback(err);
             }
             async.series([insertContract, insertSending, insertFile], function(err) {
-                dbConn.release();
+
                 if (err) {
                     return dbConn.rollback(function (){
+                        dbConn.release();
                        callback(err);
                    });
                 }

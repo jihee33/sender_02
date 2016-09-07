@@ -24,7 +24,7 @@ router.post('/', getLog, isSecure, isAuthenticated, function(req, res, next) {
 
             if (fields.here_lat && fields.here_lon && fields.addr_lat && fields.addr_lon && fields.rec_phone && fields.price) { //필수 데이터
                 var result = {};
-                result.user_id = parseInt(fields.user_id); //fixme : session값으로 변경 -> req.user
+                result.user_id = req.user.id; // session값으로 변경 -> req.user
                 result.here_lat = fields.here_lat; // 현위치 위도
                 result.here_lon = fields.here_lon; // 현위치 경도
                 result.addr_lat = fields.addr_lat; // 목적지 위도
