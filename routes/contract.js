@@ -6,6 +6,7 @@ var url = require('url');
 var Contract = require('../models/contract');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
+var logger = require('../common/logger');
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; //fixme : port 변경 -> 80
 
 // 9. 배송 요청 등록 및 미체결 계약 생성

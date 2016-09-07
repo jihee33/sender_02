@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var isAuthenticated = require('./common').isAuthenticated;
 var Notice = require('../models/notice');
+var logger = require('../common/logger');
 
 // TODO :  이벤트, 공지사항
 router.get('/', isAuthenticated, function(req, res, next) {

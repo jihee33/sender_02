@@ -2,11 +2,12 @@ var express = require('express');
 var router = express.Router();
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
-// var FacebookStrategy = require('passport-facebook').Strategy;
 var FacebookTokenStrategy = require('passport-facebook-token');
 var Member = require('../models/member');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
+var getLog = require('./common').getLog;
+var logger = require('../common/logger');
 
 passport.use(new FacebookTokenStrategy({
     clientID: process.env.FACEBOOK_APP_ID,
@@ -81,8 +82,8 @@ router.get('/logout', isAuthenticated, function(req, res, next) {
     res.send({ result: '로그아웃 완료' });
 });
 
-router.post('/facebook/token', isSecure, passport.authenticate('facebook-token', {scope : ['email']}), function(req, res, next) {
-    Member.updateRegistrationToken(req.body.registration_token, req.user.id, function(err, next) {
+router.post('/facebook/token', isSecure, getLog, passport.authenticate('facebook-token', {scope : ['email']}), function(req, res, next) {
+     Member.updateRegistrationToken(req.body.registration_token, req.user.id, function(err, next) {
         if (err) {
             return next(err);
         }

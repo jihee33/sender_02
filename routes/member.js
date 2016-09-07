@@ -9,6 +9,7 @@ var isAuthenticated = require('./common').isAuthenticated;
 var isActivated = require('./common').isActivated;
 
 var Member = require('../models/member');
+var logger = require('../common/logger');
 
 router.put('/', isSecure, isAuthenticated, function(req, res, next) {
     var user = {};
