@@ -90,6 +90,7 @@ router.put('/me', getLog, isAuthenticated, isActivated, function(req, res, next)
     var form = new formidable.IncomingForm();
     form.keepExtensions = true;
     form.multiples = true;
+    form.uploadDir = path.join(__dirname, '../uploads/images/profiles');
     form.parse(req, function(err, fields, files) {
         if (err) {
             return next(err);
@@ -101,7 +102,7 @@ router.put('/me', getLog, isAuthenticated, isActivated, function(req, res, next)
             if (err) {
                 return next(err);
             }
-            form.uploadDir = path.join(__dirname, '../uploads/images/profiles');
+
             res.send({
                 result: '프로필 사진의 변경을 성공하였습니다.'
             });
