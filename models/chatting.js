@@ -24,7 +24,51 @@ function insertFile() {
 
 }
 
-function getChattingLogs() {
+function getChattingLogs(data, callback) {
+    var sql_get_chatting_log = 'SELECT id, sender_id, content, ctime date FROM chatting WHERE ctime < CURRENT_TIMESTAMP ' +
+                               'AND receiver_id = ? AND type = 0 AND contract_id = ?';
+    var sql_update_chatting_log = 'UPDATE chatting SET type = 1 WHERE id = ? AND type = 0 AND contract_id = ?';
+
+    dbPool.getConnection(function(err, dbConn) {
+        if (err) {
+            return callback(err);
+        }
+        dbConn.beginTransaction(function(err) {
+           if (err) {
+               dbConn.release();
+               return callback(err);
+           }
+            var log = {};
+            log.message = [];
+            log.date = [];
+            dbConn.query(sql_get_chatting_log, [data.receiverId, data.contractId], function(err, results) {
+                if (err) {
+                    dbConn.rollback();
+                    return dbConn.release();
+                }
+                async.each(results, function(item, done) {
+                    log.message.push(item.content);
+                    log.date.push(item.date);
+                    dbConn.query(sql_update_chatting_log, [item.id, item.contractId], function(err) {
+                        if (err) {
+                            dbConn.rollback();
+                            return dbConn.release();
+                        }
+                        done(null);
+                    });
+                }, function(err) {
+                    if (err) {
+                        return callback(err);
+                    }
+                });
+                dbConn.commit();
+                dbConn.release();
+                callback(null, log);
+            });
+        });
+
+    });
+
 
 }
 
