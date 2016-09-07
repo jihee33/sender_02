@@ -19,17 +19,17 @@ router.put('/', isSecure, isAuthenticated, function(req, res, next) {
             if (err) {
                 return function() {
                     res.send({
-                        error: '사용자 등록을 실패했습니다.'
+                        error: '핸드폰 번호 등록을 실패했습니다.'
                     });
                     next(err);
                 }
             }
             res.send({
-               result: '사용자 등록을 성공했습니다.'
+               result: '핸드폰 번호 등록을 성공했습니다.'
             });
         });
     } else {
-        next(new Error('사용자 등록을 실패했습니다.'));
+        next(new Error('핸드폰 번호 등록을 실패했습니다.'));
     }
 }); // 2. 핸드폰 번호 등록
 
