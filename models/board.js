@@ -62,7 +62,8 @@ function insertBoard(data, callback) {
                     done(null);
                 });
             } else {
-                console.log('aa');
+                console.log('error');
+                done(new Error('boardType는 0, 1, 2만 가능합니다.'));
             }
         }
         function insertFiles(done) {

@@ -7,10 +7,6 @@ var fs = require('fs');
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; //fixme : port 변경 -> 80
 
 function selectNotice(currentPage, itemsPerPage, type, callback) {
-    // Todo : 본 서비스
-    // todo : 페이징
-    // todo : 사진 처리
-    // todo : 데이터 조합
     var sql_select_notice = 'select n.id notice_id, n.type type, n.title title, n.content content, f.filename originalFilename, f.filepath filepath, ' +
                             'date_format(convert_tz(n.write_time,?, ?), \'%Y-%m-%d %H:%i:%s\') write_time ' +
                             'from notice n join file f on (n.id = f.fk_id) ' +
@@ -59,7 +55,7 @@ function selectNotice(currentPage, itemsPerPage, type, callback) {
             if (err) {
                 return done(err);
             }
-            dbConn.query(sql_select_notice, ['+00:00', '+09:00',4, type, itemsPerPage * (currentPage - 1), itemsPerPage], function(err, results) {
+            dbConn.query(sql_select_notice, ['+00:00', '+09:00', 4, type, itemsPerPage * (currentPage - 1), itemsPerPage], function(err, results) {
                 dbConn.release();
                 if (err) {
                     return done(err);

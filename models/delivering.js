@@ -8,7 +8,9 @@ var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; /
 
 // No.11 배달 가기 목록 보기
 function listDelivering(currentPage, itemsPerPage, callback) {
-    var sql_select_delivering_review_user ='SELECT d.id delivering_id, d.user_id user_id, u.name name, u.phone phone, ' +
+    var sql_select_delivering_review_user ='SELECT d.id delivering_id, d.user_id user_id, ' +
+        'cast(aes_decrypt(u.name, unhex(sha2(? ,?))) as char(45)) name,' +
+        'cast(aes_decrypt(u.phone, unhex(sha2(? ,?))) as char(45)) phone, ' +
         'r.avg_star star, d.here_lat here_lat, d.here_lon here_lon, d.next_lat next_lat, d.next_lon next_lon, ' +
         'date_format(convert_tz(d.dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
         'date_format(convert_tz(d.arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, ' +
@@ -78,7 +80,7 @@ function listDelivering(currentPage, itemsPerPage, callback) {
                 return callback(err);
             }
             dbConn.query(sql_select_delivering_review_user,
-                ['+00:00', '+09:00', '+00:00', '+09:00', itemsPerPage * (currentPage - 1), itemsPerPage],
+                [process.env.MYSQL_SECRET, 512, process.env.MYSQL_SECRET, 512, '+00:00', '+09:00', '+00:00', '+09:00', itemsPerPage * (currentPage - 1), itemsPerPage],
                 function (err, results) {
                     dbConn.release();
                     if (err) {
@@ -110,7 +112,8 @@ function listDelivering(currentPage, itemsPerPage, callback) {
 
 // No.12 ‘배달가기’ 상세 목록 보기
 function listDeliveringById(deliverId, callback) {
-    var sql_select_delivering_id =  'select d.id deilvering_id, d.user_id, u.name name, ' +
+    var sql_select_delivering_id =  'select d.id deilvering_id, d.user_id, ' +
+        'cast(aes_decrypt(u.name, unhex(sha2(? ,?))) as char(45)) name, ' +
         'd.here_lat here_lat, d.here_lon here_lon, d.next_lat next_lat, d.next_lon next_lon, ' +
         'date_format(convert_tz(dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
         'date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time ' +
@@ -124,7 +127,7 @@ function listDeliveringById(deliverId, callback) {
         if (err) {
             return callback(err);
         }
-        dbConn.query(sql_select_delivering_id, ['+00:00', '+09:00', '+00:00', '+09:00', deliverId], function(err, result) {
+        dbConn.query(sql_select_delivering_id, [process.env.MYSQL_SECRET, 512,'+00:00', '+09:00', '+00:00', '+09:00', deliverId], function(err, result) {
             dbConn.release();
             if (err) {
                 callback(err);

@@ -218,7 +218,12 @@ function acceptContract(contractId, callback) {
                 if (err) {
                     return done(err);
                 }
-                done(null, result.changedRows); //업데이트 확인을 위해 result.changeRows 존재
+                if (result.changedRows === 1) { //업데이트 확인을 위해 result.changeRows 존재
+                    done(null, result.changedRows);
+                } else {
+                    done(new Error('contractID는 없습니다.'));
+                }
+
             });
         }
         function selectSendingId(done) {
