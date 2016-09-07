@@ -2,9 +2,20 @@ var express = require('express');
 var router = express.Router();
 var Reviews = require('../models/review');
 var isAuthenticated = require('./common').isAuthenticated;
+var logger = require('../common/logger');
 
 // No.18 리뷰 등록하기
 router.post('/', isAuthenticated, function(req, res, next) {
+    logger.log('debug', 'method: %s', req.method);
+    logger.log('debug', 'protocol: %s', req.protocol);
+    logger.log('debug', 'host: %s', req.headers['host']);
+    logger.log('debug', 'originalUrl: %s', req.originalUrl);
+    logger.log('debug', 'baseUrl: %s', req.baseUrl);
+    logger.log('debug', 'url: %s', req.url);
+    logger.log('debug', 'body: %j', req.body, {});
+    logger.log('debug', 'range: %s', req.headers['range']);
+
+    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
     var reviewData = {};
     reviewData.userId = req.body.user_id;//fixme : 추후 session값으로 변경
     reviewData.contractId = req.body.contract_id;
