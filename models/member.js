@@ -7,13 +7,15 @@ var fs = require('fs');
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; // fixme : port -> 80
 
 function findOrCreateFacebook(profile, callback) {
-    var sql_find_facebook_id = 'SELECT id, phone, introduction, deliver_com, deliver_req FROM user WHERE fb_id = ?';
-    var sql_create_facebook_id = 'INSERT INTO user(fb_id, api_type, name, activation) VALUES(?, 0, ?, 0);';
+    var sql_find_facebook_id = 'SELECT id, ' +
+                                'cast(aes_encrypt(name ,unhex(sha2( ?, ?))) as char(20)),' +
+                                'introduction, deliver_com, deliver_req FROM user WHERE fb_id = ?';
+    var sql_create_facebook_id = 'INSERT INTO user(fb_id, api_type, name, activation) VALUES(?, 0, aes_encrypt(?,unhex(sha2(?, ?))), 0);';
     dbPool.getConnection(function (err, dbConn) {
        if (err) {
            return callback(err);
        }
-       dbConn.query(sql_find_facebook_id, [profile.id], function (err, result) {
+       dbConn.query(sql_find_facebook_id, [process.env.MYSQ_SECRET, 512, profile.id], function (err, result) {
            if (err) {
                return callback(err);
            }
@@ -32,7 +34,7 @@ function findOrCreateFacebook(profile, callback) {
                    dbConn.release();
                    return callback(err)
                }
-               dbConn.query(sql_create_facebook_id, [profile.id, profile.displayName], function (err, result) {
+               dbConn.query(sql_create_facebook_id, [profile.id, profile.displayName, process.env.MYSQL_SECRET, 512], function (err, result) {
                    if (err) {
                        return dbConn.rollback(function() {
                            dbConn.release();
@@ -91,13 +93,18 @@ function findById(apiId, callback) {
 }
 
 function findUser(userId, callback) {
-    var sql_select_user = 'SELECT u.id user_id, u.name name, u.phone phone, u.fb_id fb_id, ' +
+    var sql_select_user = 'SELECT u.id user_id,' +
+                          'cast(aes_decrypt(u.name, unhex(sha2(?, ?))) as char(20)) name,' +
+                          'cast(aes_decrypt(u.phone, unhex(sha2(?, ?))) as char(35)) phone, u.fb_id fb_id, ' +
                           'u.api_type api_type, u.introduction introduction, ' +
                           'u.deliver_com deliver_com, u.deliver_req deliver_req, u.activation activation, f.filepath filepath ' +
                           'FROM user u LEFT JOIN (SELECT fk_id, filename, filepath ' +
-                          'FROM file WHERE type = 0) f ON (u.id = f.fk_id) WHERE u.id = ?';
-    var sql_select_avg_star = 'SELECT AVG(star) avg_star FROM review r JOIN (SELECT id, user_id, contract_id ' +
-                              'FROM delivering WHERE user_id = ?) a ON (r.contract_id = a.contract_id)';
+                                                 'FROM file WHERE type = 0) f ON (u.id = f.fk_id) ' +
+                                                 'WHERE u.id = ?';
+    var sql_select_avg_star = 'SELECT AVG(star) avg_star ' +
+                              'FROM review r JOIN (SELECT id, user_id, contract_id ' +
+                                                  'FROM delivering WHERE user_id = ?) a ' +
+                                                  'ON (r.contract_id = a.contract_id)';
 
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
@@ -115,7 +122,7 @@ function findUser(userId, callback) {
         });
 
         function getUserData(done) {
-            dbConn.query(sql_select_user, [userId], function (err, result) {
+            dbConn.query(sql_select_user, [process.env.MYSQL_SECRET, 512, process.env.MYSQL_SECRET, 512, userId], function (err, result) {
                 if (err) {
                     return done(err);
                 }
@@ -153,10 +160,13 @@ function findUser(userId, callback) {
 }
 // 나의 물품을 배송한 사람 찾기 model
 function findDeliverings(userId, callback) {
-    var sql_find_deliverer = 'SELECT u.name dname, d.uid sid, d.duid duid, d.cstate cstate, date_format(convert_tz(d.res_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') res_time ' +
+    var sql_find_deliverer = 'SELECT cast(aes_decrypt(u.name, unhex(sha2(?, ?))) as char(45)) dname, d.uid sid, d.duid duid, d.cstate cstate, ' +
+                             'date_format(convert_tz(d.res_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') res_time ' +
                              'FROM user u JOIN (SELECT u.id uid, s.id sid, s.contract_id con_id, d.id did, d.user_id duid, c.state cstate, c.res_time ' +
-                                               'FROM user u JOIN sending s ON (u.id = s.user_id) JOIN delivering d ON (s.contract_id = d.contract_id) ' +
-                                                           'JOIN contract c ON (d.contract_id = c.id) WHERE c.state = 3) d ON (u.id = d.duid) ' +
+                                               'FROM user u JOIN sending s ON (u.id = s.user_id) ' +
+                                                           'JOIN delivering d ON (s.contract_id = d.contract_id) ' +
+                                                           'JOIN contract c ON (d.contract_id = c.id) ' +
+                                                           'WHERE c.state = 3) d ON (u.id = d.duid) ' +
                              'WHERE d.uid = ?';
 
     var deliverer = {};
@@ -167,7 +177,7 @@ function findDeliverings(userId, callback) {
         if (err) {
             return callback(err);
         }
-        dbConn.query(sql_find_deliverer, ['+00:00', '+09:00', userId], function (err, result) {
+        dbConn.query(sql_find_deliverer, [process.env.MYSQL_SECRET, 512,'+00:00', '+09:00', userId], function (err, result) {
             dbConn.release();
             if (err) {
                 return callback(err);
@@ -224,8 +234,8 @@ function updateMember(user, callback) {
 
 function updateProfileImage(userId, file, callback) {
     var sql_delete_file = 'DELETE FROM file WHERE fk_id = ? AND type = 0';
-    var sql_select_filepath = 'SELECT filepath FROM file WHERE fk_id = ? AND type = 0';
-    var sql_insert_file = 'INSERT INTO file(type, fk_id, filename, filepath) VALUES (0, ?, ?, ?)';
+    var sql_select_filepath = 'SELECT filepath FROM file WHERE fk_id = ? AND type = ?';
+    var sql_insert_file = 'INSERT INTO file(type, fk_id, filename, filepath) VALUES (?, ?, ?, ?)';
 
     dbPool.getConnection(function(err, dbConn) {
         if (err) {
@@ -250,7 +260,7 @@ function updateProfileImage(userId, file, callback) {
             }); // async
         });
         function deleteRealFile(callback) {
-            dbPool.query(sql_select_filepath, [userId], function (err, result) {
+            dbPool.query(sql_select_filepath, [userId, 0], function (err, result) {
                 if (err) {
                     return callback(err);
                 }
@@ -280,7 +290,7 @@ function updateProfileImage(userId, file, callback) {
         } // deleteFile
         function insertFile(callback) { // 여러개일때
             async.each(file, function (item, done) {
-                dbConn.query(sql_insert_file, [userId, item[0].name, item[0].path], function (err, result) {
+                dbConn.query(sql_insert_file, [0, userId, item[0].name, item[0].path], function (err, result) {
                     if (err) {
                         return done(err);
                     }
