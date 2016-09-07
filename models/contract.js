@@ -10,7 +10,7 @@ var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; /
 function insertSendingAndContract(data, callback) {
     var sql_insert_contract = 'insert into contract(state) values(?)';
     var sql_insert_sending = 'insert into sending (user_id, contract_id, here_lat, here_lon, addr_lat, addr_lon, info, arr_time, rec_phone, price, memo) ' +
-                             'VALUES ( ?, ?, ?, ?, ?, ?, ?, str_to_date(?,\'%Y-%m-%d %H:%i:%s\'), ?, ?, ?)';
+                             'VALUES ( ?, ?, ?, ?, ?, ?, ?, str_to_date(?,\'%Y-%m-%d %H:%i:%s\'), aes_encrypt(? ,unhex(sha2( ? , ?))), ?, ?)';
     var sql_insert_file = 'insert into file(fk_id, type, filename, filepath) values(?, ?, ? ,?)';
 
     dbPool.getConnection(function(err, dbConn) {
@@ -54,7 +54,7 @@ function insertSendingAndContract(data, callback) {
 
         function insertSending(done) { // sending 생성_베송 요청 등록
             dbConn.query(sql_insert_sending, [data.user_id, contract_id, data.here_lat, data.here_lon, data.addr_lat, data.addr_lon, data.info,
-            data.arr_time, data.rec_phone, data.price, data.memo],
+            data.arr_time, data.rec_phone, process.env.MYSQL_SECRET, 512, data.price, data.memo],
             function(err, result) {
                 if (err) {
                     return done(err);
@@ -89,7 +89,8 @@ function selectSending(deliveringId, callback) {
     var sql_select_sending = 'select s.id sending_id, c.id contract_id, s.here_lat here_lat, s.here_lon here_lon, ' +
                              's.addr_lat addr_lat, s.addr_lon addr_lon, s.info info, ' +
                              'date_format(convert_tz(s.arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, ' +
-                             's.rec_phone rec_phone, s.price price ' + //__column
+                             'cast(aes_decrypt(s.rec_phone , unhex(sha2(? ,?))) as char(45)) rec_phone, ' +
+                             's.price price ' + //__column
                              'from delivering d ' +
                              'join contract c on(d.contract_id = c.id) ' +
                              'join sending s on(c.id = s.contract_id) ' +
@@ -143,7 +144,7 @@ function selectSending(deliveringId, callback) {
             if (err) {
                 return callback(err);
             }
-            dbConn.query(sql_select_sending, ['+00:00', '+09:00', deliveringId], function(err, result) {
+            dbConn.query(sql_select_sending, ['+00:00', '+09:00', process.env.MYSQL_SECRET, 512, deliveringId], function(err, result) {
                 dbConn.release();
                 if (err) {
                    callback(err);
@@ -278,7 +279,7 @@ function selectContract(contractId, callback) {
 
 // 배송 상태 변경 하기
 function changeStateOfContract(contractId, state, callback) {
-    var sql_change_contract = 'update contract set state = ? where id = ? ';
+    var sql_change_contract = 'update contract set state = ?, utime = now() where id = ? ';
     dbPool.getConnection(function(err, dbConn) {
         if (err) {
             return callback(err);

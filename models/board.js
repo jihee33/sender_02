@@ -8,7 +8,7 @@ var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; /
 
 function insertBoard(data, callback) {
     var sql_insert_board_praiseAndDeclare = 'insert into board(user_id, name, board_type, es_type, title, content) ' +
-                                            'values(?, ?, ?, ?, ?, ?)';
+                                            'values(?, aes_encrypt( ?,unhex(sha2( ?, ?))), ?, ?, ?, ?)';
     var sql_insert_board_inquire = 'insert into board(user_id, name, board_type, title, content) ' +
                                    'values(?, ?, ?, ?, ?) ';
     var sql_insert_file = 'insert into file(type, fk_id, filename, filepath) ' +
@@ -40,7 +40,7 @@ function insertBoard(data, callback) {
         function insertBoards(done) {
             if (data.boardType === 0 || data.boardType === 1) {
                 dbConn.query(sql_insert_board_praiseAndDeclare,
-                    [data.user_id, data.name, data.boardType, data.esType, '', data.content],
+                    [data.user_id, data.name, process.env.MYSQL_SECRET, 512, data.boardType, data.esType, '', data.content],
                     function (err, result) {
                     if (err) {
                         return done(err);
@@ -67,7 +67,6 @@ function insertBoard(data, callback) {
         }
         function insertFiles(done) {
             async.each(data.pic, function (item, as_done) {
-                console.log('aa');
                 dbConn.query(sql_insert_file, [2, recentBoardId, item.name, item.path], function (err, result) { // file type -> board은 2 [DB]
                     if (err) {
                         return as_done(err);
