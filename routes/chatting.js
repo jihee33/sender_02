@@ -5,6 +5,7 @@ var path = require('path');
 var url = require('url');
 var fcm = require('node-gcm');
 var Chatting = require('../models/chatting');
+var logger = require('../common/logger');
 
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
