@@ -18,7 +18,7 @@ function getLog(req, res, next) {
 
 function isAuthenticated(req, res, next) { // 세션 확인을 위해 추가
     if (!req.user) {
-        return res.send({
+        return res.status(401).send({
             error: '로그인이 필요합니다.'
         });
     }
@@ -27,7 +27,7 @@ function isAuthenticated(req, res, next) { // 세션 확인을 위해 추가
 
 function isSecure(req, res, next) {// HTTPS 사용 위해 추가
     if(!req.secure) {
-        return res.send({
+        return res.status(426).send({
             error: '프로토콜 변경이 필요합니다.'
         });
     }
@@ -36,7 +36,7 @@ function isSecure(req, res, next) {// HTTPS 사용 위해 추가
 
 function isActivated(req, res, next) { // 세션 확인을 위해 추가
     if (req.user.activation !== 1) {
-        return res.send({
+        return res.status(401).send({
             error: '핸드폰 번호 등록이 필요합니다.'
         });
     }
