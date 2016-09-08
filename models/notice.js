@@ -4,7 +4,7 @@ var dbPool = require('./common').dbPool;
 var path = require('path');
 var url = require('url');
 var fs = require('fs');
-var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; //fixme : port 변경 -> 80
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 function selectNotice(currentPage, itemsPerPage, type, callback) {
     var sql_select_notice = 'select n.id notice_id, n.type type, n.title title, n.content content, f.filename originalFilename, f.filepath filepath, ' +

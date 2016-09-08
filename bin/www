@@ -41,8 +41,8 @@ httpServer.listen(port);
 httpServer.on('error', onError);
 httpServer.on('listening', onListening);
 
-httpsServer.listen(4433, function () {// https서버 구동
-  console.log("HTTPS Listening on 4433");
+httpsServer.listen(443, function () {// https서버 구동
+  console.log("HTTPS Listening on 443");
 });
 
 /**

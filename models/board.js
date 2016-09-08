@@ -4,7 +4,7 @@ var dbPool = require('./common').dbPool;
 var path = require('path');
 var url = require('url');
 var fs = require('fs');
-var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; //fixme : port 변경 -> 80
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80'; //fixme : port 변경 -> 80
 
 function insertBoard(data, callback) {
     var sql_insert_board_praiseAndDeclare = 'insert into board(user_id, name, board_type, es_type, title, content) ' +

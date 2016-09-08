@@ -5,7 +5,7 @@ var path = require('path');
 var url = require('url');
 var fs = require('fs');
 var logger = require('../common/logger');
-var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; //fixme : port 변경 -> 80
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 // No.09 배송 요청 등록 및 미체결 계약 생성
 function insertSendingAndContract(data, callback) {

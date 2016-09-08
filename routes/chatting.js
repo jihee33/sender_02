@@ -11,7 +11,7 @@ var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
 var isActivated = require('./common').isActivated;
 
-var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080';
+var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 
 router.post('/', getLog,  isAuthenticated, isActivated, function(req, res, next) {

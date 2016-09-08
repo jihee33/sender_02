@@ -5,7 +5,7 @@ var async = require('async');
 var fs = require('fs');
 var logger = require('../common/logger');
 
-var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; // fixme : port -> 80
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80'; // fixme : port -> 80
 
 function findOrCreateFacebook(profile, callback) {
     var sql_find_facebook_id = 'SELECT id, ' +

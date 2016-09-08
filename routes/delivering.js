@@ -8,7 +8,7 @@ var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
 var getLog = require('./common').getLog;
 var logger = require('../common/logger');
-var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; //fixme : port 변경 -> 80
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 // 11. 배달 가기 목록 보기
 router.get('/', isSecure, isAuthenticated, function(req, res, next) {
