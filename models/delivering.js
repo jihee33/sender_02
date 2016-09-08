@@ -45,25 +45,47 @@ function listDelivering(currentPage, itemsPerPage, callback) {
             info.itemsPerPage = itemsPerPage; // rowCount
             info.data = [];
 
+
+            console.log(path.basename('/home/ubuntu/dev_service/uploads/images/profiles/SENDER_10.jpg'));
             async.each(results[0], function (item, as_done) { //  result[0]은 selectLimitDelivering 값
                 if (err) {
                     return as_done(err);
                 }
-                info.data.push({
-                    delivering_id: item.delivering_id,
-                    user_id: item.user_id, // 사용자 아이디
-                    name: item.name, // 이름
-                    phone: item.phone, //수신자 핸드폰 번호
-                    star: item.star, // 평균 별점
-                    here_lat: item.here_lat, // 현위치 위도
-                    here_lon: item.here_lon, // 현위치 경도
-                    next_lat: item.next_lat, // 행선지 위도
-                    next_lon: item.next_lon, // 행선지 경도
-                    dep_time: item.dep_time, // 출발 시각
-                    arr_time: item.arr_time, // 도착 시각
-                    originalFilename: item.filename, // 파일명
-                    fileUrl: url.resolve(url_, '/profiles/' + path.basename(item.filepath)) // file url
-                });
+                console.log(('1 :' + item.filepath));
+                console.log(path.basename(item.filepath));
+                if (item.filepath !== null) {
+                    info.data.push({
+                        delivering_id: item.delivering_id,
+                        user_id: item.user_id, // 사용자 아이디
+                        name: item.name, // 이름
+                        phone: item.phone, //수신자 핸드폰 번호
+                        star: item.star, // 평균 별점
+                        here_lat: item.here_lat, // 현위치 위도
+                        here_lon: item.here_lon, // 현위치 경도
+                        next_lat: item.next_lat, // 행선지 위도
+                        next_lon: item.next_lon, // 행선지 경도
+                        dep_time: item.dep_time, // 출발 시각
+                        arr_time: item.arr_time, // 도착 시각
+                        originalFilename: item.filename, // 파일명
+                        fileUrl: url.resolve(url_, '/profiles/' + path.basename(item.filepath)) // file url
+                    });
+                } else {
+                    info.data.push({
+                        delivering_id: item.delivering_id,
+                        user_id: item.user_id, // 사용자 아이디
+                        name: item.name, // 이름
+                        phone: item.phone, //수신자 핸드폰 번호
+                        star: item.star, // 평균 별점
+                        here_lat: item.here_lat, // 현위치 위도
+                        here_lon: item.here_lon, // 현위치 경도
+                        next_lat: item.next_lat, // 행선지 위도
+                        next_lon: item.next_lon, // 행선지 경도
+                        dep_time: item.dep_time, // 출발 시각
+                        arr_time: item.arr_time, // 도착 시각
+                        originalFilename: null,
+                        fileUrl: null
+                    });
+                }
                 as_done();
             }, function (err) {
                 if (err) {
@@ -144,7 +166,7 @@ function listDeliveringById(deliverId, callback) {
 // No.13  ‘배달 가기’ 등록
 function insertDelivering(obj, callback)  {
     var sql_insert_delivering = 'insert into delivering(user_id, here_lat, here_lon, next_lat, next_lon, dep_time, arr_time) ' +
-        'values(?, ?, ?, ?, ?, str_to_date(? ,\'%Y-%m-%d %H:%i:%s\'),str_to_date(? ,\'%Y-%m-%d %H:%i:%s\'))';
+                                'values(?, ?, ?, ?, ?, str_to_date(? ,\'%Y-%m-%d %H:%i:%s\'),str_to_date(? ,\'%Y-%m-%d %H:%i:%s\'))';
     // delivering테이블에 배달가기를 위한 정보를 입력
     dbPool.getConnection(function(err, dbConn) {
         if (err) {
@@ -153,12 +175,12 @@ function insertDelivering(obj, callback)  {
         dbConn.query(sql_insert_delivering, [obj.userId, obj.here_lat, obj.here_lon, obj.next_lat, obj.next_lon, obj.dep_time, obj.arr_time],
             function(err, result) {
                 dbConn.release();
-                var data = {};
-                data.exist =  result.affectedRows; // insert가 제대로 되었다면 OK -> 1
-                data.delivering_id = result.insertId; // 입력된 delivering의 id
                 if (err) {
                     return callback(err);
                 }
+                var data = {};
+                data.exist =  result.affectedRows; // insert가 제대로 되었다면 OK -> 1
+                data.delivering_id = result.insertId; // 입력된 delivering의 id
                 callback(null, data);
             });
     });

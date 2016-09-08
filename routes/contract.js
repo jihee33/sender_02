@@ -12,7 +12,7 @@ var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; /
 
 // 9. 배송 요청 등록 및 미체결 계약 생성
 router.post('/', getLog, isSecure, isAuthenticated, function(req, res, next) {
-    if (req.headers['content-type'] !== 'application/x-www-form-urlencoded') { //form-data 형식
+    if (req.headers['content-type'] !== 'application/x-www-form-urlencoded') { // form-data 형식
         var form = new formidable.IncomingForm();
         form.keepExtensions = true;
         form.multiples = true;
@@ -22,7 +22,7 @@ router.post('/', getLog, isSecure, isAuthenticated, function(req, res, next) {
                 return next(err);
             }
 
-            if (fields.here_lat && fields.here_lon && fields.addr_lat && fields.addr_lon && fields.rec_phone && fields.price) { //필수 데이터
+            if (fields.here_lat && fields.here_lon && fields.addr_lat && fields.addr_lon && fields.rec_phone && fields.price) { // 필수 데이터
                 var result = {};
                 result.user_id = req.user.id; // session값으로 변경 -> req.user
                 result.here_lat = fields.here_lat; // 현위치 위도
@@ -43,7 +43,7 @@ router.post('/', getLog, isSecure, isAuthenticated, function(req, res, next) {
                 } else {
                     result.pic.push({name : '', path : ''});
                 }
-
+        console.log('aa');
                 Contract.insertSendingAndContract(result, function (err, data) {
                     if (err) {
                         return next(err);

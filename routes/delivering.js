@@ -66,7 +66,7 @@ router.post('/', getLog, isSecure, isAuthenticated, function(req, res, next) {
     if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
         if (req.body.here_lat && req.body.here_lon && req.body.next_lat && req.body.next_lon && req.body.dep_time && req.body.arr_time) { // 필수 데이터
             var result = {};
-            result.userId = parseInt(req.body.user_id); //fixme : 추후 session값으로 변경
+            result.userId = req.user.id; // session값으로 변경
             result.here_lat = req.body.here_lat; // 현위치 위도
             result.here_lon = req.body.here_lon; // 현위치 경도
             result.next_lat = req.body.next_lat; // 행선지 위도
