@@ -88,7 +88,7 @@ function insertSendingAndContract(data, callback) {
 // No.10  배송 요청 보기
 function selectSending(deliveringId, callback) {
     var sql_select_sending = 'select s.id sending_id, c.id contract_id, s.here_lat here_lat, s.here_lon here_lon, ' +
-                             's.addr_lat addr_lat, s.addr_lon addr_lon, s.info info, ' +
+                             's.addr_lat addr_lat, s.addr_lon addr_lon, s.info info, s.memo memo' +
                              'date_format(convert_tz(s.arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, ' +
                              'cast(aes_decrypt(s.rec_phone , unhex(sha2(? ,?))) as char(45)) rec_phone, ' +
                              's.price price ' + //__column
@@ -97,7 +97,12 @@ function selectSending(deliveringId, callback) {
                              'join sending s on(c.id = s.contract_id) ' +
                              'where d.id = ? ';
 
-    var sql_select_file = 'SELECT f.filename, f.filepath FROM file f where f.type = ? and f.fk_id = ? ';
+    var sql_select_file = 'SELECT f.filename, f.filepath ' +
+                            'FROM delivering d ' +
+                            'join contract c on(d.contract_id = c.id) ' +
+                            'join sending s on(c.id = s.contract_id) ' +
+                            'join file f on(f.fk_id = s.id) ' +
+                            'where f.type = ? and d.id = ?';
 
     async.parallel([selectSending, selectFile], function(err, result) {
     // selectSending, selectFile을 동시에 실행
