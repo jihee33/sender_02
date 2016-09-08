@@ -114,6 +114,7 @@ function selectSending(deliveringId, callback) {
             callback(null, 0);
         } else { // 값이 존재할 경우
             // result[0]은 selectSending의 값, result[1]은 selectFile의 값
+            info.delivering_id = deliveringId;
             info.sending_id = result[0][0].sending_id; //sending id
             info.contract_id = result[0][0].contract_id; //constract의 id
             info.here_lat = result[0][0].here_lat; // 현재 위도
@@ -283,7 +284,12 @@ function selectContract(contractId, callback) {
            if (err) {
                return callback(err);
            }
-            callback(null, results[0]);
+           if (results.length !== 0) {
+               callback(null, results[0]);
+           } else {
+               callback(null, 0);
+           }
+
        });
     });
 } // No.16 계약 내역 보기

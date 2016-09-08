@@ -39,7 +39,7 @@ function listDelivering(currentPage, itemsPerPage, callback) {
         var info = {};
         //result[1]은 selectCountDelivering 값
         if (results[1].count === 0) {
-            callback(null, 0); //fixme 결과 값 변경
+            callback(null, 0);
         } else {
             info.totalPage = Math.ceil(results[1].count / itemsPerPage); // 총 페이지를 itemsPerPage로 나눠 올림
             info.currentPage = currentPage; // 현재 페이지
@@ -50,8 +50,6 @@ function listDelivering(currentPage, itemsPerPage, callback) {
                 if (err) {
                     return as_done(err);
                 }
-                logger.log('debug', 'item: %j', item, {});
-                logger.log('debug', 'item.basename: %s', path.basename(item.filepath));
                 if (item.filepath !== null) {
                     info.data.push({
                         delivering_id: item.delivering_id,
