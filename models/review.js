@@ -17,7 +17,7 @@ function insertReview(reviewData, callback) {// 리뷰 등록
                 if (result.affectedRows === 1) {
                     callback(null, '리뷰 등록에 성공했습니다');
                 } else {
-                    callback(null, '리뷰 등록에 실패했습니다.');
+                    callback(new Error('리뷰 등록에 실패했습니다.'));
                 }
             });
     });
@@ -50,7 +50,7 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
             queryResult.data = {};
             queryResult.data.review = [];
             if (!result[0]) {
-                return callback(null, '해당하는 사용자가 없습니다');
+                return callback(new Error('리뷰 목록 불러오기를 실패했습니다.'));
             }
             if (result[0].length !== 1) {
                 async.each(result[0], function(item, done) {
@@ -66,13 +66,13 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
                     }
                 });
                 if (!queryResult.data.review[0]) {
-                    return callback(null, '등록된 리뷰가 없습니다');
+                    return callback(new Error('리뷰 목록 불러오기를 실패했습니다.'));
                 }
             } else {// if (result[0].length === 1) {
                 if (result[0][0].content !== null) {
                     queryResult.data.review.push(result[0][0]);
                 } else {
-                    return callback(null, '등록된 리뷰가 없습니다');
+                    return callback(new Error('리뷰 목록 불러오기를 실패했습니다.'));
                 }
             }
             callback(null, queryResult);
