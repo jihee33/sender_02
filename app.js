@@ -35,9 +35,10 @@ app.use(cookieParser());
 app.use(session({// redis seesion 생성 및 설정
   secret : process.env.SESSION_SECRET,
   store : new RedisStore({
-    host : "127.0.0.1",
-    port : 6379,
-    client : redisClient
+      host : "127.0.0.1",
+      port : 6379,
+      client : redisClient,
+      disableTTL : true
   }),
   resave : true,
   saveUninitialized : false
