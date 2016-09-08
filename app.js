@@ -37,11 +37,13 @@ app.use(session({// redis seesion 생성 및 설정
   store : new RedisStore({
       host : "127.0.0.1",
       port : 6379,
-      client : redisClient,
-      disableTTL : true
+      client : redisClient
   }),
-  resave : true,
-  saveUninitialized : false
+    resave : true,
+    saveUninitialized : false,
+    cookie : {
+      maxAge : 1000000000
+    }
 }));
 app.use(passport.initialize());
 app.use(passport.session());
