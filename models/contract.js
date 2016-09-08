@@ -215,7 +215,6 @@ function requestContract(deliveringId, contractId, callback) {
                 return callback(err);
             }
             changedRows += result.changedRows;  // update확인을 위한 result.changeRows
-            console.log(changedRows);
             callback(null);
         });
     }
@@ -242,7 +241,7 @@ function acceptContract(contractId, callback) {
         if (err) {
             return callback(err);
         }
-        async.parallel([changeStartState, selectSendingId], function(err, results) {
+        async.series([changeStartState, selectSendingId], function(err, results) {
             dbConn.release();
             if (err) {
                 return callback(err);
@@ -253,7 +252,7 @@ function acceptContract(contractId, callback) {
             data.sending_user_id = results[1].sending_user_id;
             callback(null, data);
             });
-        // parallel
+        // series
         function changeStartState(done) {
             dbConn.query(sql_update_contract, [2, contractId], function(err, result) { // state -> 1_계약 완료 및 배송 전
                 if (err) {
@@ -284,7 +283,7 @@ function rejectContract(contractId, callback) { //TODO state -> 0
                                 //delivering table에 contract_id, utime 변경
     var sql_update_contract = 'update contract set state = ?, utime = now() where id = ? ';
     dbPool.getConnection(function(err, dbConn) {
-        console.log('aa');
+        console.log('aa1');
         if (err) {
             return callback(err);
         }
@@ -296,19 +295,18 @@ function rejectContract(contractId, callback) { //TODO state -> 0
             }
             console.log('aa');
             async.series([updateDelivering, updateStateOfContract], function(err) {
+                dbConn.release();
                 if (err) {
                     return dbConn.rollback(function(){
-                        dbConn.release();
                         callback(err);
                     });
                 }
                 dbConn.commit(function(){
-                    dbConn.release();
-                  //  logger.log('debug', 'reject model : %s', changedRows);
                     callback(null, changedRows);
-                })
+                });
             });
         });
+    });
     function updateDelivering(done) {
         dbConn.query(sql_update_delivering, [0, contractId], function(err, result) { // contract_id -> 0_미체결계약으로 변경
             if (err) {
