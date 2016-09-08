@@ -114,7 +114,7 @@ router.put('/', isAuthenticated, function(req, res, next) {
                     if (err) {
                         return next(err);
                     }
-                    if (results.changedRows === 1) { // 업데이트 완료시 -> 1
+                    if (results.changedRows === 1) { // 업데이트 완료시 -> 1 TODO
                         delete results.changedRows;
                         res.send({
                             result: results
@@ -130,7 +130,7 @@ router.put('/', isAuthenticated, function(req, res, next) {
                     if (err) {
                         return next(err);
                     }
-                    if (result === 1) { // 업데이트 완료시 -> 1
+                    if (result === 2) { // 업데이트 완료시 -> 2
                         res.send({
                             result: '계약 체결을 거절했습니다. '
                         });
@@ -147,7 +147,7 @@ router.put('/', isAuthenticated, function(req, res, next) {
                 if (err) {
                     return next(err);
                 }
-                if (result === 1) { // 업데이트 된 값이 있다면 -> 1
+                if (result === 2) { // 업데이트 된 값이 있다면 -> 2
                     res.send({
                         result: '계약 체결에 성공했습니다.'
                     });

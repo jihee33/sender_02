@@ -4,6 +4,7 @@ var dbPool = require('./common').dbPool;
 var path = require('path');
 var url = require('url');
 var fs = require('fs');
+var logger = require('../common/logger');
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; //fixme : port 변경 -> 80
 
 // No.09 배송 요청 등록 및 미체결 계약 생성
@@ -179,21 +180,55 @@ function selectSending(deliveringId, callback) {
 
 // No.14. 계약 신청하기
 function requestContract(deliveringId, contractId, callback) {
-    var sql_update_contract = 'update delivering ' +
+    var sql_update_delivering = 'update delivering ' +
                               'set contract_id = ?, utime = now() ' +
                               'where id = ? ';
+    var sql_update_contract = 'update contract set state = ?, utime = now() ' +
+                              'where contract_id = ? ';
+    var changedRows = 0;
     // delivering 테이블에 contract_id, utime 변경
+
     dbPool.getConnection(function(err, dbConn) {
         if (err) {
             return callback(err);
         }
-        dbConn.query(sql_update_contract, [contractId, deliveringId], function(err, result) {
-            dbConn.release();
+        dbConn.beginTransaction(function(err) {
+            if (err) {
+                dbConn.release();
+                return callback(err);
+            }
+            async.series([updateDelivering, updateStateOfContract], function(err) {
+                if (err) {
+                    return dbConn.rollback(function(){
+                        dbConn.release();
+                        callback(err);
+                    });
+                }
+                dbConn.commit(function(){
+                    dbConn.release();
+                    callback(null, changedRows);
+                });
+            });
+        });
+
+    function updateDelivering(callback) {
+        dbConn.query(sql_update_delivering, [contractId, deliveringId], function(err, result) {
             if (err) {
                 return callback(err);
             }
-            callback(null, result.changedRows); // update확인을 위한 result.changeRows
+            changedRows += result.changedRows;  // update확인을 위한 result.changeRows
+            callback(null);
         });
+    }
+    function updateStateOfContract(callback) {
+        dbConn.query(sql_update_contract, [1 ,contractId], function(err, result) {
+            if (err) {
+                return callback(err);
+            }
+            changedRows += result.changedRows;  // update확인을 위한 result.changeRows
+            callback(null);
+        });
+    }
     });
 } // No.14. 계약 신청하기
 
@@ -215,13 +250,14 @@ function acceptContract(contractId, callback) {
                 }
             var data = {};
             data.changedRows = results[0];
+            logger.log('debug', 'changedRows: %s', results[0]);
             data.sending_id = results[1].sending_id;
             data.sending_user_id = results[1].sending_user_id;
             callback(null, data);
             });
         // parallel
         function changeStartState(done) {
-            dbConn.query(sql_update_contract, [1, contractId], function(err, result) { // state -> 1_계약 완료 및 배송 전
+            dbConn.query(sql_update_contract, [2, contractId], function(err, result) { // state -> 1_계약 완료 및 배송 전
                 if (err) {
                     return done(err);
                 }
@@ -245,22 +281,53 @@ function acceptContract(contractId, callback) {
 } // No.15_1 계약 체결하기 _ 수락
 
 // No.15_9 계약 체결하기 _ 거절
-function rejectContract(contractId, callback) {
-    var sql_update_contract = 'update delivering ' +
-                                'set contract_id = ?, utime = now() ' +
-                                'where contract_id = ? ';
+function rejectContract(contractId, callback) { //TODO state -> 0
+    var sql_update_delivering = 'update delivering set contract_id = ?, utime = now() where contract_id = ? ';
                                 //delivering table에 contract_id, utime 변경
+    var sql_update_contract = 'update contract set state = ?, utime = now() where contract_id = ? ';
     dbPool.getConnection(function(err, dbConn) {
         if (err) {
             return callback(err);
         }
+        var changedRows = 0;
+        dbConn.beginTransaction(function(err) {
+            if (err) {
+                dbConn.release();
+                return callback(err);
+            }
+            async.series([updateDelivering, updateStateOfContract], function(err) {
+                if (err) {
+                    return dbconn.rollback(function(){
+                        dbConn.release();
+                        callback(err);
+                    });
+                }
+                dbconn.commit(function(){
+                    dbConn.release();
+                    callback(null, changedRows);
+                })
+            });
+        });
+    function updateDelivering(done) {
+        dbConn.query(sql_update_delivering, [0, contractId], function(err, result) { // contract_id -> 0_미체결계약으로 변경
+            dbConn.release();
+            if (err) {
+                return done(err);
+            }
+            changedRows += result.changedRows;
+            done(null); //업데이트 확인을 위해 result.changeRows 존재
+        });
+    }
+    function updateStateOfContract(done) {
         dbConn.query(sql_update_contract, [0, contractId], function(err, result) { // contract_id -> 0_미체결계약으로 변경
             dbConn.release();
             if (err) {
-                return callback(err);
+                return done(err);
             }
-            callback(null, result.changedRows); //업데이트 확인을 위해 result.changeRows 존재
+            changedRows += result.changedRows;
+            done(null); //업데이트 확인을 위해 result.changeRows 존재
         });
+    }
     });
 } // No.15_9 계약 체결하기 _ 거절
 
