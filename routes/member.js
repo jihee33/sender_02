@@ -7,12 +7,15 @@ var url = require('url');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
 var isActivated = require('./common').isActivated;
-var getLog = require('./common').getLog;
 
 var Member = require('../models/member');
 var logger = require('../common/logger');
 
-router.put('/', getLog, isSecure, isAuthenticated, function(req, res, next) {
+router.put('/', isSecure, isAuthenticated, function(req, res, next) {
+    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    logger.log('debug', 'phone: %j', req.body.phone, {});
+    logger.log('debug', 'user: %j', req.user, {});
+
     var user = {};
     user.phone = req.body.phone;
     if (user.phone !== undefined) {
@@ -35,7 +38,9 @@ router.put('/', getLog, isSecure, isAuthenticated, function(req, res, next) {
     }
 }); // 2. 핸드폰 번호 등록
 
-router.get('/me', getLog, isSecure, isAuthenticated, function(req, res, next) {
+router.get('/me', isSecure, isAuthenticated, function(req, res, next) {
+    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    logger.log('debug', 'user: %j', req.user, {});
     Member.findUser(req.user.id, function (err, user) {
         if (err) {
             return function () {
@@ -56,7 +61,9 @@ router.get('/me', getLog, isSecure, isAuthenticated, function(req, res, next) {
     });
 }); // 3. 자신의 정보 보기
 
-router.get('/:user_id', getLog, isSecure, isAuthenticated, isActivated, function(req, res, next) {
+router.get('/:user_id', isSecure, isAuthenticated, isActivated, function(req, res, next) {
+    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    logger.log('debug', 'user_id: %j', req.params, {});
     Member.findUser(req.params.user_id, function (err, user) {
         if (err) {
             return function() {
@@ -74,7 +81,9 @@ router.get('/:user_id', getLog, isSecure, isAuthenticated, isActivated, function
 }); // 4. 특정 사용자의 정보 보기
 
 // 나의 물품을 배송한 사람 찾기 router
-router.get('/me/deliverings', getLog, isAuthenticated, function(req, res, next) {
+router.get('/me/deliverings', isAuthenticated, function(req, res, next) {
+    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    logger.log('debug', 'user: %j', req.user, {});
     Member.findDeliverings(req.user.id, function (err, result) {
         if (err) {
             return next(err);
@@ -86,7 +95,7 @@ router.get('/me/deliverings', getLog, isAuthenticated, function(req, res, next) 
 });
 
 // 5. 자신의 프로필 사진 변경하기 router
-router.put('/me', getLog, isAuthenticated, isActivated, function(req, res, next) {
+router.put('/me', isAuthenticated, isActivated, function(req, res, next) {
     var form = new formidable.IncomingForm();
     form.keepExtensions = true;
     form.multiples = true;
@@ -95,6 +104,9 @@ router.put('/me', getLog, isAuthenticated, isActivated, function(req, res, next)
         if (err) {
             return next(err);
         }
+        logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+        logger.log('debug', 'files: %j', files, {});
+        logger.log('debug', 'user: %j', req.user, {});
         var profileImage = {};
         profileImage.files = [];
         profileImage.files.push(files.pic);
@@ -111,7 +123,9 @@ router.put('/me', getLog, isAuthenticated, isActivated, function(req, res, next)
 }); // 5. 자신의 프로필 사진 변경 하기
 
 // 7. 회원 탈퇴 하기
-router.delete('/', getLog, isAuthenticated, isActivated, function(req, res, next) {
+router.delete('/', isAuthenticated, isActivated, function(req, res, next) {
+    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    logger.log('debug', 'user: %j', req.user, {});
     Member.deleteUser(req.user.id, function(err, result) {
         if (err) {
             return next(err);

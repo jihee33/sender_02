@@ -3,6 +3,7 @@ var url = require('url');
 var path = require('path');
 var async = require('async');
 var fs = require('fs');
+var logger = require('../common/logger');
 
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; // fixme : port -> 80
 
@@ -139,7 +140,7 @@ function findUser(userId, callback) {
                     if (result[0].filepath) {
                         user.fileUrl = url.resolve(url_, '/profiles/' + path.basename(result[0].filepath));
                     } else {
-                        user.fileUrl = null;
+                        user.fileUrl = url.resolve(url_, '/profiles/basic.png');
                     }
                 } else {
                     user.message = '존재하지 않는 회원';
@@ -205,7 +206,9 @@ function findDeliverings(userId, callback) {
 }
 
 function updateMember(user, callback) {
-    var sql = 'UPDATE user SET phone = ?, activation = 1 WHERE id = ?';
+    logger.log('info', 'update member');
+    logger.log('debug', 'user: %j', user, {});
+    var sql = 'UPDATE user SET phone = AES_ENCRYPT(?,UNHEX(SHA2(?,?))), activation = 1 WHERE id = ?';
     dbPool.getConnection(function (err, dbConn) {
        if (err) {
            return callback(err);
@@ -215,7 +218,7 @@ function updateMember(user, callback) {
                dbConn.release();
                return callback(err);
            }
-            dbConn.query(sql, [user.phone, user.id], function (err) {
+            dbConn.query(sql, [user.phone, process.env.MYSQL_SECRET, 512, user.id], function (err) {
                 if (err) {
                     return dbConn.rollback(function() {
                         dbConn.release();

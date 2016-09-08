@@ -11,9 +11,12 @@ var logger = require('../common/logger');
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; //fixme : port 변경 -> 80
 
 // 11. 배달 가기 목록 보기
-router.get('/', getLog, isSecure, isAuthenticated, function(req, res, next) {
+router.get('/', isSecure, isAuthenticated, function(req, res, next) {
     var currentPage = parseInt(req.query.currentPage); // 현재 페이지
     var itemsPerPage = parseInt(req.query.itemsPerPage); // rowCount
+    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    logger.log('debug', 'currentPage: %s', req.query.currentPage);
+    logger.log('debug', 'itemsPerPage: %s', req.query.itemsPerPage);
     if (req.url.match(/\?currentPage=\d+&itemsPerPage=\d+/i)) {
         Delivering.listDelivering(currentPage, itemsPerPage, function(err, result) {
             if (err) {

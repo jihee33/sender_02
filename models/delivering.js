@@ -4,6 +4,7 @@ var dbPool = require('./common').dbPool;
 var path = require('path');
 var url = require('url');
 var fs = require('fs');
+var logger = require('../common/logger');
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:8080'; //fixme : port 변경 -> 80
 
 // No.11 배달 가기 목록 보기
@@ -45,14 +46,12 @@ function listDelivering(currentPage, itemsPerPage, callback) {
             info.itemsPerPage = itemsPerPage; // rowCount
             info.data = [];
 
-
-            console.log(path.basename('/home/ubuntu/dev_service/uploads/images/profiles/SENDER_10.jpg'));
             async.each(results[0], function (item, as_done) { //  result[0]은 selectLimitDelivering 값
                 if (err) {
                     return as_done(err);
                 }
-                console.log(('1 :' + item.filepath));
-                console.log(path.basename(item.filepath));
+                logger.log('debug', 'item: %j', item, {});
+                logger.log('debug', 'item.basename: %s', path.basename(item.filepath));
                 if (item.filepath !== null) {
                     info.data.push({
                         delivering_id: item.delivering_id,
@@ -67,7 +66,7 @@ function listDelivering(currentPage, itemsPerPage, callback) {
                         dep_time: item.dep_time, // 출발 시각
                         arr_time: item.arr_time, // 도착 시각
                         originalFilename: item.filename, // 파일명
-                        fileUrl: url.resolve(url_, '/profiles/' + path.basename(item[0].filepath)) // file url
+                        fileUrl: url.resolve(url_, '/profiles/' + path.basename(item.filepath)) // file url
                     });
                 } else {
                     info.data.push({
@@ -83,7 +82,7 @@ function listDelivering(currentPage, itemsPerPage, callback) {
                         dep_time: item.dep_time, // 출발 시각
                         arr_time: item.arr_time, // 도착 시각
                         originalFilename: null,
-                        fileUrl: null
+                        fileUrl: url.resolve(url_, '/profiles/basic.png')
                     });
                 }
                 as_done();
