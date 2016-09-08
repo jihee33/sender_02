@@ -197,14 +197,13 @@ function requestContract(deliveringId, contractId, callback) {
                 return callback(err);
             }
             async.series([updateDelivering, updateStateOfContract], function(err) {
+                dbConn.release();
                 if (err) {
                     return dbConn.rollback(function(){
-                        dbConn.release();
                         callback(err);
                     });
                 }
                 dbConn.commit(function(){
-                    dbConn.release();
                     callback(null, changedRows);
                 });
             });
@@ -216,6 +215,7 @@ function requestContract(deliveringId, contractId, callback) {
                 return callback(err);
             }
             changedRows += result.changedRows;  // update확인을 위한 result.changeRows
+            console.log(changedRows);
             callback(null);
         });
     }
@@ -282,8 +282,9 @@ function acceptContract(contractId, callback) {
 function rejectContract(contractId, callback) { //TODO state -> 0
     var sql_update_delivering = 'update delivering set contract_id = ?, utime = now() where contract_id = ? ';
                                 //delivering table에 contract_id, utime 변경
-    var sql_update_contract = 'update contract set state = ?, utime = now() where contract_id = ? ';
+    var sql_update_contract = 'update contract set state = ?, utime = now() where id = ? ';
     dbPool.getConnection(function(err, dbConn) {
+        console.log('aa');
         if (err) {
             return callback(err);
         }
@@ -296,7 +297,6 @@ function rejectContract(contractId, callback) { //TODO state -> 0
             console.log('aa');
             async.series([updateDelivering, updateStateOfContract], function(err) {
                 if (err) {
-
                     return dbConn.rollback(function(){
                         dbConn.release();
                         callback(err);

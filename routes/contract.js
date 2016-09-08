@@ -104,7 +104,7 @@ router.get('/', isSecure, isAuthenticated, function(req, res, next) {
 }); // 10. 배송 요청 보기
 
 //  14. 계약 신청 및 체결하기
-router.put('/', isAuthenticated, function(req, res, next) {
+router.put('/', function(req, res, next) { // TODO isauthenticated
     if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
         var contract_id = parseInt(req.body.contract_id);
         if (req.body.contract_id && req.body.state) {
@@ -114,7 +114,7 @@ router.put('/', isAuthenticated, function(req, res, next) {
                     if (err) {
                         return next(err);
                     }
-                    if (results.changedRows === 1) { // 업데이트 완료시 -> 1 TODO
+                    if (results.changedRows === 1) { // 업데이트 완료시 -> 1
                         delete results.changedRows;
                         res.send({
                             result: results
