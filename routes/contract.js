@@ -130,6 +130,7 @@ router.put('/', isAuthenticated, function(req, res, next) {
                     if (err) {
                         return next(err);
                     }
+                    logger.log('debug', 'reject : %s', result);
                     if (result === 2) { // 업데이트 완료시 -> 2
                         res.send({
                             result: '계약 체결을 거절했습니다. '
