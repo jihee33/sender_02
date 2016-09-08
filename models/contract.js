@@ -278,7 +278,9 @@ function selectContract(contractId, callback) {
                             // col -> contract_id, sender_id, deliverer_id, req_time, res_time, state
 
     dbPool.getConnection(function(err, dbConn) {
-       if (err) {return callback(err);}
+       if (err) {
+           return callback(err);
+       }
        dbConn.query(sql_select_contract, ['+00:00', '+09:00', '+00:00', '+09:00', contractId], function(err, results) {
            dbConn.release();
            if (err) {
