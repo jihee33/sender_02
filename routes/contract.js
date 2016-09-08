@@ -42,7 +42,6 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
                 } else {
                     result.pic.push({name : '', path : ''});
                 }
-        console.log('aa');
                 Contract.insertSendingAndContract(result, function (err, data) {
                     if (err) {
                         return next(err);
@@ -173,14 +172,20 @@ router.put('/', isAuthenticated, function(req, res, next) {
 // 15. 계약 내역 보기
 router.get('/:contract_id', isAuthenticated, function(req, res, next) {
     if (req.params.contract_id) {
-        var contract_id = req.params.contract_id;
+        var contract_id = parseInt(req.params.contract_id);
         Contract.selectContract(contract_id, function(err, result) {
             if (err) {
                 return next(err);
             }
-            res.send({
-                result : result
-            });
+            if (result !== 0) {
+                res.send({
+                    result: result
+                });
+            } else {
+                res.send({
+                    error : '계약 내역 보기를 실패했습니다.'
+                });
+            }
         });
     } else {
         res.send({
