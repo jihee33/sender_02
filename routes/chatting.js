@@ -26,8 +26,11 @@ router.post('/', getLog,  isAuthenticated, isActivated, function(req, res, next)
                  return next(err);
              }
              var data = {};
+             data.senderId = req.user.id;
              data.receiverId = fields.receiver_id;
-             data.message = fields.message;
+             if (fields.message) {
+                 data.message = fields.message;
+             }
              if (files.pic) {
                  data.pic = [];
                  data.pic.push(files.pic);
@@ -39,15 +42,15 @@ router.post('/', getLog,  isAuthenticated, isActivated, function(req, res, next)
                      return next(err);
                  }
                  var tokens = [];
+                 tokens.push(result);
                  var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
                      data: {
-                         key1: 'values1',
-                         key2: 'values2',
+
                      },
                      notification: {
-                         title: '',
+                         title: '채팅 메세지 전송',
                          icon: '',
-                         body: ''
+                         body: '채팅 메세지 전송'
                      }
                  });
                  var sender = new fcm.Sender(result);
@@ -55,9 +58,14 @@ router.post('/', getLog,  isAuthenticated, isActivated, function(req, res, next)
                      if (err) {
                          return next(err);
                      }
-                 });
-                 res.send({
-                     result: data
+                     Chatting.insertChattingLog(data, function(err, result) {
+                         if (err) {
+                             return next(err);
+                         }
+                         res.send({
+                             result: '전송 성공'
+                         });
+                     });
                  });
              });
          });

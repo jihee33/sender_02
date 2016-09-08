@@ -6,7 +6,6 @@ var FacebookTokenStrategy = require('passport-facebook-token');
 var Member = require('../models/member');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
-var getLog = require('./common').getLog;
 var logger = require('../common/logger');
 
 passport.use(new FacebookTokenStrategy({
@@ -77,23 +76,21 @@ router.post('/local/login', isSecure, function(req, res, next) {
     });
 });
 
-router.get('/logout', getLog, isAuthenticated, function(req, res, next) {
-    req.logout();
-    res.send({ result: '로그아웃 완료' });
+router.get('/logout', isAuthenticated, function(req, res, next) {
+    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    logger.log('debug', 'user: %j', req.user, {});
+    if (req.user) {
+        req.logout();
+        res.send({ result: '로그아웃했습니다' });
+    }
 });
 
-router.post('/facebook/token', getLog, isSecure, passport.authenticate('facebook-token', {scope : ['email']}), function(req, res, next) {
-    /*logger.log('debug', 'method: %s', req.method);
-    logger.log('debug', 'protocol: %s', req.protocol);
-    logger.log('debug', 'host: %s', req.headers['host']);
-    logger.log('debug', 'originalUrl: %s', req.originalUrl);
-    logger.log('debug', 'baseUrl: %s', req.baseUrl);
-    logger.log('debug', 'url: %s', req.url);
-    logger.log('debug', 'body: %j', req.body, {});
-    logger.log('debug', 'range: %s', req.headers['range']);
-
-    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);*/
-     Member.updateRegistrationToken(req.body.registration_token, req.user.id, function(err, next) {
+router.post('/facebook/token', function(req, res, next) {
+    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    logger.log('body value', 'body: %j', req.body, {});
+    next();
+}, isSecure, passport.authenticate('facebook-token', {scope : ['email']}), function(req, res, next) {
+    Member.updateRegistrationToken(req.body.registration_token, req.user.id, function(err, next) {
         if (err) {
             return next(err);
         }
