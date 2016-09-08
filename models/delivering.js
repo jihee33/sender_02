@@ -67,7 +67,7 @@ function listDelivering(currentPage, itemsPerPage, callback) {
                         dep_time: item.dep_time, // 출발 시각
                         arr_time: item.arr_time, // 도착 시각
                         originalFilename: item.filename, // 파일명
-                        fileUrl: url.resolve(url_, '/profiles/' + path.basename(item.filepath)) // file url
+                        fileUrl: url.resolve(url_, '/profiles/' + path.basename(item[0].filepath)) // file url
                     });
                 } else {
                     info.data.push({
