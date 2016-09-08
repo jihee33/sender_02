@@ -33,18 +33,19 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(session({// redis seesion 생성 및 설정
-  secret : process.env.SESSION_SECRET,
-  store : new RedisStore({
-      host : "127.0.0.1",
-      port : 6379,
-      client : redisClient
-  }),
-    resave : true,
-    saveUninitialized : false,
+    secret: process.env.SESSION_SECRET,
+    store: new RedisStore({
+        host: "127.0.0.1",
+        port: 6379,
+        client: redisClient
+    }),
+    resave: true,
+    saveUninitialized: false,
     cookie : {
-      maxAge : 1000000000
+        maxAge: 1000 * 60 * 60 * 24 * 30
     }
 }));
+
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
