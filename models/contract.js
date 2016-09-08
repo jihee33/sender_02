@@ -306,7 +306,7 @@ function rejectContract(contractId, callback) { //TODO state -> 0
                 });
             });
         });
-    });
+
     function updateDelivering(done) {
         dbConn.query(sql_update_delivering, [0, contractId], function(err, result) { // contract_id -> 0_미체결계약으로 변경
             if (err) {
@@ -326,6 +326,7 @@ function rejectContract(contractId, callback) { //TODO state -> 0
             done(null); //업데이트 확인을 위해 result.changeRows 존재
         });
     }
+
     });
 } // No.15_9 계약 체결하기 _ 거절
 
