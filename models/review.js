@@ -14,7 +14,11 @@ function insertReview(reviewData, callback) {// 리뷰 등록
                 if (err) {
                     return callback(err);
                 }
-                callback(null, '리뷰 등록에 성공했습니다');
+                if (result.affectedRows === 1) {
+                    callback(null, '리뷰 등록에 성공했습니다');
+                } else {
+                    callback(null, '리뷰 등록에 실패했습니다.');
+                }
             });
     });
 }

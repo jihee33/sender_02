@@ -64,20 +64,26 @@ router.get('/me', isSecure, isAuthenticated, function(req, res, next) {
 router.get('/:user_id', isSecure, isAuthenticated, isActivated, function(req, res, next) {
     logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
     logger.log('debug', 'user_id: %j', req.params, {});
-    Member.findUser(req.params.user_id, function (err, user) {
-        if (err) {
-            return function() {
-                res.send({
-                    error: '특정 사용자의 프로필을 불러오는데 실패했습니다.'
-                })
+    if (req.params.user_id) {
+        Member.findUser(req.params.user_id, function (err, user) {
+            if (err) {
+                return function () {
+                    res.send({
+                        error: '특정 사용자의 프로필을 불러오는데 실패했습니다.'
+                    })
+                }
             }
-        }
-        if (user.activation !== 0) {
-            res.send({
-                result: user
-            });
-        }
-    });
+            if (user.activation !== 0) {
+                res.send({
+                    result: user
+                });
+            }
+        });
+    } else {
+        res.send({
+            error :  '특정 사용자의 프로필을 불러오는데 실패했습니다.'
+        });
+    }
 }); // 4. 특정 사용자의 정보 보기
 
 // 나의 물품을 배송한 사람 찾기 router
@@ -131,9 +137,13 @@ router.delete('/', isAuthenticated, isActivated, function(req, res, next) {
             return next(err);
         }
         if (result === 1) {
-            res.send({ result : '회원 탈퇴가 처리되었습니다.' });
+            res.send({
+                result : '회원 탈퇴가 처리되었습니다.'
+            });
         } else {
-            res.send({ result : '회원 탈퇴가 미처리되었습니다.' });
+            res.send({
+                result : '회원 탈퇴가 미처리되었습니다.'
+            });
         }
     });
 }); // 7. 회원 탈퇴 하기
