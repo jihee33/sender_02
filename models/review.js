@@ -22,7 +22,7 @@ function insertReview(reviewData, callback) {// 리뷰 등록
                 if (result.affectedRows === 1) {
                     callback(null, '리뷰 등록에 성공했습니다');
                 } else {
-                    callback(new Error('리뷰 등록에 실패했습니다.'));
+                    callback(null, 0);
                 }
             });
     });
@@ -64,12 +64,10 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
                         return done(err);
                     }
                     if (item.content !== null) {
-                        logger.log('debug', 'filepath : %j', item.filepath, {});
+                        // logger.log('debug', 'filepath : %j', item.filepath, {});
                         if (item.filepath) {
                             item.fileUrl = url.resolve(url_, '/profiles/' + path.basename(item.filepath));
                             delete item.filepath;
-                        } else {
-                            item.fileUrl = url.resolve(url_, '/profiles/basic.png');
                         }
                         queryResult.data.review.push(item);
                     }
@@ -87,8 +85,6 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
                     if (result[0][0].filepath) {
                         result[0][0].fileUrl = url.resolve(url_, '/profiles/' + path.basename(result[0][0].filepath));
                         delete result[0][0].filepath;
-                    } else {
-                        result[0][0].fileUrl = url.resolve(url_, '/profiles/basic.png');
                     }
                     queryResult.data.review.push(result[0][0]);
                 } else {
@@ -96,7 +92,6 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
                 }
             }
             logger.log('debug', 'review : %j', queryResult.data.review, {});
-            // queryResult.data.review[0].delete(filepath);
             callback(null, queryResult);
         });
         function selectListReviews(callback) {

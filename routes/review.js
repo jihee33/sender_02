@@ -27,10 +27,15 @@ router.post('/', getLog, isAuthenticated, function(req, res, next) {
         Reviews.insertReview(reviewData, function (err, result) {
             if (err) {
                 return next(err);
+            } else if (result !== 0) {
+                res.send({
+                    result: result
+                });
+            } else {
+                res.send({
+                    error : '리뷰 등록에 실패했습니다.'
+                });
             }
-            res.send({
-                result: result
-            });
         });
     } else {
         res.send({
