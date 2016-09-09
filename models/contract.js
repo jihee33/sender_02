@@ -283,7 +283,6 @@ function rejectContract(contractId, callback) {
                                 //delivering table에 contract_id, utime 변경
     var sql_update_contract = 'update contract set state = ?, utime = now() where id = ? ';
     dbPool.getConnection(function(err, dbConn) {
-        console.log('aa1');
         if (err) {
             return callback(err);
         }
@@ -293,7 +292,6 @@ function rejectContract(contractId, callback) {
                 dbConn.release();
                 return callback(err);
             }
-            console.log('aa');
             async.series([updateDelivering, updateStateOfContract], function(err) {
                 dbConn.release();
                 if (err) {
@@ -317,7 +315,6 @@ function rejectContract(contractId, callback) {
         });
     }
     function updateStateOfContract(done) {
-        console.log('ac');
         dbConn.query(sql_update_contract, [0, contractId], function(err, result) { // contract_id -> 0_미체결계약으로 변경
             if (err) {
                 return done(err);
