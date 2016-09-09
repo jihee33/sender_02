@@ -75,15 +75,19 @@ router.get('/:user_id', isSecure, isAuthenticated, isActivated, function(req, re
                     })
                 }
             }
-            if (user.activation !== 0) {
+            if (user.activation !== 0 && user !== 0) {
                 res.send({
                     result: user
+                });
+            } else if (user === 0 ) {
+                res.send({
+                    error: '특정 사용자의 프로필을 불러오는데 실패했습니다.'
                 });
             }
         });
     } else {
         res.send({
-            error :  '특정 사용자의 프로필을 불러오는데 실패했습니다.'
+            error : '특정 사용자의 프로필을 불러오는데 실패했습니다.'
         });
     }
 }); // 4. 특정 사용자의 정보 보기
@@ -95,10 +99,16 @@ router.get('/me/deliverings', isAuthenticated, function(req, res, next) {
     Member.findDeliverings(req.user.id, function (err, result) {
         if (err) {
             return next(err);
+        } else if (result !== 0) {
+            res.send({
+                result : result
+            });
+        } else {
+            res.send({
+                error : '배달원 목록을 가져오는데 실패하였습니다.'
+            });
         }
-        res.send({
-           result : result
-        });
+
     });
 });
 

@@ -87,7 +87,7 @@ function findById(apiId, callback) {
             } else if (result.length !== 0) {
                 return callback(null, result[0]);
             } else {
-                return callback(null, null);
+                return callback(null, 0);
             }
         });
     });
@@ -198,7 +198,7 @@ function findDeliverings(userId, callback) {
             if(deliverer.totalCount !== 0) {
                 return callback(null, deliverer);
             }
-            callback(null, '결과 없음')
+            callback(null, 0)
         });
     });
 }
