@@ -278,7 +278,7 @@ function acceptContract(contractId, callback) {
 } // No.15_1 계약 체결하기 _ 수락
 
 // No.15_9 계약 체결하기 _ 거절
-function rejectContract(contractId, callback) { //TODO state -> 0
+function rejectContract(contractId, callback) {
     var sql_update_delivering = 'update delivering set contract_id = ?, utime = now() where contract_id = ? ';
                                 //delivering table에 contract_id, utime 변경
     var sql_update_contract = 'update contract set state = ?, utime = now() where id = ? ';

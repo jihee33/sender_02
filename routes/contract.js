@@ -7,7 +7,7 @@ var Contract = require('../models/contract');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
 var logger = require('../common/logger');
-var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80'; //fixme : port 변경 -> 80
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 // 9. 배송 요청 등록 및 미체결 계약 생성
 router.post('/', isSecure, isAuthenticated, function(req, res, next) {
@@ -104,7 +104,7 @@ router.get('/', isSecure, isAuthenticated, function(req, res, next) {
 }); // 10. 배송 요청 보기
 
 //  14. 계약 신청 및 체결하기
-router.put('/', function(req, res, next) { // TODO isauthenticated
+router.put('/', isAuthenticated, function(req, res, next) {
     if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
         var contract_id = parseInt(req.body.contract_id);
         if (req.body.contract_id && req.body.state) {

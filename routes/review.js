@@ -19,7 +19,7 @@ router.post('/', getLog, isAuthenticated, function(req, res, next) {
 
         logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
         var reviewData = {};
-        reviewData.userId = req.body.user_id;//fixme : 추후 session값으로 변경
+        reviewData.userId = req.user.id;
         reviewData.contractId = req.body.contract_id;
         reviewData.content = req.body.content;
         reviewData.star = req.body.star;

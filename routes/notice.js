@@ -5,7 +5,7 @@ var getLog = require('./common').getLog;
 var Notice = require('../models/notice');
 var logger = require('../common/logger');
 
-// TODO :  이벤트, 공지사항
+
 router.get('/', getLog, isAuthenticated, function(req, res, next) {
     if (req.url.match(/\/\?currentPage=\d+&itemsPerPage=\d+&type=\d+/i)) {
         var currentPage = parseInt(req.query.currentPage);

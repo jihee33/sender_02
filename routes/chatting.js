@@ -16,7 +16,7 @@ var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 router.post('/', getLog,  isAuthenticated, isActivated, function(req, res, next) {
     if(req.url.match(/\/\?action=send/i)) {
-        // TODO : No.21 채팅 메세지 전송하기
+        // No.21 채팅 메세지 전송하기
         var form = new formidable.IncomingForm();
          form.keepExtensions = true;
          form.multiples = true;
@@ -71,7 +71,7 @@ router.post('/', getLog,  isAuthenticated, isActivated, function(req, res, next)
          });
     }
     if(req.url.match(/\/\?action=notification/i)) {
-        // TODO : No.23 배송 알림 전송하기
+        // No.23 배송 알림 전송하기
         var receiverId = req.body.receiver_id;
         Chatting.getRegistrationToken(receiverId, function(err, result) {
            if (err) {
@@ -125,7 +125,7 @@ router.post('/', getLog,  isAuthenticated, isActivated, function(req, res, next)
 
 });//  No.22 채팅 메세지 전송하기
 router.get('/', getLog, isSecure, isAuthenticated, isActivated, function(req, res, next) {
-    // TODO : No.22 채팅 메세지 수신하기
+    // No.22 채팅 메세지 수신하기
     if(req.url.match(/\/\?senderId=\d+&contractId=\d+/i)) {
         var data = {};
         data.receiverId = req.user.id;
