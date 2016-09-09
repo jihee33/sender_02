@@ -11,6 +11,8 @@ var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 // 9. 배송 요청 등록 및 미체결 계약 생성
 router.post('/', isSecure, isAuthenticated, function(req, res, next) {
+    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    logger.log('debug', 'content type: %s', req.headers['content-type']);
     if (req.headers['content-type'] !== 'application/x-www-form-urlencoded') { // form-data 형식
         var form = new formidable.IncomingForm();
         form.keepExtensions = true;
@@ -20,7 +22,8 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
             if (err) {
                 return next(err);
             }
-
+            logger.log('debug', 'fields: %j', files, {});
+            logger.log('debug', 'files: %j', fields, {});
             if (fields.here_lat && fields.here_lon && fields.addr_lat && fields.addr_lon && fields.rec_phone && fields.price) { // 필수 데이터
                 var result = {};
                 result.user_id = req.user.id; // session값으로 변경 -> req.user

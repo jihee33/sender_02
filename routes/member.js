@@ -34,7 +34,9 @@ router.put('/', isSecure, isAuthenticated, function(req, res, next) {
             });
         });
     } else {
-        next(new Error('핸드폰 번호 등록을 실패했습니다.'));
+        res.send({
+            error: '핸드폰 번호 등록을 실패했습니다.'
+        });
     }
 }); // 2. 핸드폰 번호 등록
 

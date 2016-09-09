@@ -83,8 +83,7 @@ function listDelivering(currentPage, itemsPerPage, callback) {
                         next_lon: item.next_lon, // 행선지 경도
                         dep_time: item.dep_time, // 출발 시각
                         arr_time: item.arr_time, // 도착 시각
-                        originalFilename: null,
-                        fileUrl: url.resolve(url_, '/profiles/basic.png')
+                        originalFilename: null
                     });
                 }
                 as_done();

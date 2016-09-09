@@ -27,10 +27,15 @@ router.post('/', getLog, isAuthenticated, function(req, res, next) {
         Reviews.insertReview(reviewData, function (err, result) {
             if (err) {
                 return next(err);
+            } else if (result !== 0) {
+                res.send({
+                    result: result
+                });
+            } else {
+                res.send({
+                    error : '리뷰 등록에 실패했습니다.'
+                });
             }
-            res.send({
-                result: result
-            });
         });
     } else {
         res.send({
@@ -48,10 +53,15 @@ router.get('/', getLog, isAuthenticated, function(req, res, next) {// 주문 목
         Reviews.listReviews(currentPage, itemsPerPage, delivererId, function(err, result) {
             if (err) {
                 return next(err);
+            } else if (result !== 0) {
+                res.send({
+                    result: result
+                });
+            } else {
+                res.send({
+                    error : '리뷰 목록 불러오기를 실패했습니다.'
+                });
             }
-            res.send({
-                result: result
-            });
         });
     } else {
         res.send({
