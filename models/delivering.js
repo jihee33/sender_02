@@ -9,7 +9,7 @@ var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 // No.11 배달 가기 목록 보기
 function listDelivering(currentPage, itemsPerPage, callback) {
-    var sql_select_delivering_review_user ='SELECT d.id delivering_id, d.user_id user_id, ' +
+    var sql_select_delivering_review_user = 'select d.id delivering_id, d.user_id user_id, ' +
                                             'cast(aes_decrypt(u.name, unhex(sha2(? ,?))) as char(45)) name,' +
                                             'cast(aes_decrypt(u.phone, unhex(sha2(? ,?))) as char(45)) phone, ' +
                                             'r.avg_star star, d.here_lat here_lat, d.here_lon here_lon, d.next_lat next_lat, d.next_lon next_lon, ' +
@@ -31,7 +31,9 @@ function listDelivering(currentPage, itemsPerPage, callback) {
     // table -> delivering + user + file[type 0(user)인 table] + (delivering + review)[평균 별점을 위한 table]
     // col -> delivering_id, user_id, name, phone, star, here_lat, here_lon, next_lat, next_lon,
     //        dep_time, arr_time, filename, filepath
-    var sql_select_count = 'select count(id) count from delivering';
+    var sql_select_count = 'select count(d.id) count from delivering d ' +
+                            'left join contract c on(c.id = d.contract_id) ' +
+                            'where c.state is null';
 
     async.parallel([selectLimitDelivering, selectCountDelivering], function(err, results){
         // selectLimitDelivering, selectCountDelivering을 동시에 실행
