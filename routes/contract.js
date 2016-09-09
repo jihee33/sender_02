@@ -121,7 +121,7 @@ router.put('/', isAuthenticated, function(req, res, next) {
                         });
                     } else {
                         res.send({
-                            error: '계약 체결에 실패했습니다. 1-1'
+                            error: {message :'계약 체결에 실패했습니다. 1-1'}
                         });
                     }
                 });
@@ -130,14 +130,13 @@ router.put('/', isAuthenticated, function(req, res, next) {
                     if (err) {
                         return next(err);
                     }
-                    logger.log('debug', 'reject : %s', result);
                     if (result === 2) { // 업데이트 완료시 -> 2
                         res.send({
-                            result: '계약 체결을 거절했습니다. '
+                            result: {message :'계약 체결을 거절했습니다. '}
                         });
                     } else {
                         res.send({
-                            error: '계약 체결에 실패했습니다. 1-2'
+                            error: {message :'계약 체결에 실패했습니다. 1-2'}
                         });
                     }
                 });
@@ -150,22 +149,22 @@ router.put('/', isAuthenticated, function(req, res, next) {
                 }
                 if (result === 2) { // 업데이트 된 값이 있다면 -> 2
                     res.send({
-                        result: '계약 체결에 성공했습니다.'
+                        result: {message : '계약 신청에 성공했습니다.'}
                     });
                 } else {
                     res.send({
-                        error : '계약 체결에 실패했습니다. 1'
+                        error : {message : '계약 신청에 실패했습니다. 1'}
                     });
                 }
             });
         } else {
             res.send({
-                error : '실패했습니다. 2'
+                error : {message : '실패했습니다. 2'}
             });
         }
     } else {
         res.send({
-            error: '실패했습니다. 3'
+            error: {message :'실패했습니다. 3' }
         });
     }
 }); // 14. 계약 신청 및 체결하기
