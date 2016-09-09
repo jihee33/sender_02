@@ -6,7 +6,7 @@ var url = require('url');
 var fcm = require('node-gcm');
 var Chatting = require('../models/chatting');
 
-var getLog = require('./common').getLog;
+var logger = require('../common/logger');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
 var isActivated = require('./common').isActivated;
@@ -14,7 +14,7 @@ var isActivated = require('./common').isActivated;
 var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 
-router.post('/', getLog,  isAuthenticated, isActivated, function(req, res, next) {
+router.post('/', isAuthenticated, isActivated, function(req, res, next) {
     if(req.url.match(/\/\?action=send/i)) {
         // No.21 채팅 메세지 전송하기
         var form = new formidable.IncomingForm();
@@ -27,6 +27,7 @@ router.post('/', getLog,  isAuthenticated, isActivated, function(req, res, next)
              }
              var data = {};
              data.senderId = req.user.id;
+             data.contractId = fields.contract_id;
              data.receiverId = fields.receiver_id;
              if (fields.message) {
                  data.message = fields.message;
@@ -41,6 +42,7 @@ router.post('/', getLog,  isAuthenticated, isActivated, function(req, res, next)
                  if (err) {
                      return next(err);
                  }
+                 logger.log('debug', 'registrationToken : %s', result);
                  var tokens = [];
                  tokens.push(result);
                  var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
@@ -53,7 +55,7 @@ router.post('/', getLog,  isAuthenticated, isActivated, function(req, res, next)
                          body: '채팅 메세지 전송'
                      }
                  });
-                 var sender = new fcm.Sender(result);
+                 var sender = new fcm.Sender(process.env.GCM_KEY);
                  sender.send(message, {registration: tokens}, function (err, response) {
                      if (err) {
                          return next(err);
@@ -90,7 +92,7 @@ router.post('/', getLog,  isAuthenticated, isActivated, function(req, res, next)
                     body: ''
                 }
             });
-            var sender = new fcm.Sender(result);
+            var sender = new fcm.Sender(process.env.GCM_KEY);
             sender.send(message, {registration: tokens}, function (err, response) {
                 if (err) {
                     return next(err);

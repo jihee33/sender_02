@@ -6,7 +6,7 @@ var getLog = require('./common').getLog;
 var logger = require('../common/logger');
 
 // No.18 리뷰 등록하기
-router.post('/', getLog, isAuthenticated, function(req, res, next) {
+router.post('/', isAuthenticated, function(req, res, next) {
     if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
         logger.log('debug', 'method: %s', req.method);
         logger.log('debug', 'protocol: %s', req.protocol);

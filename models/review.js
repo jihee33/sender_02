@@ -1,7 +1,7 @@
 var async = require('async');
 var dbPool = require('./common').dbPool;
 var url = require('url');
-var path = require('path')
+var path = require('path');
 var logger = require('../common/logger');
 
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
@@ -29,10 +29,11 @@ function insertReview(reviewData, callback) {// 리뷰 등록
 }
 
 function listReviews(currentPage, itemsPerPage, delivererId, callback) {
-    var sql_select_reviews = 'SELECT r.user_id reviewer_id, r.content content, r.star star, f.filepath filepath, ' +
-                             'date_format(convert_tz(r.ctime, ?, ?), \'%Y-%m-%d %H:%i:%s\') review_date ' +
-                             'FROM review r RIGHT JOIN delivering d ON (r.contract_id = d.contract_id)' +
-                                           'LEFT JOIN (SELECT fk_id, filename, filepath from file where type = 0) f ON (f.fk_id = r.user_id) ' +
+    var sql_select_reviews = 'SELECT CAST(AES_DECRYPT(u.name, UNHEX(SHA2(?, 512))) AS CHAR(45)) name, r.content content, ' +
+                             'r.star star, f.filepath filepath, date_format(convert_tz(r.ctime, ?, ?), \'%Y-%m-%d %H:%i:%s\') review_date ' +
+                             'FROM review r RIGHT JOIN delivering d ON (r.contract_id = d.contract_id) ' +
+                                                 'JOIN user u ON (r.user_id = u.id) ' +
+                                                 'LEFT JOIN (SELECT fk_id, filename, filepath from file where type = 0) f ON (f.fk_id = r.user_id) ' +
                              'WHERE d.user_id = ? ' +
                              'ORDER BY date_format(convert_tz(r.ctime, ?, ?), \'%Y-%m-%d %H:%i:%s\') DESC ' +
                              'LIMIT ?, ?';
@@ -96,7 +97,7 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
         });
         function selectListReviews(callback) {
             dbConn.query(sql_select_reviews,
-                ['+00:00', '+09:00', delivererId, '+00:00', '+09:00' , (itemsPerPage * (currentPage - 1)), itemsPerPage ],
+                [process.env.MYSQL_SECRET, '+00:00', '+09:00', delivererId, '+00:00', '+09:00' , (itemsPerPage * (currentPage - 1)), itemsPerPage ],
                 function(err, results) {
                     if (err) {
                         return callback(err);
