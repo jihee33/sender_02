@@ -55,13 +55,6 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
             queryResult.data = {};
             queryResult.data.review = [];
             logger.log('debug', 'result[0] : %j', result[0], {});
-            logger.log('debug', 'result[0] : %j', result[0], {});
-            if (result[0][0].filepath) {
-                result[0][0].fileUrl = url.resolve(url_, '/profiles/' + path.basename(result[0][0].filepath));
-                delete result[0][0].filepath;
-            } else {
-                result[0][0].fileUrl = url.resolve(url_, '/profiles/basic.png');
-            }
             if (!result[0]) {
                 return callback(null, 0);
             }
@@ -71,18 +64,32 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
                         return done(err);
                     }
                     if (item.content !== null) {
+                        logger.log('debug', 'filepath : %j', item.filepath, {});
+                        if (item.filepath) {
+                            item.fileUrl = url.resolve(url_, '/profiles/' + path.basename(item.filepath));
+                            delete item.filepath;
+                        } else {
+                            item.fileUrl = url.resolve(url_, '/profiles/basic.png');
+                        }
                         queryResult.data.review.push(item);
                     }
                 }, function(err) {
                     if (err) {
                         return callback(err);
                     }
+                    done(null, queryResult);
                 });
                 if (!queryResult.data.review[0]) {
                     return callback(null, 0);
                 }
             } else {// if (result[0].length === 1) {
                 if (result[0][0].content !== null) {
+                    if (result[0][0].filepath) {
+                        result[0][0].fileUrl = url.resolve(url_, '/profiles/' + path.basename(result[0][0].filepath));
+                        delete result[0][0].filepath;
+                    } else {
+                        result[0][0].fileUrl = url.resolve(url_, '/profiles/basic.png');
+                    }
                     queryResult.data.review.push(result[0][0]);
                 } else {
                     return callback(null, 0);
