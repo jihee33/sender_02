@@ -78,6 +78,7 @@ router.post('/', getLog,  isAuthenticated, isActivated, function(req, res, next)
                return next(err);
            }
             var tokens = [];
+            tokens.push(result);
             var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
                 data: {
                     key1: 'values1',
@@ -99,31 +100,9 @@ router.post('/', getLog,  isAuthenticated, isActivated, function(req, res, next)
                 });
             });
         });
-
     }
-    /*var form = new formidable.IncomingForm();
-    form.keepExtensions = true;
-    form.multiples = true;
-    form.uploadDir = path.join(__dirname, '../uploads/images/menus');
-    form.parse(req, function(err, fields, files) {
-        if (err) { return next(err);}
-        var data = {};
-        data.receiverId = fields.receiver_id;
-        data.name = fields.name;
-        data.message = fields.message;
+});
 
-        if (files.pic) {
-            data.pic = [];
-            data.pic.push(files.pic);
-            var filename = path.basename(files.pic.path);
-            data.pic.push({url: url.resolve(ecTo, '/images/' + filename)});
-        }
-        res.send({
-            result : data
-        });
-    });*/
-
-});//  No.22 채팅 메세지 전송하기
 router.get('/', getLog, isSecure, isAuthenticated, isActivated, function(req, res, next) {
     // No.22 채팅 메세지 수신하기
     if(req.url.match(/\/\?senderId=\d+&contractId=\d+/i)) {

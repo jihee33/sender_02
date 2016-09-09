@@ -9,7 +9,7 @@ function insertReview(reviewData, callback) {// 리뷰 등록
             return callback(err);
         }
         dbConn.query(sql_insert_review,
-            [reviewData.userId, reviewData.contractId, reviewData.content, reviewData.star], function(err) {
+            [reviewData.userId, reviewData.contractId, reviewData.content, reviewData.star], function(err, result) {
                 dbConn.release();
                 if (err) {
                     return callback(err);
