@@ -105,7 +105,7 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
     }
 });
 
-router.get('/', getLog, isSecure, isAuthenticated, isActivated, function(req, res, next) {
+router.get('/', isSecure, isAuthenticated, isActivated, function(req, res, next) {
     // No.22 채팅 메세지 수신하기
     if(req.url.match(/\/\?senderId=\d+&contractId=\d+/i)) {
         var data = {};
