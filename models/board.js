@@ -47,7 +47,7 @@ function insertBoard(data, callback) {
                     }
                     affectedRows += result.affectedRows;
                     recentBoardId = result.insertId;
-                    console.log(recentBoardId);
+                    // console.log(recentBoardId);
                     done(null);
                 });
             } else if (data.boardType === 2) {
@@ -62,7 +62,7 @@ function insertBoard(data, callback) {
                     done(null);
                 });
             } else {
-                console.log('error');
+                // console.log('error');
                 done(new Error('boardType는 0, 1, 2만 가능합니다.'));
             }
         }
@@ -73,7 +73,7 @@ function insertBoard(data, callback) {
                         return as_done(err);
                     }
                     affectedRows += result.affectedRows; // OK -> 2
-                    console.log(result);
+                    // console.log(result);
                     as_done(null);
                 });
             }, function (err) {

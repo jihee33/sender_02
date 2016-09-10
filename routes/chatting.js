@@ -51,7 +51,7 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
                      },
                      notification: {
                          title: '채팅 메세지 전송',
-                         icon: '',
+                         icon: '채팅 메세지 전송',
                          body: '채팅 메세지 전송'
                      }
                  });
@@ -83,13 +83,12 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
             tokens.push(result);
             var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
                 data: {
-                    key1: 'values1',
-                    key2: 'values2',
+
                 },
                 notification: {
-                    title: '',
-                    icon: '',
-                    body: ''
+                    title: '배송 요청 전송',
+                    icon: '배송 요청 전송',
+                    body: '배송 요청 전송'
                 }
             });
             var sender = new fcm.Sender(process.env.GCM_KEY);

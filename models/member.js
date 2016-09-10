@@ -165,7 +165,7 @@ function findDeliverings(userId, callback) {
                                                'FROM user u JOIN sending s ON (u.id = s.user_id) ' +
                                                            'JOIN delivering d ON (s.contract_id = d.contract_id) ' +
                                                            'JOIN contract c ON (d.contract_id = c.id) ' +
-                                                           'WHERE c.state = 3) d ON (u.id = d.duid) ' +
+                                                           'WHERE c.state = 4) d ON (u.id = d.duid) ' +
                              'WHERE d.uid = ?';
 
     var deliverer = {};
@@ -337,7 +337,7 @@ function deleteUser(userId, callback) {
                     if (err) {
                         done(err);
                     }
-                    console.log(result.changedRows);
+                    // console.log(result.changedRows);
                     done(null, result.changedRows);
                 });
             } else if (apiType === 1) {
