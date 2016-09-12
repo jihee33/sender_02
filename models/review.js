@@ -33,13 +33,14 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
                              'r.star star, f.filepath filepath, date_format(convert_tz(r.ctime, ?, ?), \'%Y-%m-%d %H:%i:%s\') review_date ' +
                              'FROM review r RIGHT JOIN delivering d ON (r.contract_id = d.contract_id) ' +
                                                  'JOIN user u ON (r.user_id = u.id) ' +
-                                                 'LEFT JOIN (SELECT fk_id, filename, filepath from file where type = 0) f ON (f.fk_id = r.user_id) ' +
+                                            'LEFT JOIN (SELECT fk_id, filename, filepath from file where type = 0) f ON (f.fk_id = r.user_id) ' +
                              'WHERE d.user_id = ? ' +
                              'ORDER BY date_format(convert_tz(r.ctime, ?, ?), \'%Y-%m-%d %H:%i:%s\') DESC ' +
                              'LIMIT ?, ?';
 
-    var sql_select_count = 'SELECT count(d.id) count FROM review r RIGHT JOIN delivering d ON (r.contract_id = d.contract_id) ' +
-                           'WHERE d.user_id = ?';
+    var sql_select_count =  'SELECT count(d.id) count FROM review r ' +
+                            'RIGHT JOIN delivering d ON (r.contract_id = d.contract_id) ' +
+                            'WHERE d.user_id = ?';
     var queryResult = {};
     dbPool.getConnection(function(err, dbConn) {
         if (err) {

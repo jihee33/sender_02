@@ -43,12 +43,12 @@ router.post('/', isAuthenticated, function(req, res, next) {
     }
 });// No.18 리뷰 등록하기
 
-// No.19 리뷰 목록하기
+// No.19 리뷰 목록보기
 router.get('/', isAuthenticated, function(req, res, next) {// 주문 목록 조회
-    var currentPage = parseInt(req.query.currentPage);
-    var itemsPerPage = parseInt(req.query.itemsPerPage);
-    var delivererId = parseInt(req.query.deliverer_id);
     if (req.url.match(/\?currentPage=\d+&itemsPerPage=\d+&deliverer_id=\d+/i)) {
+        var currentPage = parseInt(req.query.currentPage);
+        var itemsPerPage = parseInt(req.query.itemsPerPage);
+        var delivererId = parseInt(req.query.deliverer_id);
         Reviews.listReviews(currentPage, itemsPerPage, delivererId, function(err, result) {
             if (err) {
                 return next(err);
