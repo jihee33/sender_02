@@ -4,7 +4,7 @@ var formidable = require('formidable');
 var path = require('path');
 var url = require('url');
 var fcm = require('node-gcm');
-var CronJob = require('cron').CronJob;
+// var CronJob = require('cron').CronJob;
 var moment = require('moment-timezone');
 var Contract = require('../models/contract');
 var isSecure = require('./common').isSecure;
@@ -20,7 +20,7 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
         var form = new formidable.IncomingForm();
         form.keepExtensions = true;
         form.multiples = true;
-
+        form.uploadDir = path.join(__dirname, '../uploads/images/sendings'); //파일 업로드
         form.parse(req, function (err, fields, files) {
             if (err) {
                 return next(err);
@@ -56,7 +56,7 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
                     if (files.pic) { // 사진이 없을 경우를 보완
                         var filename = path.basename(files.pic.path);
                         result.pic.push({url: url.resolve(url_, '/images/' + filename)});
-                        form.uploadDir = path.join(__dirname, '../uploads/images/sendings'); //파일 업로드
+
                     }
                     if (data.affectedRows <= 3) { //insert가 제대로 된 경우
                         res.send({
