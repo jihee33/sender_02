@@ -235,7 +235,7 @@ router.put('/', isAuthenticated, function(req, res, next) {
                                 });
                                 // 1분 후에 * 찍히게 하는 것
                                 /*var timer = 0;
-                                var crontime = '05 * * * * *';
+                                var crontime = '02 * * * * *';
                                 var timeZone = 'Asia/Seoul';
                                 var job = new CronJob(crontime, function(){
                                     timer += 1;
@@ -245,14 +245,14 @@ router.put('/', isAuthenticated, function(req, res, next) {
                                                 result : 'cron error 1'
                                             });
                                         }
-                                        if (contractState.state !== 0) {
+                                        if (contractState.state === 2) {
                                             process.exit(0);
                                             return res.send({
                                                 result: {message: '계약 신청에 성공했습니다.'}
                                             });
                                         }
                                     });
-                                    if (timer === 36) {
+                                    if (timer === 90) {
                                         Contract.rejectContract(contract_id, function(err, result) {
                                             if (err) {
                                                 return next(err);

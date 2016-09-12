@@ -103,7 +103,8 @@ function insertSendingAndContract(data, callback) {
 
 // No.10  배송 요청 보기
 function selectSending(deliveringId, callback) {
-    var sql_select_sending = 'select s.user_id user_id, s.id sending_id, c.id contract_id, s.here_lat here_lat, s.here_lon here_lon, ' +
+    var sql_select_sending = 'select s.user_id user_id, cast(aes_decrypt(u.name , unhex(sha2(?, ?))) as char(45)) name, ' +
+                             's.id sending_id, c.id contract_id, s.here_lat here_lat, s.here_lon here_lon, ' +
                              's.addr_lat addr_lat, s.addr_lon addr_lon, s.info info, s.memo memo , ' +
                              'date_format(convert_tz(s.arr_time,?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, ' +
                              'cast(aes_decrypt(s.rec_phone , unhex(sha2(?, ?))) as char(45)) rec_phone, ' +
@@ -111,6 +112,7 @@ function selectSending(deliveringId, callback) {
                              'from delivering d ' +
                              'join contract c on(d.contract_id = c.id) ' +
                              'join sending s on(c.id = s.contract_id) ' +
+                             'join user u on(u.id = s.user_id) ' +
                              'where d.id = ?';
 
     var sql_select_file = 'SELECT f.filename, f.filepath ' +
@@ -133,6 +135,7 @@ function selectSending(deliveringId, callback) {
             info.delivering_id = deliveringId;
             info.sending_id = result[0][0].sending_id; //sending id
             info.id = result[0][0].user_id;
+            info.name = result[0][0].name;
             info.contract_id = result[0][0].contract_id; //constract의 id
             info.here_lat = result[0][0].here_lat; // 현재 위도
             info.here_lon = result[0][0].here_lon; // 현재 경도
@@ -168,7 +171,8 @@ function selectSending(deliveringId, callback) {
             if (err) {
                 return callback(err);
             }
-            dbConn.query(sql_select_sending, ['+00:00', '+09:00', process.env.MYSQL_SECRET, 512, deliveringId], function(err, result) {
+            dbConn.query(sql_select_sending, [process.env.MYSQL_SECRET, 512, '+00:00', '+09:00',
+                process.env.MYSQL_SECRET, 512, deliveringId], function(err, result) {
                 dbConn.release();
                 if (err) {
                    callback(err);
