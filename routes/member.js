@@ -149,6 +149,7 @@ router.delete('/', isAuthenticated, isActivated, function(req, res, next) {
             return next(err);
         }
         if (result === 1) {
+            req.logout();
             res.send({
                 result : '회원 탈퇴가 처리되었습니다.'
             });
