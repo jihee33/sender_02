@@ -13,8 +13,8 @@ function listDelivering(currentPage, itemsPerPage, userId, callback) {
                                             'cast(aes_decrypt(u.name, unhex(sha2(?, ?))) as char(45)) name, ' +
                                             'cast(aes_decrypt(u.phone, unhex(sha2(?, ?))) as char(45)) phone, ' +
                                             'r.avg_star star, d.here_lat here_lat, d.here_lon here_lon, d.next_lat next_lat, d.next_lon next_lon, ' +
-                                            'date_format(convert_tz(d.dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
-                                            'date_format(convert_tz(d.arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, ' +
+                                            'date_format(d.dep_time, \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
+                                            'date_format(d.arr_time, \'%Y-%m-%d %H:%i:%s\') arr_time, ' +
                                             'f.filename filename, f.filepath filepath ' +
                                             'from delivering d ' +
                                             'join user u on(u.id = d.user_id) ' +
@@ -95,7 +95,7 @@ function listDelivering(currentPage, itemsPerPage, userId, callback) {
                 return callback(err);
             }
             dbConn.query(sql_select_delivering_review_user,
-                [process.env.MYSQL_SECRET, 512, process.env.MYSQL_SECRET, 512, '+00:00', '+09:00', '+00:00', '+09:00', userId, itemsPerPage * (currentPage - 1), itemsPerPage],
+                [process.env.MYSQL_SECRET, 512, process.env.MYSQL_SECRET, 512, userId, itemsPerPage * (currentPage - 1), itemsPerPage],
                 function (err, results) {
                     dbConn.release();
                     if (err) {
@@ -130,8 +130,8 @@ function listDeliveringById(deliverId, callback) {
     var sql_select_delivering_id =  'select d.id deilvering_id, d.user_id, ' +
         'cast(aes_decrypt(u.name, unhex(sha2(? ,?))) as char(45)) name, ' +
         'd.here_lat here_lat, d.here_lon here_lon, d.next_lat next_lat, d.next_lon next_lon, ' +
-        'date_format(convert_tz(dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
-        'date_format(convert_tz(arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time ' +
+        'date_format(dep_time, \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
+        'date_format(arr_time, \'%Y-%m-%d %H:%i:%s\') arr_time ' +
         'from delivering d ' +
         'join user u on(u.id = d.user_id) ' +
         'where d.id = ? ';
@@ -142,7 +142,7 @@ function listDeliveringById(deliverId, callback) {
         if (err) {
             return callback(err);
         }
-        dbConn.query(sql_select_delivering_id, [process.env.MYSQL_SECRET, 512,'+00:00', '+09:00', '+00:00', '+09:00', deliverId], function(err, result) {
+        dbConn.query(sql_select_delivering_id, [process.env.MYSQL_SECRET, 512, deliverId], function(err, result) {
             dbConn.release();
             if (err) {
                 callback(err);

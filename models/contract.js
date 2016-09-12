@@ -106,7 +106,7 @@ function selectSending(deliveringId, callback) {
     var sql_select_sending = 'select s.user_id user_id, cast(aes_decrypt(u.name , unhex(sha2(?, ?))) as char(45)) name, ' +
                              's.id sending_id, c.id contract_id, s.here_lat here_lat, s.here_lon here_lon, ' +
                              's.addr_lat addr_lat, s.addr_lon addr_lon, s.info info, s.memo memo , ' +
-                             'date_format(convert_tz(s.arr_time,?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, ' +
+                             'date_format(s.arr_time, \'%Y-%m-%d %H:%i:%s\') arr_time, ' +
                              'cast(aes_decrypt(s.rec_phone , unhex(sha2(?, ?))) as char(45)) rec_phone, ' +
                              's.price price ' +
                              'from delivering d ' +
@@ -171,7 +171,7 @@ function selectSending(deliveringId, callback) {
             if (err) {
                 return callback(err);
             }
-            dbConn.query(sql_select_sending, [process.env.MYSQL_SECRET, 512, '+00:00', '+09:00',
+            dbConn.query(sql_select_sending, [process.env.MYSQL_SECRET, 512,
                 process.env.MYSQL_SECRET, 512, deliveringId], function(err, result) {
                 dbConn.release();
                 if (err) {
@@ -351,8 +351,8 @@ function rejectContract(contractId, callback) {
 // No.16 계약 내역 보기
 function selectContract(contractId, callback) {
     var sql_select_contract =   'select c.id contract_id, s.id sender_id, d.id deliverer_id, ' +
-                                'date_format(convert_tz(c.req_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') req_time, ' +
-                                'date_format(convert_tz(c.res_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') res_time, ' +
+                                'date_format(c.req_time, \'%Y-%m-%d %H:%i:%s\') req_time, ' +
+                                'date_format(c.res_time, \'%Y-%m-%d %H:%i:%s\') res_time, ' +
                                 'c.state state ' +// __컬럼명
                                 'from contract c ' +
                                 'join sending s on(c.id = s.contract_id) ' +
@@ -365,7 +365,7 @@ function selectContract(contractId, callback) {
        if (err) {
            return callback(err);
        }
-       dbConn.query(sql_select_contract, ['+00:00', '+09:00', '+00:00', '+09:00', contractId], function(err, results) {
+       dbConn.query(sql_select_contract, [contractId], function(err, results) {
            dbConn.release();
            if (err) {
                return callback(err);

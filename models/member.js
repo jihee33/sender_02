@@ -160,7 +160,7 @@ function findUser(userId, callback) {
 // 나의 물품을 배송한 사람 찾기 model
 function findDeliverings(userId, callback) {
     var sql_find_deliverer = 'SELECT cast(aes_decrypt(u.name, unhex(sha2(?, ?))) as char(45)) dname, d.uid sid, d.duid duid, d.cstate cstate, ' +
-                             'date_format(convert_tz(d.res_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') res_time ' +
+                             'date_format(d.res_time, \'%Y-%m-%d %H:%i:%s\') res_time ' +
                              'FROM user u JOIN (SELECT u.id uid, s.id sid, s.contract_id con_id, d.id did, d.user_id duid, c.state cstate, c.res_time ' +
                                                'FROM user u JOIN sending s ON (u.id = s.user_id) ' +
                                                            'JOIN delivering d ON (s.contract_id = d.contract_id) ' +
@@ -176,7 +176,7 @@ function findDeliverings(userId, callback) {
         if (err) {
             return callback(err);
         }
-        dbConn.query(sql_find_deliverer, [process.env.MYSQL_SECRET, 512,'+00:00', '+09:00', userId], function (err, result) {
+        dbConn.query(sql_find_deliverer, [process.env.MYSQL_SECRET, 512, userId], function (err, result) {
             dbConn.release();
             if (err) {
                 return callback(err);
