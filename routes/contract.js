@@ -4,6 +4,8 @@ var formidable = require('formidable');
 var path = require('path');
 var url = require('url');
 var fcm = require('node-gcm');
+var CronJob = require('cron').CronJob;
+var moment = require('moment-timezone');
 var Contract = require('../models/contract');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
@@ -131,7 +133,7 @@ router.put('/', isAuthenticated, function(req, res, next) {
                             logger.log('debug', 'tokens : %j', tokens, {});
                             var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
                                 data: {
-                                    type: 'confirm',
+                                    type: 'confirm'
                                 }
                             });
                             logger.log('debug', 'fcm message : ', message);
@@ -158,111 +160,6 @@ router.put('/', isAuthenticated, function(req, res, next) {
                         });
                     }
                 });
-                /*// var CronJob = require('cron').CronJob;
-//
-// var moment = require('moment-timezone');
-//
-// console.log(moment().add(30, 'm').format()); //30 분 추가
-//
-// console.log(moment.tz('UTC').add(1, 'm').format('YYYY-MM-DD HH:mm:ss'));
-// console.log(moment.tz('UTC').add(1, 'm').month() + 1);
-// console.log(moment.tz('UTC').add(1, 'm').date());
-// console.log(moment.tz('UTC').add(1, 'm').hour());
-// console.log(moment.tz('UTC').add(1, 'm').minute());
-//
-// var in1min = moment().tz('UTC').add(1, 'm');
-//
-// // 1분 후에 * 찍히게 하는 것
-// var crontime = in1min.second() + ' ' +
-//                in1min.minute() + ' ' +
-//                in1min.hour() + ' ' +
-//                in1min.date() + ' ' +
-//                in1min.month() + ' *';
-//
-//
-//
-// //var crontime = '05 * * * * *'; // *는 매를 의미한다
-// // 00 * * * * *  는 매분마다
-// // 30 * * * * * 는 매 30초마다
-// // * * * * * * 는 매초마다
-// // 30초마다 라는 건 실제 시간에서 30초마다이다
-// // 즉 1시 1분 30초, 2분 30초 이렇게 실행된다
-//
-// var timeZone = 'Asia/Seoul';
-//
-// var job = new CronJob(crontime, function(){
-//   console.log('*');
-// }, null, false, timeZone);
-//
-// job.start();
-
-
-
-                /!**
-                 * Created by Tacademy on 2016-09-05.
-                 *!/
-                var CronJob = require('cron').CronJob;
-                var moment = require('moment-timezone');
-
-                var timeZone = 'Asia/Seoul';
-                var future = moment().tz(timeZone);
-                future.add(1, 'm');
-                console.log(future.format('YYYY-MM-DD HH:mm:ss'));
-                console.log(future.format('YYYY-MM-DD hh:mm:ss'));
-                console.log(future.month() + 1);
-                console.log(future.date());
-                console.log(future.hour());
-                console.log(future.minute());
-                console.log(future.second());
-
-//var crontime = '10 * * * * *'; // 초, 분, 시, 일, 월, 요일
-                var crontime = future.second() + ' ' +
-                    future.minute() + ' ' +
-                    future.hour() + ' ' +
-                    future.date() + ' ' +
-                    future.month() + ' *';
-
-                var job = new CronJob(crontime, function() {
-                    console.log('*');
-                }/!* 수행할 함수 *!/, function() {
-                    process.exit(0);
-                }/!* 완료 함수 *!/, false/!* 즉시 실행? *!/, timeZone);
-
-                job.start();
-
-
-
-
-
-
-
-
-//
-// var CronJob = require('cron').CronJob;
-// var moment = require('moment-timezone');
-//
-// var timeZone = "Asia/Seoul";
-//
-// var crontime_min50 = "00 50 9-17 * * 1-5";
-// var crontime_1215 = "00 15 12 * * 1-5";
-// var crontime_1755 = "00 55 17 * * 1-5";
-//
-// var job_min50 = new CronJob(crontime_min50, function() {
-//   console.log(moment().tz(timeZone).format("YYYY-MM-DD HH:mm:ss") +
-//     " : 눈의 피로를 풀어 주세요...");
-// }, true, timeZone);
-//
-// var job_1215 = new CronJob(crontime_1215, function() {
-//   console.log(moment().tz(timeZone).format("YYYY-MM-DD HH:mm:ss") +
-//     " : 밥 먹으러 갑시다…");
-// }, true, timeZone);
-//
-// var job_1755 = new CronJob(crontime_1755, function() {
-//   console.log(moment().tz(timeZone).format("YYYY-MM-DD HH:mm:ss") +
-//     " : 카카오택시 콜…");
-// }, true, timeZone);*/
-
-
             } else if (state === 9) { // 거절
                 Contract.rejectContract(contract_id, function (err, result) {
                     if (err) {
@@ -278,7 +175,7 @@ router.put('/', isAuthenticated, function(req, res, next) {
                             logger.log('debug', 'tokens : %j', tokens, {});
                             var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
                                 data: {
-                                    type: 'reject',
+                                    type: 'reject'
                                 }
                             });
                             logger.log('debug', 'fcm message : ', message);
@@ -322,7 +219,7 @@ router.put('/', isAuthenticated, function(req, res, next) {
                         logger.log('debug', 'tokens : %j', tokens, {});
                         var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
                             data: {
-                                type: 'delivery',
+                                type: 'delivery'
                             }
                         });
                         logger.log('debug', 'fcm message : ', message);
@@ -336,16 +233,52 @@ router.put('/', isAuthenticated, function(req, res, next) {
                                 res.send({
                                     result: {message: '계약 신청에 성공했습니다.'}
                                 });
+                                // 1분 후에 * 찍히게 하는 것
+                                /*var timer = 0;
+                                var crontime = '05 * * * * *';
+                                var timeZone = 'Asia/Seoul';
+                                var job = new CronJob(crontime, function(){
+                                    timer += 1;
+                                    Contract.selectContract(req.body.contract_id, function (err, contractState) {
+                                        if (err) {
+                                            return res.send({
+                                                result : 'cron error 1'
+                                            });
+                                        }
+                                        if (contractState.state !== 0) {
+                                            process.exit(0);
+                                            return res.send({
+                                                result: {message: '계약 신청에 성공했습니다.'}
+                                            });
+                                        }
+                                    });
+                                    if (timer === 36) {
+                                        Contract.rejectContract(contract_id, function(err, result) {
+                                            if (err) {
+                                                return next(err);
+                                            }
+                                            if (result === 2) {
+                                                res.send({
+                                                    error: '계약 신청에 실패했습니다. timeout'
+                                                });
+                                            }
+                                        });
+                                    process.exit(0);
+                                    }
+                                }, null, true, timeZone);
+
+                                job.start();*/
+
                             } else {
                                 res.send({
-                                    error: '계약 신청에 실패했습니다. 0'
+                                    error: '계약 신청에 실패했습니다. fcm'
                                 });
                             }
                         });
                     });
                 } else {
                     res.send({
-                        error : '계약 신청에 실패했습니다. 1'
+                        error : '계약 신청에 실패했습니다. update'
                     });
                 }
             });
