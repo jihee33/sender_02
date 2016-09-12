@@ -111,9 +111,10 @@ router.get('/', isSecure, isAuthenticated, function(req, res, next) {
 router.put('/', isAuthenticated, function(req, res, next) {
     if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
         var contract_id = parseInt(req.body.contract_id);
+        var receiverId = parseInt(req.body.receiver_id);
+        var tokens = [];
         if (req.body.contract_id && req.body.state) {
             var state = parseInt(req.body.state);
-            var tokens = [];
             if (state === 2) { // 수락;
                 Contract.acceptContract(contract_id, function (err, results) {
                     if (err) {
@@ -121,30 +122,35 @@ router.put('/', isAuthenticated, function(req, res, next) {
                     }
                     if (results.changedRows === 1) { // 업데이트 완료시 -> 1
                         delete results.changedRows;
-                        logger.log('debug', 'reg_token : %j', result, {});
-                        tokens.push(result.registration_token);
-                        logger.log('debug', 'tokens : %j', tokens, {});
-                        var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
-                            data: {
-                                type : 'confirm',
-                            }
-                        });
-                        logger.log('debug', 'fcm message : ', message);
-                        var sender = new fcm.Sender(process.env.GCM_KEY);
-                        sender.send(message, {registrationTokens: tokens}, function (err, response) {
+                        Contract.getRegistrationToken(receiverId, function (err, regToken) {
                             if (err) {
                                 return next(err);
                             }
-                            logger.log('debug', 'response : %j', response, {});
-                            if (response.failure !== 1) {
-                                res.send({
-                                    result: results
-                                });
-                            } else {
-                                res.send({
-                                    error: '계약 체결에 실패했습니다. 1-1'
-                                });
-                            }
+                            logger.log('debug', 'reg_token : %j', regToken, {});
+                            tokens.push(regToken.registration_token);
+                            logger.log('debug', 'tokens : %j', tokens, {});
+                            var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
+                                data: {
+                                    type: 'confirm',
+                                }
+                            });
+                            logger.log('debug', 'fcm message : ', message);
+                            var sender = new fcm.Sender(process.env.GCM_KEY);
+                            sender.send(message, {registrationTokens: tokens}, function (err, response) {
+                                if (err) {
+                                    return next(err);
+                                }
+                                logger.log('debug', 'response : %j', response, {});
+                                if (response.failure !== 1) {
+                                    res.send({
+                                        result: results
+                                    });
+                                } else {
+                                    res.send({
+                                        error: '계약 체결에 실패했습니다. 1-1'
+                                    });
+                                }
+                            });
                         });
                     } else {
                         res.send({
@@ -152,36 +158,146 @@ router.put('/', isAuthenticated, function(req, res, next) {
                         });
                     }
                 });
+                /*// var CronJob = require('cron').CronJob;
+//
+// var moment = require('moment-timezone');
+//
+// console.log(moment().add(30, 'm').format()); //30 분 추가
+//
+// console.log(moment.tz('UTC').add(1, 'm').format('YYYY-MM-DD HH:mm:ss'));
+// console.log(moment.tz('UTC').add(1, 'm').month() + 1);
+// console.log(moment.tz('UTC').add(1, 'm').date());
+// console.log(moment.tz('UTC').add(1, 'm').hour());
+// console.log(moment.tz('UTC').add(1, 'm').minute());
+//
+// var in1min = moment().tz('UTC').add(1, 'm');
+//
+// // 1분 후에 * 찍히게 하는 것
+// var crontime = in1min.second() + ' ' +
+//                in1min.minute() + ' ' +
+//                in1min.hour() + ' ' +
+//                in1min.date() + ' ' +
+//                in1min.month() + ' *';
+//
+//
+//
+// //var crontime = '05 * * * * *'; // *는 매를 의미한다
+// // 00 * * * * *  는 매분마다
+// // 30 * * * * * 는 매 30초마다
+// // * * * * * * 는 매초마다
+// // 30초마다 라는 건 실제 시간에서 30초마다이다
+// // 즉 1시 1분 30초, 2분 30초 이렇게 실행된다
+//
+// var timeZone = 'Asia/Seoul';
+//
+// var job = new CronJob(crontime, function(){
+//   console.log('*');
+// }, null, false, timeZone);
+//
+// job.start();
+
+
+
+                /!**
+                 * Created by Tacademy on 2016-09-05.
+                 *!/
+                var CronJob = require('cron').CronJob;
+                var moment = require('moment-timezone');
+
+                var timeZone = 'Asia/Seoul';
+                var future = moment().tz(timeZone);
+                future.add(1, 'm');
+                console.log(future.format('YYYY-MM-DD HH:mm:ss'));
+                console.log(future.format('YYYY-MM-DD hh:mm:ss'));
+                console.log(future.month() + 1);
+                console.log(future.date());
+                console.log(future.hour());
+                console.log(future.minute());
+                console.log(future.second());
+
+//var crontime = '10 * * * * *'; // 초, 분, 시, 일, 월, 요일
+                var crontime = future.second() + ' ' +
+                    future.minute() + ' ' +
+                    future.hour() + ' ' +
+                    future.date() + ' ' +
+                    future.month() + ' *';
+
+                var job = new CronJob(crontime, function() {
+                    console.log('*');
+                }/!* 수행할 함수 *!/, function() {
+                    process.exit(0);
+                }/!* 완료 함수 *!/, false/!* 즉시 실행? *!/, timeZone);
+
+                job.start();
+
+
+
+
+
+
+
+
+//
+// var CronJob = require('cron').CronJob;
+// var moment = require('moment-timezone');
+//
+// var timeZone = "Asia/Seoul";
+//
+// var crontime_min50 = "00 50 9-17 * * 1-5";
+// var crontime_1215 = "00 15 12 * * 1-5";
+// var crontime_1755 = "00 55 17 * * 1-5";
+//
+// var job_min50 = new CronJob(crontime_min50, function() {
+//   console.log(moment().tz(timeZone).format("YYYY-MM-DD HH:mm:ss") +
+//     " : 눈의 피로를 풀어 주세요...");
+// }, true, timeZone);
+//
+// var job_1215 = new CronJob(crontime_1215, function() {
+//   console.log(moment().tz(timeZone).format("YYYY-MM-DD HH:mm:ss") +
+//     " : 밥 먹으러 갑시다…");
+// }, true, timeZone);
+//
+// var job_1755 = new CronJob(crontime_1755, function() {
+//   console.log(moment().tz(timeZone).format("YYYY-MM-DD HH:mm:ss") +
+//     " : 카카오택시 콜…");
+// }, true, timeZone);*/
+
+
             } else if (state === 9) { // 거절
                 Contract.rejectContract(contract_id, function (err, result) {
                     if (err) {
                         return next(err);
                     }
                     if (result === 2) { // 업데이트 완료시 -> 2
-                        logger.log('debug', 'reg_token : %j', result, {});
-                        tokens.push(result.registration_token);
-                        logger.log('debug', 'tokens : %j', tokens, {});
-                        var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
-                            data: {
-                                type : 'reject',
-                            }
-                        });
-                        logger.log('debug', 'fcm message : ', message);
-                        var sender = new fcm.Sender(process.env.GCM_KEY);
-                        sender.send(message, {registrationTokens: tokens}, function (err, response) {
+                        Contract.getRegistrationToken(receiverId, function (err, result) {
                             if (err) {
                                 return next(err);
                             }
-                            logger.log('debug', 'response : %j', response, {});
-                            if (response.failure !== 1) {
-                                res.send({
-                                    result: '계약 체결을 거절했습니다.'
-                                });
-                            } else {
-                                res.send({
-                                    error: '계약 체결에 실패했습니다. 1-1'
-                                });
-                            }
+                            logger.log('debug', 'reg_token : %j', result, {});
+                            tokens.push(result.registration_token);
+                            logger.log('debug', 'tokens : %j', tokens, {});
+                            var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
+                                data: {
+                                    type: 'reject',
+                                }
+                            });
+                            logger.log('debug', 'fcm message : ', message);
+                            var sender = new fcm.Sender(process.env.GCM_KEY);
+                            sender.send(message, {registrationTokens: tokens}, function (err, response) {
+                                if (err) {
+                                    return next(err);
+                                }
+                                logger.log('debug', 'response : %j', response, {});
+                                if (response.failure !== 1) {
+                                    res.send({
+                                        result: '계약 체결을 거절했습니다.'
+                                    });
+                                } else {
+                                    res.send({
+                                        error: '계약 체결에 실패했습니다. 1-1'
+                                    });
+                                }
+                            });
                         });
                     } else {
                         res.send({
@@ -197,30 +313,35 @@ router.put('/', isAuthenticated, function(req, res, next) {
                     return next(err);
                 }
                 if (result === 2) { // 업데이트 된 값이 있다면 -> 2
-                    logger.log('debug', 'reg_token : %j', result, {});
-                    tokens.push(result.registration_token);
-                    logger.log('debug', 'tokens : %j', tokens, {});
-                    var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
-                        data: {
-                            type : 'delivery',
-                        }
-                    });
-                    logger.log('debug', 'fcm message : ', message);
-                    var sender = new fcm.Sender(process.env.GCM_KEY);
-                    sender.send(message, {registrationTokens: tokens}, function (err, response) {
+                    Contract.getRegistrationToken(receiverId, function (err, result) {
                         if (err) {
                             return next(err);
                         }
-                        logger.log('debug', 'response : %j', response, {});
-                        if (response.failure !== 1) {
-                            res.send({
-                                result: {message : '계약 신청에 성공했습니다.'}
-                            });
-                        } else {
-                            res.send({
-                                error: '계약 신청에 실패했습니다. 0'
-                            });
-                        }
+                        logger.log('debug', 'reg_token : %j', result, {});
+                        tokens.push(result.registration_token);
+                        logger.log('debug', 'tokens : %j', tokens, {});
+                        var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
+                            data: {
+                                type: 'delivery',
+                            }
+                        });
+                        logger.log('debug', 'fcm message : ', message);
+                        var sender = new fcm.Sender(process.env.GCM_KEY);
+                        sender.send(message, {registrationTokens: tokens}, function (err, response) {
+                            if (err) {
+                                return next(err);
+                            }
+                            logger.log('debug', 'response : %j', response, {});
+                            if (response.failure !== 1) {
+                                res.send({
+                                    result: {message: '계약 신청에 성공했습니다.'}
+                                });
+                            } else {
+                                res.send({
+                                    error: '계약 신청에 실패했습니다. 0'
+                                });
+                            }
+                        });
                     });
                 } else {
                     res.send({

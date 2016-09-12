@@ -7,6 +7,22 @@ var fs = require('fs');
 var logger = require('../common/logger');
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
+function getRegistrationToken(data, callback) {
+    var sql_select_registration_token = 'SELECT registration_token FROM user WHERE id = ?';
+    dbPool.getConnection(function(err, dbConn) {
+        if (err) {
+            return callback(err);
+        }
+        dbConn.query(sql_select_registration_token, [data], function(err, results) {
+            dbConn.release();
+            if (err) {
+                return callback(err);
+            }
+            callback(null, results[0]);
+        });
+    });
+}
+
 // No.09 배송 요청 등록 및 미체결 계약 생성
 function insertSendingAndContract(data, callback) {
     var sql_insert_contract = 'insert into contract(state) values(?)';
@@ -383,3 +399,4 @@ module.exports.acceptContract = acceptContract;
 module.exports.rejectContract = rejectContract;
 module.exports.insertSendingAndContract = insertSendingAndContract;
 module.exports.selectSending = selectSending;
+module.exports.getRegistrationToken = getRegistrationToken;
