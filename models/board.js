@@ -19,12 +19,11 @@ function insertBoard(data, callback) {
             return callback(err);
         }
         var affectedRows = 0;
-        var recentBoardId = 0;
         dbConn.beginTransaction(function(err) {
             if (err) {
                 return callback(err);
             }
-            async.series([insertBoards, insertFiles], function(err, result) {
+            async.waterfall([insertBoards, insertFiles], function(err) {
                 dbConn.release();
                 if (err) {
                     return dbConn.rollback(function (){
@@ -46,9 +45,7 @@ function insertBoard(data, callback) {
                         return done(err);
                     }
                     affectedRows += result.affectedRows;
-                    recentBoardId = result.insertId;
-                    // console.log(recentBoardId);
-                    done(null);
+                    done(null, result.insertId);
                 });
             } else if (data.boardType === 2) {
                 dbConn.query(sql_insert_board_inquire,
@@ -58,22 +55,20 @@ function insertBoard(data, callback) {
                         return done(err);
                     }
                     affectedRows += result.affectedRows;
-                    recentBoardId = result.insertId;
-                    done(null);
+                    done(null, result.insertId);
                 });
             } else {
                 // console.log('error');
                 done(new Error('boardType는 0, 1, 2만 가능합니다.'));
             }
         }
-        function insertFiles(done) {
+        function insertFiles(boardId, done) {
             async.each(data.pic, function (item, as_done) {
-                dbConn.query(sql_insert_file, [2, recentBoardId, item.name, item.path], function (err, result) { // file type -> board은 2 [DB]
+                dbConn.query(sql_insert_file, [2, boardId, item.name, item.path], function (err, result) { // file type -> board은 2 [DB]
                     if (err) {
                         return as_done(err);
                     }
                     affectedRows += result.affectedRows; // OK -> 2
-                    // console.log(result);
                     as_done(null);
                 });
             }, function (err) {

@@ -7,7 +7,7 @@ var Board = require('../models/board');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
 var logger = require('../common/logger');
-var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
+var ec2Url = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 //  No.20 게시글 등록하기
 router.post('/', isSecure, isAuthenticated, function(req, res, next) {
@@ -49,7 +49,7 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
                if (result >= 1) {
                     if (files.pic) { // 파일 없을 경우 필터링
                        var filename = path.basename(files.pic.path);
-                       data.pic.push({url: url.resolve(ecTo, '/boards/' + filename)});
+                       data.pic.push({url: url.resolve(ec2Url, '/boards/' + filename)});
                     }
                     if (boardType === 0) { // 칭찬
                         res.send({
@@ -65,12 +65,12 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
                         })
                     } else {
                         res.send({
-                            error: '칭찬/신고/문의 등록을 실패했습니다. 1'
+                            error: '칭찬/신고/문의 등록을 실패했습니다.'
                         });
                     }
                 } else {
                     res.send({
-                        error: '칭찬/신고/문의 등록을 실패했습니다. 2'
+                        error: '칭찬/신고/문의 등록을 실패했습니다.'
                     });
                 }
             });
