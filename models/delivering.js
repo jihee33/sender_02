@@ -26,9 +26,6 @@ function listDelivering(currentPage, itemsPerPage, userId, callback) {
                                             'where d.contract_id = 0 and d.user_id != ? ' +
                                             'group by d.id order by d.id ' +
                                             'limit ?, ?';
-    // table -> delivering + user + file[type 0(user)인 table] + (delivering + review)[평균 별점을 위한 table]
-    // col -> delivering_id, user_id, name, phone, star, here_lat, here_lon, next_lat, next_lon,
-    //        dep_time, arr_time, filename, filepath
     var sql_select_count = 'select count(d.id) count from delivering d where d.contract_id = 0 ';
 
     async.parallel([selectLimitDelivering, selectCountDelivering], function(err, results){
