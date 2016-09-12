@@ -103,7 +103,7 @@ function insertSendingAndContract(data, callback) {
 
 // No.10  배송 요청 보기
 function selectSending(deliveringId, callback) {
-    var sql_select_sending = 'select s.id sending_id, c.id contract_id, s.here_lat here_lat, s.here_lon here_lon, ' +
+    var sql_select_sending = 'select s.user_id user_id, s.id sending_id, c.id contract_id, s.here_lat here_lat, s.here_lon here_lon, ' +
                              's.addr_lat addr_lat, s.addr_lon addr_lon, s.info info, s.memo memo , ' +
                              'date_format(convert_tz(s.arr_time,?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, ' +
                              'cast(aes_decrypt(s.rec_phone , unhex(sha2(?, ?))) as char(45)) rec_phone, ' +
@@ -132,6 +132,7 @@ function selectSending(deliveringId, callback) {
             // result[0]은 selectSending의 값, result[1]은 selectFile의 값
             info.delivering_id = deliveringId;
             info.sending_id = result[0][0].sending_id; //sending id
+            info.id = result[0][0].user_id;
             info.contract_id = result[0][0].contract_id; //constract의 id
             info.here_lat = result[0][0].here_lat; // 현재 위도
             info.here_lon = result[0][0].here_lon; // 현재 경도
