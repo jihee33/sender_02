@@ -19,13 +19,13 @@ function listDelivering(currentPage, itemsPerPage, userId, callback) {
                                             'from delivering d ' +
                                             'join user u on(u.id = d.user_id) ' +
                                             'left join contract c on(d.contract_id = c.id) ' +
-                                            'left join (SELECT fk_id, filename, filepath, type from file WHERE type = 0) f on(u.id = f.fk_id) ' +
+                                            'left join (SELECT fk_id, filename, filepath, type from file where type = 0) f on(u.id = f.fk_id) ' +
                                             'left join ( ' +
-                                            'SELECT a.user_id user_id, AVG(star) avg_star ' +
-                                            'FROM  delivering a ' +
-                                            'left JOIN review r ON (r.contract_id = a.contract_id))r ' +
+                                            'select a.user_id user_id, AVG(star) avg_star ' +
+                                            'from delivering a ' +
+                                            'left join review r ON (r.contract_id = a.contract_id))r ' +
                                             'on ( d.user_id = r.user_id) ' +
-                                            'where c.state is null AND d.user_id != ? ' +
+                                            'where c.state is null and d.user_id != ? ' +
                                             'group by d.id ' +
                                             'order by d.id limit ?, ?';
     // table -> delivering + user + file[type 0(user)인 table] + (delivering + review)[평균 별점을 위한 table]
@@ -57,7 +57,7 @@ function listDelivering(currentPage, itemsPerPage, userId, callback) {
                 if (item.filepath !== null) {
                     info.data.push({
                         delivering_id: item.delivering_id,
-                        user_id: item.user_id, // 사용자 아이디
+                        id: item.user_id, // 사용자 아이디
                         name: item.name, // 이름
                         phone: item.phone, //수신자 핸드폰 번호
                         star: item.star, // 평균 별점
@@ -73,7 +73,7 @@ function listDelivering(currentPage, itemsPerPage, userId, callback) {
                 } else {
                     info.data.push({
                         delivering_id: item.delivering_id,
-                        user_id: item.user_id, // 사용자 아이디
+                        id: item.user_id, // 사용자 아이디
                         name: item.name, // 이름
                         phone: item.phone, //수신자 핸드폰 번호
                         star: item.star, // 평균 별점
