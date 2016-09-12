@@ -44,19 +44,17 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
                  }
                  logger.log('debug', 'registrationToken : %s', result);
                  var tokens = [];
-                 tokens.push(result);
+                 logger.log('debug', 'reg_token : %j', result, {});
+                 tokens.push(result.registration_token);
+                 logger.log('debug', 'tokens : %j', tokens, {});
                  var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
                      data: {
-
-                     },
-                     notification: {
-                         title: '채팅 메세지 전송',
-                         icon: '채팅 메세지 전송',
-                         body: '채팅 메세지 전송'
+                         type : 'chat',
                      }
                  });
+                 logger.log('debug', 'fcm message : ', message);
                  var sender = new fcm.Sender(process.env.GCM_KEY);
-                 sender.send(message, {registration: tokens}, function (err, response) {
+                 sender.send(message, {registrationTokens: tokens}, function (err, response) {
                      if (err) {
                          return next(err);
                      }
@@ -64,9 +62,16 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
                          if (err) {
                              return next(err);
                          }
-                         res.send({
-                             result: '전송 성공'
-                         });
+                         logger.log('debug', 'response : %j', response, {});
+                         if (response.failure !== 1) {
+                             res.send({
+                                 result: '전송 성공',
+                             });
+                         } else {
+                             res.send({
+                                 result: '채팅 메세지 전송을 실패하였습니다.',
+                             });
+                         }
                      });
                  });
              });
@@ -74,31 +79,37 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
     }
     if(req.url.match(/\/\?action=notification/i)) {
         // No.23 배송 알림 전송하기
-        var receiverId = req.body.receiver_id;
+        var receiverId = parseInt(req.body.receiver_id);
+        logger.log('debug', 'receiverId : %s', receiverId);
         Chatting.getRegistrationToken(receiverId, function(err, result) {
            if (err) {
                return next(err);
            }
             var tokens = [];
-            tokens.push(result);
+            logger.log('debug', 'reg_token : %j', result, {});
+            tokens.push(result.registration_token);
+            logger.log('debug', 'tokens : %j', tokens, {});
             var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
                 data: {
-
-                },
-                notification: {
-                    title: '배송 요청 전송',
-                    icon: '배송 요청 전송',
-                    body: '배송 요청 전송'
+                    type : 'delivery',
                 }
             });
+            logger.log('debug', 'fcm message : ', message);
             var sender = new fcm.Sender(process.env.GCM_KEY);
-            sender.send(message, {registration: tokens}, function (err, response) {
+            sender.send(message, {registrationTokens: tokens}, function (err, response) {
                 if (err) {
                     return next(err);
                 }
-                res.send({
-                    result : '배송 요청 전송을 성공하였습니다.',
-                });
+                logger.log('debug', 'response : %j', response, {});
+                if (response.failure !== 1) {
+                    res.send({
+                        result: '배송 요청 전송을 성공하였습니다.',
+                    });
+                } else {
+                    res.send({
+                        result: '배송 요청 전송을 실패하였습니다.',
+                    });
+                }
             });
         });
     }

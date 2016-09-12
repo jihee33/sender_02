@@ -91,6 +91,7 @@ router.post('/facebook/token', function(req, res, next) {
     next();
 }, isSecure, passport.authenticate('facebook-token', {scope : ['email']}), function(req, res, next) {
     Member.updateRegistrationToken(req.body.registration_token, req.user.id, function(err, next) {
+        logger.log('debug', 'registration_token : %s', req.body.registration_token);
         if (err) {
             return next(err);
         }
