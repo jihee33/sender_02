@@ -8,7 +8,7 @@ var logger = require('../common/logger');
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 // No.11 배달 가기 목록 보기
-function listDelivering(currentPage, itemsPerPage, callback) {
+function listDelivering(currentPage, itemsPerPage, userId, callback) {
     var sql_select_delivering_review_user = 'select d.id delivering_id, d.user_id user_id, ' +
                                             'cast(aes_decrypt(u.name, unhex(sha2(? ,?))) as char(45)) name,' +
                                             'cast(aes_decrypt(u.phone, unhex(sha2(? ,?))) as char(45)) phone, ' +
@@ -25,7 +25,7 @@ function listDelivering(currentPage, itemsPerPage, callback) {
                                             'FROM  delivering a ' +
                                             'left JOIN review r ON (r.contract_id = a.contract_id))r ' +
                                             'on ( d.user_id = r.user_id) ' +
-                                            'where c.state is null ' +
+                                            'where c.state is null AND d.user_id != ? ' +
                                             'group by d.id ' +
                                             'order by d.id limit ?, ?';
     // table -> delivering + user + file[type 0(user)인 table] + (delivering + review)[평균 별점을 위한 table]
@@ -102,7 +102,7 @@ function listDelivering(currentPage, itemsPerPage, callback) {
                 return callback(err);
             }
             dbConn.query(sql_select_delivering_review_user,
-                [process.env.MYSQL_SECRET, 512, process.env.MYSQL_SECRET, 512, '+00:00', '+09:00', '+00:00', '+09:00', itemsPerPage * (currentPage - 1), itemsPerPage],
+                [process.env.MYSQL_SECRET, 512, process.env.MYSQL_SECRET, 512, '+00:00', '+09:00', '+00:00', '+09:00', userId, itemsPerPage * (currentPage - 1), itemsPerPage],
                 function (err, results) {
                     dbConn.release();
                     if (err) {

@@ -18,7 +18,7 @@ router.get('/', isSecure, isAuthenticated, function(req, res, next) {
     logger.log('debug', 'currentPage: %s', req.query.currentPage);
     logger.log('debug', 'itemsPerPage: %s', req.query.itemsPerPage);
     if (req.url.match(/\?currentPage=\d+&itemsPerPage=\d+/i)) {
-        Delivering.listDelivering(currentPage, itemsPerPage, function(err, result) {
+        Delivering.listDelivering(currentPage, itemsPerPage, req.user.id, function(err, result) {
             if (err) {
                 return next(err);
             }
