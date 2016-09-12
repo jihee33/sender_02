@@ -10,30 +10,26 @@ var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 // No.11 배달 가기 목록 보기
 function listDelivering(currentPage, itemsPerPage, userId, callback) {
     var sql_select_delivering_review_user = 'select d.id delivering_id, d.user_id user_id, ' +
-                                            'cast(aes_decrypt(u.name, unhex(sha2(? ,?))) as char(45)) name,' +
-                                            'cast(aes_decrypt(u.phone, unhex(sha2(? ,?))) as char(45)) phone, ' +
+                                            'cast(aes_decrypt(u.name, unhex(sha2(?, ?))) as char(45)) name, ' +
+                                            'cast(aes_decrypt(u.phone, unhex(sha2(?, ?))) as char(45)) phone, ' +
                                             'r.avg_star star, d.here_lat here_lat, d.here_lon here_lon, d.next_lat next_lat, d.next_lon next_lon, ' +
                                             'date_format(convert_tz(d.dep_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
                                             'date_format(convert_tz(d.arr_time, ?, ?), \'%Y-%m-%d %H:%i:%s\') arr_time, ' +
-                                            'f.filename filename, f.filepath filepath ' + //___column
+                                            'f.filename filename, f.filepath filepath ' +
                                             'from delivering d ' +
                                             'join user u on(u.id = d.user_id) ' +
-                                            'left join contract c on(d.contract_id = c.id) ' +
                                             'left join (SELECT fk_id, filename, filepath, type from file where type = 0) f on(u.id = f.fk_id) ' +
-                                            'left join ( ' +
-                                            'select a.user_id user_id, AVG(star) avg_star ' +
-                                            'from delivering a ' +
-                                            'left join review r ON (r.contract_id = a.contract_id))r ' +
-                                            'on ( d.user_id = r.user_id) ' +
-                                            'where c.state is null and d.user_id != ? ' +
-                                            'group by d.id ' +
-                                            'order by d.id limit ?, ?';
+                                            'left join (select d.user_id user_id, AVG(star) avg_star ' +
+                                            'from delivering d ' +
+                                            'left join review r ON (r.contract_id = d.contract_id) ' +
+                                            'group by d.user_id) r on (u.id = r.user_id) ' +
+                                            'where d.contract_id = 0 and d.user_id != ? ' +
+                                            'group by d.id order by d.id ' +
+                                            'limit ?, ?';
     // table -> delivering + user + file[type 0(user)인 table] + (delivering + review)[평균 별점을 위한 table]
     // col -> delivering_id, user_id, name, phone, star, here_lat, here_lon, next_lat, next_lon,
     //        dep_time, arr_time, filename, filepath
-    var sql_select_count = 'select count(d.id) count from delivering d ' +
-                            'left join contract c on(c.id = d.contract_id) ' +
-                            'where c.state is null';
+    var sql_select_count = 'select count(d.id) count from delivering d where d.contract_id = 0 ';
 
     async.parallel([selectLimitDelivering, selectCountDelivering], function(err, results){
         // selectLimitDelivering, selectCountDelivering을 동시에 실행
