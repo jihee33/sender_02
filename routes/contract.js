@@ -3,6 +3,7 @@ var router = express.Router();
 var formidable = require('formidable');
 var path = require('path');
 var url = require('url');
+var fcm = require('node-gcm');
 var Contract = require('../models/contract');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
@@ -112,15 +113,38 @@ router.put('/', isAuthenticated, function(req, res, next) {
         var contract_id = parseInt(req.body.contract_id);
         if (req.body.contract_id && req.body.state) {
             var state = parseInt(req.body.state);
-            if (state === 1) { // 수락;
+            var tokens = [];
+            if (state === 2) { // 수락;
                 Contract.acceptContract(contract_id, function (err, results) {
                     if (err) {
                         return next(err);
                     }
                     if (results.changedRows === 1) { // 업데이트 완료시 -> 1
                         delete results.changedRows;
-                        res.send({
-                            result: results
+                        logger.log('debug', 'reg_token : %j', result, {});
+                        tokens.push(result.registration_token);
+                        logger.log('debug', 'tokens : %j', tokens, {});
+                        var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
+                            data: {
+                                type : 'confirm',
+                            }
+                        });
+                        logger.log('debug', 'fcm message : ', message);
+                        var sender = new fcm.Sender(process.env.GCM_KEY);
+                        sender.send(message, {registrationTokens: tokens}, function (err, response) {
+                            if (err) {
+                                return next(err);
+                            }
+                            logger.log('debug', 'response : %j', response, {});
+                            if (response.failure !== 1) {
+                                res.send({
+                                    result: results
+                                });
+                            } else {
+                                res.send({
+                                    error: '계약 체결에 실패했습니다. 1-1'
+                                });
+                            }
                         });
                     } else {
                         res.send({
@@ -134,8 +158,30 @@ router.put('/', isAuthenticated, function(req, res, next) {
                         return next(err);
                     }
                     if (result === 2) { // 업데이트 완료시 -> 2
-                        res.send({
-                            result: '계약 체결을 거절했습니다.'
+                        logger.log('debug', 'reg_token : %j', result, {});
+                        tokens.push(result.registration_token);
+                        logger.log('debug', 'tokens : %j', tokens, {});
+                        var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
+                            data: {
+                                type : 'reject',
+                            }
+                        });
+                        logger.log('debug', 'fcm message : ', message);
+                        var sender = new fcm.Sender(process.env.GCM_KEY);
+                        sender.send(message, {registrationTokens: tokens}, function (err, response) {
+                            if (err) {
+                                return next(err);
+                            }
+                            logger.log('debug', 'response : %j', response, {});
+                            if (response.failure !== 1) {
+                                res.send({
+                                    result: '계약 체결을 거절했습니다.'
+                                });
+                            } else {
+                                res.send({
+                                    error: '계약 체결에 실패했습니다. 1-1'
+                                });
+                            }
                         });
                     } else {
                         res.send({
@@ -151,8 +197,30 @@ router.put('/', isAuthenticated, function(req, res, next) {
                     return next(err);
                 }
                 if (result === 2) { // 업데이트 된 값이 있다면 -> 2
-                    res.send({
-                        result: {message : '계약 신청에 성공했습니다.'}
+                    logger.log('debug', 'reg_token : %j', result, {});
+                    tokens.push(result.registration_token);
+                    logger.log('debug', 'tokens : %j', tokens, {});
+                    var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
+                        data: {
+                            type : 'delivery',
+                        }
+                    });
+                    logger.log('debug', 'fcm message : ', message);
+                    var sender = new fcm.Sender(process.env.GCM_KEY);
+                    sender.send(message, {registrationTokens: tokens}, function (err, response) {
+                        if (err) {
+                            return next(err);
+                        }
+                        logger.log('debug', 'response : %j', response, {});
+                        if (response.failure !== 1) {
+                            res.send({
+                                result: {message : '계약 신청에 성공했습니다.'}
+                            });
+                        } else {
+                            res.send({
+                                error: '계약 신청에 실패했습니다. 0'
+                            });
+                        }
                     });
                 } else {
                     res.send({
