@@ -15,8 +15,7 @@ var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 
 router.post('/', isAuthenticated, isActivated, function(req, res, next) {
-    if(req.url.match(/\/\?action=send/i)) {
-        // No.21 채팅 메세지 전송하기
+    if(req.url.match(/\/\?action=send/i)) { // No.21 채팅 메세지 전송하기
         var form = new formidable.IncomingForm();
          form.keepExtensions = true;
          form.multiples = true;
@@ -43,13 +42,13 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
                      return next(err);
                  }
                  logger.log('debug', 'registrationToken : %s', result);
-                 var tokens = [];
                  logger.log('debug', 'reg_token : %j', result, {});
+                 var tokens = [];
                  tokens.push(result.registration_token);
                  logger.log('debug', 'tokens : %j', tokens, {});
                  var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
                      data: {
-                         type : 'chat',
+                         type : 'chat'
                      }
                  });
                  logger.log('debug', 'fcm message : ', message);
@@ -58,18 +57,18 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
                      if (err) {
                          return next(err);
                      }
-                     Chatting.insertChattingLog(data, function(err, result) {
+                     Chatting.insertChattingLog(data, function(err) {
                          if (err) {
                              return next(err);
                          }
                          logger.log('debug', 'response : %j', response, {});
                          if (response.failure !== 1) {
                              res.send({
-                                 result: '전송 성공',
+                                 result: '전송 성공'
                              });
                          } else {
                              res.send({
-                                 result: '채팅 메세지 전송을 실패하였습니다.',
+                                 result: '채팅 메세지 전송을 실패하였습니다.'
                              });
                          }
                      });
@@ -77,8 +76,7 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
              });
          });
     }
-    if(req.url.match(/\/\?action=notification/i)) {
-        // No.23 배송 알림 전송하기
+    if(req.url.match(/\/\?action=notification/i)) { // No.23 배송 알림 전송하기
         var receiverId = parseInt(req.body.receiver_id);
         logger.log('debug', 'receiverId : %s', receiverId);
         Chatting.getRegistrationToken(receiverId, function(err, result) {
@@ -89,9 +87,9 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
             logger.log('debug', 'reg_token : %j', result, {});
             tokens.push(result.registration_token);
             logger.log('debug', 'tokens : %j', tokens, {});
-            var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
+            var message = new fcm.Message({ // 위에서 가져오거나 여기서 바로 만들거나
                 data: {
-                    type : 'delivery',
+                    type : 'delivery'
                 }
             });
             logger.log('debug', 'fcm message : ', message);
@@ -103,11 +101,11 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
                 logger.log('debug', 'response : %j', response, {});
                 if (response.failure !== 1) {
                     res.send({
-                        result: '배송 요청 전송을 성공하였습니다.',
+                        result: '배송 요청 전송을 성공하였습니다.'
                     });
                 } else {
                     res.send({
-                        result: '배송 요청 전송을 실패하였습니다.',
+                        result: '배송 요청 전송을 실패하였습니다.'
                     });
                 }
             });

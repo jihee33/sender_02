@@ -5,13 +5,13 @@ var async = require('async');
 var fs = require('fs');
 var logger = require('../common/logger');
 
-function getRegistrationToken(data, callback) {
+function getRegistrationToken(receiverId, callback) {
     var sql_select_registration_token = 'SELECT registration_token FROM user WHERE id = ?';
     dbPool.getConnection(function(err, dbConn) {
        if (err) {
            return callback(err);
        }
-       dbConn.query(sql_select_registration_token, [data], function(err, results) {
+       dbConn.query(sql_select_registration_token, [receiverId], function(err, results) {
           dbConn.release();
            if (err) {
               return callback(err);
@@ -23,7 +23,7 @@ function getRegistrationToken(data, callback) {
 
 function insertChattingLog(data, callback) {
     var sql_insert_into_chatting = 'INSERT INTO chatting(sender_id, receiver_id, contract_id, content, type) ' +
-                                   'VALUES (?, ?, ?, ?, 0)';
+                                   'VALUES (?, ?, ?, ?, ?)';
     logger.log('info', 'inside insertChattingLog');
     logger.log('debug', 'message: %j', data.message, {});
     logger.log('debug', 'pic: %j', data.pic, {});
@@ -41,7 +41,7 @@ function insertChattingLog(data, callback) {
                 contents.push(data.message);
                 contents.push(data.pic[1].url);
                 async.eachSeries(contents, function (item, done) {
-                    dbConn.query(sql_insert_into_chatting, [data.senderId, data.receiverId, data.contractId, item], function(err) {
+                    dbConn.query(sql_insert_into_chatting, [data.senderId, data.receiverId, data.contractId, item, 0], function(err) {
                         if (err) {
                             dbConn.rollback();
                             dbConn.release();
@@ -58,7 +58,7 @@ function insertChattingLog(data, callback) {
                     callback(null);
                 });
             } else if (data.message && !data.pic) {
-                dbConn.query(sql_insert_into_chatting, [data.senderId, data.receiverId, data.contractId, data.message], function(err) {
+                dbConn.query(sql_insert_into_chatting, [data.senderId, data.receiverId, data.contractId, data.message, 0], function(err) {
                     if (err) {
                         dbConn.rollback();
                         dbConn.release();
@@ -69,7 +69,7 @@ function insertChattingLog(data, callback) {
                     callback(null);
                 });
             } else if (data.pic && !data.message) {
-                dbConn.query(sql_insert_into_chatting, [data.senderId, data.receiverId, data.contractId, data.pic[1].url], function(err) {
+                dbConn.query(sql_insert_into_chatting, [data.senderId, data.receiverId, data.contractId, data.pic[1].url, 0], function(err) {
                     if (err) {
                         dbConn.rollback();
                         dbConn.release();
@@ -85,10 +85,16 @@ function insertChattingLog(data, callback) {
 }
 
 function getChattingLogs(data, callback) {
-    var sql_get_chatting_log = 'SELECT id, sender_id, content, date_format(convert_tz(ctime,?, ?), \'%Y-%m-%d %H:%i:%s\') ' +
-                               'date FROM chatting WHERE date_format(convert_tz(ctime,?, ?) < CURRENT_TIMESTAMP ' +
-                               'AND receiver_id = ? AND type = 0 AND contract_id = ?';
-    var sql_update_chatting_log = 'UPDATE chatting SET type = 1 WHERE id = ? AND type = 0 AND contract_id = ?';
+    var sql_get_chatting_log =  'SELECT id, sender_id, content, date_format(convert_tz(ctime,?, ?), \'%Y-%m-%d %H:%i:%s\') date ' +
+                                'FROM chatting ' +
+                                'WHERE date_format(convert_tz(ctime,?, ?) < CURRENT_TIMESTAMP ' +
+                                      'AND receiver_id = ? ' +
+                                      'AND type = 0 ' +
+                                      'AND contract_id = ? ';
+    var sql_update_chatting_log = 'UPDATE chatting SET type = ? ' +
+                                  'WHERE id = ? ' +
+                                  'AND type = ? ' +
+                                  'AND contract_id = ?';
 
     dbPool.getConnection(function(err, dbConn) {
         if (err) {
@@ -112,7 +118,7 @@ function getChattingLogs(data, callback) {
                         date : item.date
                     });
 
-                    dbConn.query(sql_update_chatting_log, [item.id, item.contractId], function(err) {
+                    dbConn.query(sql_update_chatting_log, [1, item.id, 0, item.contractId], function(err) {
                         if (err) {
                             dbConn.rollback();
                             return dbConn.release();
