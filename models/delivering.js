@@ -12,7 +12,8 @@ function listDelivering(currentPage, itemsPerPage, userId, callback) {
     var sql_select_delivering_review_user = 'select d.id delivering_id, d.user_id user_id, ' +
                                             'cast(aes_decrypt(u.name, unhex(sha2(?, ?))) as char(45)) name, ' +
                                             'cast(aes_decrypt(u.phone, unhex(sha2(?, ?))) as char(45)) phone, ' +
-                                            'r.avg_star star, d.here_lat here_lat, d.here_lon here_lon, d.next_lat next_lat, d.next_lon next_lon, ' +
+                                            'r.avg_star star, d.here_lat here_lat, d.here_lon here_lon, d.here_unit here_unit, ' +
+                                            'd.next_lat next_lat, d.next_lon next_lon, d.next_unit next_unit, ' +
                                             'date_format(d.dep_time, \'%Y-%m-%d %H:%i:%s\') dep_time, ' +
                                             'date_format(d.arr_time, \'%Y-%m-%d %H:%i:%s\') arr_time, ' +
                                             'f.filename filename, f.filepath filepath ' +
@@ -56,8 +57,10 @@ function listDelivering(currentPage, itemsPerPage, userId, callback) {
                         star: item.star, // 평균 별점
                         here_lat: item.here_lat, // 현위치 위도
                         here_lon: item.here_lon, // 현위치 경도
+                        here_unit: item.here_unit, // 현위치 동 이름
                         next_lat: item.next_lat, // 행선지 위도
                         next_lon: item.next_lon, // 행선지 경도
+                        next_unit: item.next_unit, //행선지 동 이름
                         dep_time: item.dep_time, // 출발 시각
                         arr_time: item.arr_time, // 도착 시각
                         originalFilename: item.filename, // 파일명
@@ -72,8 +75,10 @@ function listDelivering(currentPage, itemsPerPage, userId, callback) {
                         star: item.star, // 평균 별점
                         here_lat: item.here_lat, // 현위치 위도
                         here_lon: item.here_lon, // 현위치 경도
+                        here_unit: item.here_unit, // 현위치 동 이름
                         next_lat: item.next_lat, // 행선지 위도
                         next_lon: item.next_lon, // 행선지 경도
+                        next_unit: item.next_unit, //행선지 동 이름
                         dep_time: item.dep_time, // 출발 시각
                         arr_time: item.arr_time, // 도착 시각
                         originalFilename: null
@@ -158,14 +163,14 @@ function listDeliveringById(deliverId, callback) {
 
 // No.13  ‘배달 가기’ 등록
 function insertDelivering(obj, callback)  {
-    var sql_insert_delivering = 'insert into delivering(user_id, here_lat, here_lon, next_lat, next_lon, dep_time, arr_time) ' +
-                                'values(?, ?, ?, ?, ?, str_to_date(? ,\'%Y-%m-%d %H:%i:%s\'),str_to_date(? ,\'%Y-%m-%d %H:%i:%s\'))';
+    var sql_insert_delivering = 'insert into delivering(user_id, here_lat, here_lon, here_unit, next_lat, next_lon, next_unit, dep_time, arr_time) ' +
+                                'values(?, ?, ?, ?, ?, ?, ?, str_to_date(? ,\'%Y-%m-%d %H:%i:%s\'),str_to_date(? ,\'%Y-%m-%d %H:%i:%s\'))';
     // delivering테이블에 배달가기를 위한 정보를 입력
     dbPool.getConnection(function(err, dbConn) {
         if (err) {
             return callback(err);
         }
-        dbConn.query(sql_insert_delivering, [obj.userId, obj.here_lat, obj.here_lon, obj.next_lat, obj.next_lon, obj.dep_time, obj.arr_time],
+        dbConn.query(sql_insert_delivering, [obj.userId, obj.here_lat, obj.here_lon, obj.here_unit, obj.next_lat, obj.next_lon, obj.next_unit, obj.dep_time, obj.arr_time],
             function(err, result) {
                 dbConn.release();
                 if (err) {

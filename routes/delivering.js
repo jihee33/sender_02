@@ -72,8 +72,10 @@ router.post('/',  isSecure, isAuthenticated, function(req, res, next) {
             result.userId = req.user.id; // session값으로 변경
             result.here_lat = req.body.here_lat; // 현위치 위도
             result.here_lon = req.body.here_lon; // 현위치 경도
+            result.here_unit = req.body.here_unit; // 현위치 동 이름
             result.next_lat = req.body.next_lat; // 행선지 위도
             result.next_lon = req.body.next_lon; // 행선지 경도
+            result.next_unit = req.body.next_unit; // 행선지 동 이름
             result.dep_time = req.body.dep_time; // 출발 시각
             result.arr_time = req.body.arr_time; // 도착 시각
             Delivering.insertDelivering(result, function(err, data) {

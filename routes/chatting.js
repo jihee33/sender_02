@@ -76,7 +76,7 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
              });
          });
     }
-    if(req.url.match(/\/\?action=notification/i)) { // No.23 배송 알림 전송하기
+    /*if(req.url.match(/\/\?action=notification/i)) { // No.23 배송 알림 전송하기
         var receiverId = parseInt(req.body.receiver_id);
         logger.log('debug', 'receiverId : %s', receiverId);
         Chatting.getRegistrationToken(receiverId, function(err, result) {
@@ -110,7 +110,7 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
                 }
             });
         });
-    }
+    }*/
 });
 
 router.get('/', isSecure, isAuthenticated, isActivated, function(req, res, next) {
