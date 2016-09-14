@@ -68,7 +68,7 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
                              });
                          } else {
                              res.send({
-                                 result: '채팅 메세지 전송을 실패하였습니다.'
+                                 error: '채팅 메세지 전송을 실패하였습니다.'
                              });
                          }
                      });
@@ -105,7 +105,7 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
                     });
                 } else {
                     res.send({
-                        result: '배송 요청 전송을 실패하였습니다.'
+                        error: '배송 요청 전송을 실패하였습니다.'
                     });
                 }
             });
