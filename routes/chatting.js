@@ -49,8 +49,8 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
                  var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
                      data: {
                          type : 'chat',
-                         sender_id : senderId,
-                         contract_id : contractId
+                         sender_id : data.senderId,
+                         contract_id : data.contractId
                      }
                  });
                  logger.log('debug', 'fcm message : ', message);
