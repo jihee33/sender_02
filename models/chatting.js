@@ -85,7 +85,10 @@ function insertChattingLog(data, callback) {
 }
 
 function getChattingLogs(data, callback) {
-    var sql_get_chatting_log =  'SELECT id, sender_id, content, date_format(convert_tz(ctime,?, ?), \'%Y-%m-%d %H:%i:%s\') date ' +
+    var sql_get_sender_data = 'SELECT u.id id, CAST(AES_DECRYPT(u.name, UNHEX(SHA2(?, 512)))AS CHAR(45)) name, f.filepath filepath ' +
+                              'FROM user u LEFT JOIN (SELECT fk_id, filepath FROM file WHERE type = 0) f ON (u.id = f.fk_id) ' +
+                              'WHERE u.id = ?';
+    var sql_get_chatting_log =  'SELECT id, sender_id, contract_id, content, date_format(convert_tz(ctime,?, ?), \'%Y-%m-%d %H:%i:%s\') date ' +
                                 'FROM chatting ' +
                                 'WHERE date_format(convert_tz(ctime,?, ?) < CURRENT_TIMESTAMP ' +
                                       'AND receiver_id = ? ' +
@@ -101,11 +104,25 @@ function getChattingLogs(data, callback) {
             return callback(err);
         }
         dbConn.beginTransaction(function(err) {
-           if (err) {
-               dbConn.release();
-               return callback(err);
-           }
-            var log = [];
+            if (err) {
+                dbConn.release();
+                return callback(err);
+            }
+            var chatData = {};
+            chatData.sender = {};
+            chatData.data = [];
+            dbConn.query(sql_get_sender_data, [process.env.MYSQL_SECRET, data.senderId], function (err, results) {
+                if (err) {
+                    dbConn.release();
+                    return callback(err);
+                }
+                chatData.sender.contractId = data.contractId;
+                chatData.sender.id = data.senderId;
+                chatData.sender.name = results[0].name;
+                if (results[0].filepath) {
+                    chatData.sender.fileUrl = url.resolve(url_, '/profiles/' + path.basename(result[0].filepath));
+                }
+            });
             dbConn.query(sql_get_chatting_log, [ '+00:00', '+09:00', '+00:00', '+09:00', data.receiverId, data.contractId], function(err, results) {
                 if (err) {
                     dbConn.rollback();
@@ -113,12 +130,12 @@ function getChattingLogs(data, callback) {
                     return callback(err);
                 }
                 async.each(results, function(item, done) {
-                    log.push({
+                    chatData.data.push({
                         message : item.content,
                         date : item.date
                     });
 
-                    dbConn.query(sql_update_chatting_log, [1, item.id, 0, item.contractId], function(err) {
+                    dbConn.query(sql_update_chatting_log, [1, item.id, 0, data.contractId], function(err) {
                         if (err) {
                             dbConn.rollback();
                             return dbConn.release();
@@ -132,7 +149,7 @@ function getChattingLogs(data, callback) {
                 });
                 dbConn.commit();
                 dbConn.release();
-                callback(null, log);
+                callback(null, chatData);
             });
         });
     });
