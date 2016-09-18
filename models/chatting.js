@@ -85,7 +85,7 @@ function insertChattingLog(data, callback) {
 }
 
 function getChattingLogs(data, callback) {
-    var sql_get_sender_data = 'SELECT u.id id, CAST(AES_DECRYPT(u.name, UNHEX(SHA2(?, 512)))AS CHAR(45)) name, f.filepath filepath ' +
+    var sql_get_sender_data = 'SELECT u.id id, CAST(AES_DECRYPT(u.name, UNHEX(SHA2(?, 512)))AS CHAR(45)) name, u.phone phone, f.filepath filepath ' +
                               'FROM user u LEFT JOIN (SELECT fk_id, filepath FROM file WHERE type = 0) f ON (u.id = f.fk_id) ' +
                               'WHERE u.id = ?';
     var sql_get_chatting_log =  'SELECT id, sender_id, contract_id, content, date_format(convert_tz(ctime,?, ?), \'%Y-%m-%d %H:%i:%s\') date ' +
@@ -119,6 +119,7 @@ function getChattingLogs(data, callback) {
                 chatData.sender.contractId = data.contractId;
                 chatData.sender.id = data.senderId;
                 chatData.sender.name = results[0].name;
+                chatData.sender.phone = results[0].phone;
                 if (results[0].filepath) {
                     chatData.sender.fileUrl = url.resolve(url_, '/profiles/' + path.basename(result[0].filepath));
                 }
