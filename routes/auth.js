@@ -23,7 +23,7 @@ passport.use(new FacebookTokenStrategy({
 }));
 
 passport.use(new NaverStrategy({
-    clientId: process.env.NAVER_APP_ID,
+    clientID: process.env.NAVER_APP_ID,
     clientSecret: process.env.NAVER_APP_SECRET
 }, function(accessToken, refreshToken, profile, done) {
     Member.findOrCreateNaver(profile, function (err, user) {// 추후 변수 수정 필요
