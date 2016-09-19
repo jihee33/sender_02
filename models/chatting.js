@@ -85,12 +85,13 @@ function insertChattingLog(data, callback) {
 }
 
 function getChattingLogs(data, callback) {
-    var sql_get_sender_data = 'SELECT u.id id, CAST(AES_DECRYPT(u.name, UNHEX(SHA2(?, 512)))AS CHAR(45)) name, u.phone phone, f.filepath filepath ' +
+    var sql_get_sender_data = 'SELECT u.id id, CAST(AES_DECRYPT(u.name, UNHEX(SHA2(?, 512)))AS CHAR(45)) name,' +
+                              'CAST(AES_DECRYPT(u.phone, UNHEX(SHA2(?, 512)))AS CHAR(45)) phone, f.filepath filepath ' +
                               'FROM user u LEFT JOIN (SELECT fk_id, filepath FROM file WHERE type = 0) f ON (u.id = f.fk_id) ' +
                               'WHERE u.id = ?';
     var sql_get_chatting_log =  'SELECT id, sender_id, contract_id, content, date_format(convert_tz(ctime,?, ?), \'%Y-%m-%d %H:%i:%s\') date ' +
                                 'FROM chatting ' +
-                                'WHERE date_format(convert_tz(ctime,?, ?) < CURRENT_TIMESTAMP ' +
+                                'WHERE date_format(convert_tz(ctime,?, ?), \'%Y-%m-%d %H:%i:%s\') < CURRENT_TIMESTAMP ' +
                                       'AND receiver_id = ? ' +
                                       'AND type = 0 ' +
                                       'AND contract_id = ? ';
@@ -111,7 +112,7 @@ function getChattingLogs(data, callback) {
             var chatData = {};
             chatData.sender = {};
             chatData.data = [];
-            dbConn.query(sql_get_sender_data, [process.env.MYSQL_SECRET, data.senderId], function (err, results) {
+            dbConn.query(sql_get_sender_data, [process.env.MYSQL_SECRET, process.env.MYSQL_SECRET, data.senderId], function (err, results) {
                 if (err) {
                     dbConn.release();
                     return callback(err);
