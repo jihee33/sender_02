@@ -125,7 +125,7 @@ function getChattingLogs(data, callback) {
                 chatData.sender.name = results[0].name;
                 chatData.sender.phone = results[0].phone;
                 if (results[0].filepath) {
-                    chatData.sender.fileUrl = url.resolve(url_, '/profiles/' + path.basename(result[0].filepath));
+                    chatData.sender.fileUrl = url.resolve(url_, '/profiles/' + path.basename(results[0].filepath));
                 }
             });
             dbConn.query(sql_get_chatting_log, [ '+00:00', '+09:00', '+00:00', '+09:00', '+00:00', '+09:00', data.receiverId, data.contractId], function(err, results) {
