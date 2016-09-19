@@ -41,42 +41,43 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
                  if (err) {
                      return next(err);
                  }
-             });
-             Chatting.getRegistrationToken(data.receiverId, function (err, result) {
-                 if (err) {
-                     return next(err);
-                 }
-                 logger.log('debug', 'registrationToken : %s', result);
-                 logger.log('debug', 'reg_token : %j', result, {});
-                 var tokens = [];
-                 tokens.push(result.registration_token);
-                 logger.log('debug', 'tokens : %j', tokens, {});
-                 var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
-                     data: {
-                         type : 'chat',
-                         sender_id : data.senderId,
-                         contract_id : data.contractId
-                     }
-                 });
-                 logger.log('debug', 'fcm message : ', message);
-                 var sender = new fcm.Sender(process.env.GCM_KEY);
-                 sender.send(message, {registrationTokens: tokens}, function (err, response) {
+                 Chatting.getRegistrationToken(data.receiverId, function (err, result) {
                      if (err) {
                          return next(err);
                      }
-                     logger.log('debug', 'response : %j', response, {});
-                     if (response.failure !== 1) {
-                         res.send({
-                             result: '전송 성공'
+                     logger.log('debug', 'registrationToken : %s', result);
+                     logger.log('debug', 'reg_token : %j', result, {});
+                     var tokens = [];
+                     tokens.push(result.registration_token);
+                     logger.log('debug', 'tokens : %j', tokens, {});
+                     var message = new fcm.Message({// 위에서 가져오거나 여기서 바로 만들거나
+                         data: {
+                             type : 'chat',
+                             sender_id : data.senderId,
+                             contract_id : data.contractId
+                         }
+                     });
+                     logger.log('debug', 'fcm message : ', message);
+                     var sender = new fcm.Sender(process.env.GCM_KEY);
+                     setTimeout(function(){
+                         sender.send(message, {registrationTokens: tokens}, function (err, response) {
+                             if (err) {
+                                 return next(err);
+                             }
+                             logger.log('debug', 'response : %j', response, {});
+                             if (response.failure !== 1) {
+                                 res.send({
+                                     result: '전송 성공'
+                                 });
+                             } else {
+                                 res.send({
+                                     error: '채팅 메세지 전송을 실패하였습니다.'
+                                 });
+                             }
                          });
-                     } else {
-                         res.send({
-                             error: '채팅 메세지 전송을 실패하였습니다.'
-                         });
-                     }
+                     }, 1000);
                  });
              });
-
          });
     }
     /*if(req.url.match(/\/\?action=notification/i)) { // No.23 배송 알림 전송하기
@@ -119,6 +120,7 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
 router.get('/', isSecure, isAuthenticated, isActivated, function(req, res, next) {
     logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
     // No.22 채팅 메세지 수신하기
+    logger.log('debug', 'query : %j', req.query, {});
     if(req.url.match(/\/\?senderId=\d+&contractId=\d+/i)) {
         var data = {};
         data.receiverId = req.user.id;
