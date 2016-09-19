@@ -11,7 +11,7 @@ var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
 var isActivated = require('./common').isActivated;
 
-var ecTo = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
 router.post('/', isAuthenticated, isActivated, function(req, res, next) {
     logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
@@ -35,13 +35,12 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
                  data.pic = [];
                  data.pic.push(files.pic);
                  var filename = path.basename(files.pic.path);
-                 data.pic.push({url: url.resolve(ecTo, '/chattings/' + filename)});
+                 data.pic.push({url: url.resolve(url_, '/chattings/' + filename)});
              }
              Chatting.insertChattingLog(data, function(err) {
                  if (err) {
                      return next(err);
                  }
-                 logger.log('debug', 'response : %j', response, {});
                  Chatting.getRegistrationToken(data.receiverId, function (err, result) {
                      if (err) {
                          return next(err);
@@ -64,17 +63,19 @@ router.post('/', isAuthenticated, isActivated, function(req, res, next) {
                          if (err) {
                              return next(err);
                          }
+                         logger.log('debug', 'response : %j', response, {});
+                         if (response.failure !== 1) {
+                             res.send({
+                                 result: '전송 성공'
+                             });
+                         } else {
+                             res.send({
+                                 error: '채팅 메세지 전송을 실패하였습니다.'
+                             });
+                         }
                      });
                  });
-                 if (response.failure !== 1) {
-                     res.send({
-                         result: '전송 성공'
-                     });
-                 } else {
-                     res.send({
-                         error: '채팅 메세지 전송을 실패하였습니다.'
-                     });
-                 }
+
              });
 
          });

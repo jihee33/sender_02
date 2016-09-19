@@ -135,10 +135,20 @@ function getChattingLogs(data, callback) {
                     return callback(err);
                 }
                 async.each(results, function(item, done) {
-                    chatData.data.push({
-                        message : item.content,
-                        date : item.date
-                    });
+                    if (item.content.match(url_)) {
+                        chatData.data.push({
+                            message : null,
+                            date : item.date,
+                            url : item.content
+                        });
+                    } else {
+                        chatData.data.push({
+                            message : item.content,
+                            date : item.date,
+                            url : null
+
+                        });
+                    }
 
                     dbConn.query(sql_update_chatting_log, [1, item.id, 0, data.contractId], function(err) {
                         if (err) {
