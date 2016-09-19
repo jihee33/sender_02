@@ -57,6 +57,56 @@ function findOrCreateFacebook(profile, callback) {
     });
 }
 
+function findOrCreateNaver(profile, callback) {
+    var sql_find_naver_id = 'SELECT id, ' +
+        'cast(aes_encrypt(name ,unhex(sha2( ?, ?))) as char(20)),' +
+        'introduction, deliver_com, deliver_req FROM user WHERE naver_id = ?';
+    var sql_create_naver_id = 'INSERT INTO user(naver_id, api_type, name, activation) VALUES(?, 1, aes_encrypt(?,unhex(sha2(?, ?))), 0);';
+    dbPool.getConnection(function (err, dbConn) {
+        if (err) {
+            return callback(err);
+        }
+        dbConn.query(sql_find_naver_id, [process.env.MYSQL_SECRET, 512, profile.id], function (err, result) {
+            if (err) {
+                return callback(err);
+            }
+            if (result.length !== 0) {
+                dbConn.release();
+                var user = {};
+                user.id = result[0].id;
+                user.phone = result[0].phone;
+                user.introduction = result[0].introduction || '';
+                user.deliver_com = result[0].deliver_com;
+                user.deliver_req = result[0].deliver_req;
+                return callback(null, user);
+            }
+            dbConn.beginTransaction(function (err) {
+                if (err) {
+                    dbConn.release();
+                    return callback(err)
+                }
+                dbConn.query(sql_create_naver_id, [profile.id, profile.displayName, process.env.MYSQL_SECRET, 512], function (err, result) {
+                    if (err) {
+                        return dbConn.rollback(function() {
+                            dbConn.release();
+                            callback(err);
+                        });
+                    }
+                    var user = {};
+                    user.id = result.insertId;
+                    user.naver_id = profile.id;
+                    user.api_type = 1;
+                    user.activation = 0;
+                    user.insert = 1;
+                    dbConn.commit();
+                    dbConn.release();
+                    callback(null, user);
+                });
+            });
+        });
+    });
+}
+
 function updateRegistrationToken(regToken, userId, callback) {
     var sql = 'UPDATE user SET registration_token = ? WHERE id = ?';
     dbPool.getConnection(function(err, dbConn) {
@@ -358,6 +408,7 @@ module.exports.deleteUser = deleteUser;
 module.exports.findById = findById;
 module.exports.findUser = findUser;
 module.exports.findOrCreateFacebook = findOrCreateFacebook;
+module.exports.findOrCreateNaver = findOrCreateNaver;
 module.exports.findDeliverings = findDeliverings;
 module.exports.updateMember = updateMember;
 module.exports.updateProfileImage = updateProfileImage;

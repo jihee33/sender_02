@@ -3,6 +3,7 @@ var router = express.Router();
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var FacebookTokenStrategy = require('passport-facebook-token');
+var NaverStrategy = require('passport-naver').Strategy;
 var Member = require('../models/member');
 var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
@@ -14,6 +15,18 @@ passport.use(new FacebookTokenStrategy({
     profileFields: ['id', 'displayName', 'name', 'gender', 'profileUrl', 'photos', 'emails']
 }, function(accessToken, refreshToken, profile, done) {
     Member.findOrCreateFacebook(profile, function (err, user) {// 추후 변수 수정 필요
+        if(err) {
+            return done(err);
+        }
+        return done(null, user);
+    });
+}));
+
+passport.use(new NaverStrategy({
+    clientId: process.env.NAVER_APP_ID,
+    clientSecret: process.env.NAVER_APP_SECRET
+}, function(accessToken, refreshToken, profile, done) {
+    Member.findOrCreateNaver(profile, function (err, user) {// 추후 변수 수정 필요
         if(err) {
             return done(err);
         }

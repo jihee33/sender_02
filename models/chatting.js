@@ -146,10 +146,8 @@ function getChattingLogs(data, callback) {
                             message : item.content,
                             date : item.date,
                             url : null
-
                         });
                     }
-
                     dbConn.query(sql_update_chatting_log, [1, item.id, 0, data.contractId], function(err) {
                         if (err) {
                             dbConn.rollback();
