@@ -102,6 +102,7 @@ function getChattingLogs(data, callback) {
                                   'AND type = ? ' +
                                   'AND contract_id = ?';
 
+
     dbPool.getConnection(function(err, dbConn) {
         if (err) {
             return callback(err);
