@@ -6,14 +6,14 @@ var url = require('url');
 var fs = require('fs');
 var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 
-function selectNotice(currentPage, itemsPerPage, type, callback) {
+function selectNotice(currentPage, itemsPerPage, callback) {
     var sql_select_notice = 'select n.id notice_id, n.type type, n.title title, n.content content, f.filename originalFilename, f.filepath filepath, ' +
                             'date_format(convert_tz(n.write_time,?, ?), \'%Y-%m-%d %H:%i:%s\') write_time ' +
                             'from notice n join file f on (n.id = f.fk_id) ' +
-                            'where f.type = ? and n.type = ? ' + // 4
-                            'order by n.id ' +
+                            'where f.type = ? ' + // 4
+                            'order by n.id desc ' +
                             'limit ?, ?';
-    var sql_select_count = 'select count(id) count from notice where type = ? ';
+    var sql_select_count = 'select count(id) count from notice ';
     var info = {};
     async.parallel([selectNotice, selectCountOfNotice], function(err, results) {
         if (err) {
@@ -55,7 +55,7 @@ function selectNotice(currentPage, itemsPerPage, type, callback) {
             if (err) {
                 return done(err);
             }
-            dbConn.query(sql_select_notice, ['+00:00', '+09:00', 4, type, itemsPerPage * (currentPage - 1), itemsPerPage], function(err, results) {
+            dbConn.query(sql_select_notice, ['+00:00', '+09:00', 4, itemsPerPage * (currentPage - 1), itemsPerPage], function(err, results) {
                 dbConn.release();
                 if (err) {
                     return done(err);
@@ -69,7 +69,7 @@ function selectNotice(currentPage, itemsPerPage, type, callback) {
             if (err) {
                 return done(err);
             }
-            dbConn.query(sql_select_count, [type], function(err, result) {
+            dbConn.query(sql_select_count, [], function(err, result) {
                 dbConn.release();
                 if (err) {
                     return done(err);

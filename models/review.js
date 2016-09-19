@@ -30,7 +30,7 @@ function insertReview(reviewData, callback) {// 리뷰 등록
 
 function listReviews(currentPage, itemsPerPage, delivererId, callback) {
     var sql_select_reviews = 'SELECT CAST(AES_DECRYPT(u.name, UNHEX(SHA2(?, 512))) AS CHAR(45)) name, r.content content, ' +
-                             'r.star star, f.filepath filepath, date_format(r.ctime, \'%Y-%m-%d %H:%i:%s\') review_date ' +
+                             'r.star star, f.filepath filepath, date_format(convert_tz(r.ctime,?, ?), \'%Y-%m-%d %H:%i:%s\') review_date ' +
                              'FROM review r RIGHT JOIN delivering d ON (r.contract_id = d.contract_id) ' +
                                                  'JOIN user u ON (r.user_id = u.id) ' +
                                             'LEFT JOIN (SELECT fk_id, filename, filepath from file where type = 0) f ON (f.fk_id = r.user_id) ' +
@@ -98,7 +98,7 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
         });
         function selectListReviews(callback) {
             dbConn.query(sql_select_reviews,
-                [process.env.MYSQL_SECRET, delivererId, (itemsPerPage * (currentPage - 1)), itemsPerPage ],
+                [process.env.MYSQL_SECRET, '+00:00', '+09:00',delivererId, (itemsPerPage * (currentPage - 1)), itemsPerPage ],
                 function(err, results) {
                     if (err) {
                         return callback(err);
