@@ -5,6 +5,8 @@ var async = require('async');
 var fs = require('fs');
 var logger = require('../common/logger');
 
+var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
+
 function getRegistrationToken(receiverId, callback) {
     var sql_select_registration_token = 'SELECT registration_token FROM user WHERE id = ?';
     dbPool.getConnection(function(err, dbConn) {
@@ -91,7 +93,7 @@ function getChattingLogs(data, callback) {
                               'WHERE u.id = ?';
     var sql_get_chatting_log =  'SELECT id, sender_id, contract_id, content, date_format(convert_tz(ctime,?, ?), \'%Y-%m-%d %H:%i:%s\') date ' +
                                 'FROM chatting ' +
-                                'WHERE date_format(convert_tz(ctime,?, ?), \'%Y-%m-%d %H:%i:%s\') < CURRENT_TIMESTAMP ' +
+                                'WHERE date_format(convert_tz(ctime,?, ?), \'%Y-%m-%d %H:%i:%s\') < convert_tz(CURRENT_TIMESTAMP, ?, ?) ' +
                                       'AND receiver_id = ? ' +
                                       'AND type = 0 ' +
                                       'AND contract_id = ? ';
@@ -125,7 +127,7 @@ function getChattingLogs(data, callback) {
                     chatData.sender.fileUrl = url.resolve(url_, '/profiles/' + path.basename(result[0].filepath));
                 }
             });
-            dbConn.query(sql_get_chatting_log, [ '+00:00', '+09:00', '+00:00', '+09:00', data.receiverId, data.contractId], function(err, results) {
+            dbConn.query(sql_get_chatting_log, [ '+00:00', '+09:00', '+00:00', '+09:00', '+00:00', '+09:00', data.receiverId, data.contractId], function(err, results) {
                 if (err) {
                     dbConn.rollback();
                     dbConn.release();
