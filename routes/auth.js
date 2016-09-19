@@ -9,6 +9,8 @@ var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
 var logger = require('../common/logger');
 
+var url_ = 'https://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com';
+
 passport.use(new FacebookTokenStrategy({
     clientID: process.env.FACEBOOK_APP_ID,
     clientSecret: process.env.FACEBOOK_APP_SECRET,
@@ -24,8 +26,10 @@ passport.use(new FacebookTokenStrategy({
 
 passport.use(new NaverStrategy({
     clientID: process.env.NAVER_APP_ID,
-    clientSecret: process.env.NAVER_APP_SECRET
+    clientSecret: process.env.NAVER_APP_SECRET,
+    callbackURL: url_ + '/auth/naver/token'
 }, function(accessToken, refreshToken, profile, done) {
+    logger.log('debug', 'profile: %j', profile, {});
     Member.findOrCreateNaver(profile, function (err, user) {// 추후 변수 수정 필요
         if(err) {
             return done(err);
