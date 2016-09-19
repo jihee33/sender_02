@@ -122,4 +122,28 @@ router.post('/facebook/token', function(req, res, next) {
     // res.sendStatus(req.user ? 200 : 401);
 });
 
+router.post('/naver/token', function(req, res, next) {
+    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    logger.log('body value', 'body: %j', req.body, {});
+    next();
+}, isSecure, passport.authenticate('naver', null), function(req, res, next) {
+    Member.updateRegistrationToken(req.body.registration_token, req.user.id, function(err, next) {
+        logger.log('debug', 'registration_token : %s', req.body.registration_token);
+        if (err) {
+            return next(err);
+        }
+        if(req.user.insert) {
+            res.send({
+                result : 0
+            });
+        } else {
+            res.send({
+                result: 1
+            });
+        }
+    });
+
+    // res.sendStatus(req.user ? 200 : 401);
+});
+
 module.exports = router;
