@@ -35,7 +35,7 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
                                                  'JOIN user u ON (r.user_id = u.id) ' +
                                             'LEFT JOIN (SELECT fk_id, filename, filepath from file where type = 0) f ON (f.fk_id = r.user_id) ' +
                              'WHERE d.user_id = ? ' +
-                             'ORDER BY date_format(r.ctime, \'%Y-%m-%d %H:%i:%s\') DESC ' +
+                             'ORDER BY date_format(convert_tz(r.ctime,?, ?), \'%Y-%m-%d %H:%i:%s\') DESC ' +
                              'LIMIT ?, ?';
 
     var sql_select_count =  'SELECT count(d.id) count FROM review r ' +
@@ -98,7 +98,7 @@ function listReviews(currentPage, itemsPerPage, delivererId, callback) {
         });
         function selectListReviews(callback) {
             dbConn.query(sql_select_reviews,
-                [process.env.MYSQL_SECRET, '+00:00', '+09:00',delivererId, (itemsPerPage * (currentPage - 1)), itemsPerPage ],
+                [process.env.MYSQL_SECRET, '+00:00', '+09:00', delivererId, '+00:00', '+09:00', (itemsPerPage * (currentPage - 1)), itemsPerPage ],
                 function(err, results) {
                     if (err) {
                         return callback(err);
