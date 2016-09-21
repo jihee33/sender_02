@@ -183,7 +183,11 @@ function findUser(userId, callback) {
                 if (result.length !== 0) {
                     user.id = result[0].user_id;
                     user.name = result[0].name;
-                    user.email = result[0].email;
+                    if (result[0].email === 'null') {
+                        user.email = '';
+                    } else {
+                        user.email = result[0].email;
+                    }
                     user.phone = result[0].phone;
                     user.fb_id = result[0].fb_id;
                     user.api_type = result[0].api_type;
