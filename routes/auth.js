@@ -9,7 +9,7 @@ var isSecure = require('./common').isSecure;
 var isAuthenticated = require('./common').isAuthenticated;
 var logger = require('../common/logger');
 
-var url_ = 'https://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com';
+// var url_ = 'https://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com/auth/naver/callback';
 
 passport.use(new FacebookTokenStrategy({
     clientID: process.env.FACEBOOK_APP_ID,
@@ -27,9 +27,9 @@ passport.use(new FacebookTokenStrategy({
 passport.use(new NaverStrategy({
     clientID: process.env.NAVER_APP_ID,
     clientSecret: process.env.NAVER_APP_SECRET,
-    callbackURL: url_ + '/auth/naver/token'
+    callbackURL: process.env.NAVER_APP_CALLBACK
 }, function(accessToken, refreshToken, profile, done) {
-    logger.log('debug', 'profile: %j', profile, {});
+    logger.log('debug', 'auth profile: %j', profile, {});
     Member.findOrCreateNaver(profile, function (err, user) {// 추후 변수 수정 필요
         if(err) {
             return done(err);
@@ -146,8 +146,11 @@ router.post('/naver/token', function(req, res, next) {
             });
         }
     });
-
     // res.sendStatus(req.user ? 200 : 401);
+});
+
+router.get('/naver/callback', passport.authenticate('naver'), function(req, res, next) {
+    res.send({ message : 'naver callback' });
 });
 
 module.exports = router;

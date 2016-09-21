@@ -115,6 +115,7 @@ function getChattingLogs(data, callback) {
             var chatData = {};
             chatData.sender = {};
             chatData.data = [];
+
             dbConn.query(sql_get_sender_data, [process.env.MYSQL_SECRET, process.env.MYSQL_SECRET, data.senderId], function (err, results) {
                 if (err) {
                     dbConn.release();
