@@ -58,10 +58,11 @@ function findOrCreateFacebook(profile, callback) {
 }
 
 function findOrCreateNaver(profile, callback) {
+    logger.log('debug', 'find profile : %j', profile, {});
     var sql_find_naver_id = 'SELECT id, ' +
-        'cast(aes_encrypt(name ,unhex(sha2( ?, ?))) as char(20)),' +
+        'cast(aes_decrypt(name ,unhex(sha2( ?, ?))) as char(20)),' +
         'introduction, deliver_com, deliver_req FROM user WHERE naver_id = ?';
-    var sql_create_naver_id = 'INSERT INTO user(naver_id, api_type, name, activation) VALUES(?, 1, aes_encrypt(?,unhex(sha2(?, ?))), 0);';
+    var sql_create_naver_id = 'INSERT INTO user(naver_id, api_type, name, email, activation) VALUES(?, 1, aes_encrypt(?,unhex(sha2(?, ?))), ?, 0);';
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
             return callback(err);
@@ -75,6 +76,7 @@ function findOrCreateNaver(profile, callback) {
                 var user = {};
                 user.id = result[0].id;
                 user.phone = result[0].phone;
+                user.email = result[0].email;
                 user.introduction = result[0].introduction || '';
                 user.deliver_com = result[0].deliver_com;
                 user.deliver_req = result[0].deliver_req;
@@ -85,7 +87,7 @@ function findOrCreateNaver(profile, callback) {
                     dbConn.release();
                     return callback(err)
                 }
-                dbConn.query(sql_create_naver_id, [profile.id, profile.displayName, process.env.MYSQL_SECRET, 512], function (err, result) {
+                dbConn.query(sql_create_naver_id, [profile.id, profile.name, process.env.MYSQL_SECRET, 512, profile.email], function (err, result) {
                     if (err) {
                         return dbConn.rollback(function() {
                             dbConn.release();
@@ -95,6 +97,7 @@ function findOrCreateNaver(profile, callback) {
                     var user = {};
                     user.id = result.insertId;
                     user.naver_id = profile.id;
+                    user.email = profile.email;
                     user.api_type = 1;
                     user.activation = 0;
                     user.insert = 1;
@@ -145,8 +148,8 @@ function findById(apiId, callback) {
 
 function findUser(userId, callback) {
     var sql_select_user = 'SELECT u.id user_id,' +
-                          'cast(aes_decrypt(u.name, unhex(sha2(?, ?))) as char(20)) name,' +
-                          'cast(aes_decrypt(u.phone, unhex(sha2(?, ?))) as char(35)) phone, u.fb_id fb_id, ' +
+                          'cast(aes_decrypt(u.name, unhex(sha2(?, ?))) as char(20)) name, ' +
+                          'u.email email, cast(aes_decrypt(u.phone, unhex(sha2(?, ?))) as char(35)) phone, u.fb_id fb_id, ' +
                           'u.api_type api_type, u.introduction introduction, ' +
                           'u.deliver_com deliver_com, u.deliver_req deliver_req, u.activation activation, f.filepath filepath ' +
                           'FROM user u LEFT JOIN (SELECT fk_id, filename, filepath ' +
@@ -180,6 +183,7 @@ function findUser(userId, callback) {
                 if (result.length !== 0) {
                     user.id = result[0].user_id;
                     user.name = result[0].name;
+                    user.email = result[0].email;
                     user.phone = result[0].phone;
                     user.fb_id = result[0].fb_id;
                     user.api_type = result[0].api_type;
