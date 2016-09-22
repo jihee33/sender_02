@@ -231,24 +231,24 @@ function requestContract(deliveringId, contractId, callback) {
             });
         });
 
-    function updateDelivering(callback) {
-        dbConn.query(sql_update_delivering, [contractId, deliveringId], function(err, result) {
-            if (err) {
-                return callback(err);
-            }
-            changedRows += result.changedRows;  // update확인을 위한 result.changeRows
-            callback(null);
-        });
-    }
-    function updateStateOfContract(callback) {
-        dbConn.query(sql_update_contract, [1 ,contractId], function(err, result) {
-            if (err) {
-                return callback(err);
-            }
-            changedRows += result.changedRows;  // update확인을 위한 result.changeRows
-            callback(null);
-        });
-    }
+        function updateDelivering(callback) {
+            dbConn.query(sql_update_delivering, [contractId, deliveringId], function(err, result) {
+                if (err) {
+                    return callback(err);
+                }
+                changedRows += result.changedRows;  // update확인을 위한 result.changeRows
+                callback(null);
+            });
+        }
+        function updateStateOfContract(callback) {
+            dbConn.query(sql_update_contract, [1 ,contractId], function(err, result) {
+                if (err) {
+                    return callback(err);
+                }
+                changedRows += result.changedRows;  // update확인을 위한 result.changeRows
+                callback(null);
+            });
+        }
     });
 } // No.14. 계약 신청하기
 

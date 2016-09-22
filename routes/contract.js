@@ -86,8 +86,11 @@ router.post('/', isSecure, isAuthenticated, function(req, res, next) {
 
 // 10. 배송 요청 보기
 router.get('/', isSecure, isAuthenticated, function(req, res, next) {
+    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    logger.log('debug', 'content type: %s', req.headers['content-type']);
     if(req.url.match(/\/\?delivering_id=\d+/i)) {
         var delivering_id = parseInt(req.query.delivering_id);
+        logger.log('debug', 'delivering_id: %s', delivering_id);
         Contract.selectSending(delivering_id, function(err, result) {
             if (err) {
                 return next(err);
@@ -111,7 +114,9 @@ router.get('/', isSecure, isAuthenticated, function(req, res, next) {
 
 //  14. 계약 신청 및 체결하기
 router.put('/', isAuthenticated, function(req, res, next) {
+    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
     if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
+        logger.log('debug', 'body : %j', req.body, {});
         var contract_id = parseInt(req.body.contract_id);
         var receiverId = parseInt(req.body.receiver_id);
         var tokens = [];
@@ -205,7 +210,7 @@ router.put('/', isAuthenticated, function(req, res, next) {
                     }
                 });
             } // elseif _9_
-        }else if (req.body.contract_id && req.body.delivering_id) {
+        } else if (req.body.contract_id && req.body.delivering_id) {
             var delivering_id = parseInt(req.body.delivering_id);
             Contract.requestContract(delivering_id, contract_id, function(err, result) {
                 if (err) {
