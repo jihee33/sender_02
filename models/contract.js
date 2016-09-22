@@ -384,10 +384,80 @@ function selectContract(contractId, callback) {
 // 배송 상태 변경 하기
 function changeStateOfContract(contractId, state, callback) {
     var sql_change_contract = 'update contract set state = ?, utime = now() where id = ? ';
+    var sql_update_deliver_req = 'UPDATE user SET deliver_req = deliver_req + 1 ' +
+                                 'WHERE id = (SELECT user_id FROM sending WHERE contract_id = ?)';
+    var sql_update_deliver_com = 'UPDATE user SET deliver_com = deliver_com + 1 ' +
+                                 'WHERE id = (SELECT user_id FROM delivering WHERE contract_id = ?)';
     dbPool.getConnection(function(err, dbConn) {
         if (err) {
             return callback(err);
         }
+        if (state === 4) {
+            async.parallel([updateDeliverCom, updateDeliverReq], function (err) {
+                if (err) {
+                    return callback(err);
+                }
+            });
+            var changedRows = 0;
+            function updateDeliverCom(done) {
+                dbPool.getConnection(function(err, dbConn) {
+                    if (err) {
+                        return done(err);
+                    }
+                    dbConn.beginTransaction(function(err) {
+                        if (err) {
+                            return dbConn.rollback(function() {
+                                dbConn.release();
+                                done(err);
+                            });
+                        }
+                        dbConn.query(sql_update_deliver_com, [contractId], function (err, result) {
+                            if (err) {
+                                return dbConn.rollback(function() {
+                                    dbConn.release();
+                                    done(err);
+                                });
+                            }
+                            changedRows += result.changedRows;
+                            dbConn.commit(function () {
+                                dbConn.release();
+                                done(null);
+                            });
+                        });
+                    });
+                });
+            }
+
+            function updateDeliverReq(done) {
+                dbPool.getConnection(function(err, dbConn) {
+                    if (err) {
+                        return done(err);
+                    }
+                    dbConn.beginTransaction(function(err) {
+                        if (err) {
+                            return dbConn.rollback(function() {
+                                dbConn.release();
+                                done(err);
+                            });
+                        }
+                        dbConn.query(sql_update_deliver_req, [contractId], function (err, result) {
+                            if (err) {
+                                return dbConn.rollback(function() {
+                                    dbConn.release();
+                                    done(err);
+                                });
+                            }
+                            changedRows += result.changedRows;
+                            dbConn.commit(function () {
+                                dbConn.release();
+                                done(null);
+                            });
+                        });
+                    });
+                });
+            }
+        }
+
         dbConn.query(sql_change_contract, [state, contractId], function(err, result) {
             dbConn.release();
             if (err) {

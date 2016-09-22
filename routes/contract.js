@@ -187,7 +187,9 @@ router.put('/', isAuthenticated, function(req, res, next) {
                                 logger.log('debug', 'response : %j', response, {});
                                 if (response.failure !== 1) {
                                     res.send({
-                                        result: '계약 체결을 거절했습니다.'
+                                        result: {
+                                            message : '계약 체결을 거절했습니다.'
+                                        }
                                     });
                                 } else {
                                     res.send({
@@ -231,7 +233,10 @@ router.put('/', isAuthenticated, function(req, res, next) {
                             logger.log('debug', 'response : %j', response, {});
                             if (response.failure !== 1) {
                                 res.send({
-                                    result: {message: '계약 신청에 성공했습니다.'}
+                                    result: {
+                                        message: '계약 신청에 성공했습니다.'
+                                    }
+
                                 });
                                 // 1분 후에 * 찍히게 하는 것
                                 /*var timer = 0;
