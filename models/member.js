@@ -10,7 +10,7 @@ var url_ = 'http://ec2-52-78-70-38.ap-northeast-2.compute.amazonaws.com:80';
 function findOrCreateFacebook(profile, callback) {
     var sql_find_facebook_id = 'SELECT id, ' +
                                 'cast(aes_encrypt(name ,unhex(sha2( ?, ?))) as char(20)),' +
-                                'introduction, deliver_com, deliver_req FROM user WHERE fb_id = ?';
+                                'introduction, deliver_com, deliver_req, activation FROM user WHERE fb_id = ?';
     var sql_create_facebook_id = 'INSERT INTO user(fb_id, api_type, name, activation) VALUES(?, 0, aes_encrypt(?,unhex(sha2(?, ?))), 0);';
     dbPool.getConnection(function (err, dbConn) {
        if (err) {
@@ -20,14 +20,17 @@ function findOrCreateFacebook(profile, callback) {
            if (err) {
                return callback(err);
            }
-           if (result.length !== 0) {
+           var user = {};
+           if (result.length !== 0 && result[0].activation !== 0) {
                dbConn.release();
-               var user = {};
                user.id = result[0].id;
                user.phone = result[0].phone;
                user.introduction = result[0].introduction || '';
                user.deliver_com = result[0].deliver_com;
                user.deliver_req = result[0].deliver_req;
+               if (result[0].activation === 0) {
+                   user.insert = 1;
+               }
                return callback(null, user);
            }
            dbConn.beginTransaction(function (err) {
@@ -60,8 +63,8 @@ function findOrCreateFacebook(profile, callback) {
 function findOrCreateNaver(profile, callback) {
     logger.log('debug', 'find profile : %j', profile, {});
     var sql_find_naver_id = 'SELECT id, ' +
-        'cast(aes_decrypt(name ,unhex(sha2( ?, ?))) as char(20)),' +
-        'introduction, deliver_com, deliver_req FROM user WHERE naver_id = ?';
+        'cast(aes_decrypt(name ,unhex(sha2( ?, ?))) as char(20)), ' +
+        'introduction, deliver_com, deliver_req, activation FROM user WHERE naver_id = ?';
     var sql_create_naver_id = 'INSERT INTO user(naver_id, api_type, name, email, activation) VALUES(?, 1, aes_encrypt(?,unhex(sha2(?, ?))), ?, 0);';
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
@@ -71,15 +74,18 @@ function findOrCreateNaver(profile, callback) {
             if (err) {
                 return callback(err);
             }
+            var user = {};
             if (result.length !== 0) {
                 dbConn.release();
-                var user = {};
                 user.id = result[0].id;
                 user.phone = result[0].phone;
                 user.email = result[0].email;
                 user.introduction = result[0].introduction || '';
                 user.deliver_com = result[0].deliver_com;
                 user.deliver_req = result[0].deliver_req;
+                if (result[0].activation === 0) {
+                    user.insert = 1;
+                }
                 return callback(null, user);
             }
             dbConn.beginTransaction(function (err) {
@@ -181,23 +187,23 @@ function findUser(userId, callback) {
                     return done(err);
                 }
                 if (result.length !== 0) {
-                    user.id = result[0].user_id;
-                    user.name = result[0].name;
-                    if (result[0].email === 'null') {
-                        user.email = '';
-                    } else {
-                        user.email = result[0].email;
-                    }
-                    user.phone = result[0].phone;
-                    user.fb_id = result[0].fb_id;
-                    user.api_type = result[0].api_type;
-                    user.introduction = result[0].introduction;
-                    user.deliver_com = result[0].deliver_com;
-                    user.deliver_req = result[0].deliver_req;
-                    user.activation = result[0].activation;
-                    if (result[0].filepath) {
-                        user.fileUrl = url.resolve(url_, '/profiles/' + path.basename(result[0].filepath));
-                    }
+                        user.id = result[0].user_id;
+                        user.name = result[0].name;
+                        if (result[0].email === 'null') {
+                            user.email = '';
+                        } else {
+                            user.email = result[0].email;
+                        }
+                        user.phone = result[0].phone;
+                        user.fb_id = result[0].fb_id;
+                        user.api_type = result[0].api_type;
+                        user.introduction = result[0].introduction;
+                        user.deliver_com = result[0].deliver_com;
+                        user.deliver_req = result[0].deliver_req;
+                        user.activation = result[0].activation;
+                        if (result[0].filepath) {
+                            user.fileUrl = url.resolve(url_, '/profiles/' + path.basename(result[0].filepath));
+                        }
                 } else {
                     user.message = '존재하지 않는 회원';
                 }

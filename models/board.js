@@ -24,13 +24,14 @@ function insertBoard(data, callback) {
                 return callback(err);
             }
             async.waterfall([insertBoards, insertFiles], function(err) {
-                dbConn.release();
                 if (err) {
                     return dbConn.rollback(function (){
+                        dbConn.release();
                         callback(err);
                     });
                 }
                 dbConn.commit(function () {
+                    dbConn.release();
                     callback(null, affectedRows);
                 });
             });

@@ -43,13 +43,14 @@ function insertSendingAndContract(data, callback) {
                 return callback(err);
             }
             async.series([insertContract, insertSending, insertFile], function(err) {
-                dbConn.release();
                 if (err) {
                     return dbConn.rollback(function (){
-                       callback(err);
+                        dbConn.release();
+                        callback(err);
                    });
                 }
                 dbConn.commit(function () {
+                    dbConn.release();
                     var data = {};
                     data.affectedRows = affectedRows; // OK -> 3 올바르게 진행된 insert문의 개수
                     data.contract_id = contract_id; // contract의 id

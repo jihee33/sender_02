@@ -55,6 +55,10 @@ router.get('/me', isSecure, isAuthenticated, function(req, res, next) {
             res.send({
                 result: user
             });
+        } else if (user.activation === 0) {
+            res.send({
+                error: '핸드폰 번호 등록을 통해 계정을 활성화 시켜야 합니다'
+            });
         } else {
             res.send({
                 error: '핸드폰 번호 등록을 통해 계정을 활성화 시켜야 합니다'
@@ -79,7 +83,7 @@ router.get('/:user_id', isSecure, isAuthenticated, isActivated, function(req, re
                 res.send({
                     result: user
                 });
-            } else if (user === 0 ) {
+            } else if (user.activation === 0 ) {
                 res.send({
                     error: '특정 사용자의 프로필을 불러오는데 실패했습니다.'
                 });
@@ -114,6 +118,7 @@ router.get('/me/deliverings', isAuthenticated, function(req, res, next) {
 
 // 5. 자신의 프로필 사진 변경하기 router
 router.put('/me', isAuthenticated, isActivated, function(req, res, next) {
+    logger.log('info', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
     var form = new formidable.IncomingForm();
     form.keepExtensions = true;
     form.multiples = true;
